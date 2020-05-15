@@ -23,7 +23,8 @@ include:
   - PULL_REQUEST_TEMPLATE.md
 gist:
   noscript: false
-permalink: /blog/:year/:month:day:title
+
+## permalink: /blog/:year/:month:day:title
 
 #lsi: false
 #safe: true
