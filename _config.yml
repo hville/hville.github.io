@@ -1,0 +1,35 @@
+# theme: jekyll-theme-midnight
+# jekyll-theme-midnight options
+# title: [The title of your site]
+# description: [A short description of your site's purpose]
+# show_downloads: false
+# google_analytics: [Your Google Analytics tracking ID]
+
+plugins:
+  - jekyll-gist
+#  - jekyll-github-metadata
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - CONTRIBUTING.md
+  - README.md
+  - LICENSE.md
+  - COPYING.md
+  - CODE_OF_CONDUCT.md
+  - CONTRIBUTING.md
+  - ISSUE_TEMPLATE.md
+  - PULL_REQUEST_TEMPLATE.md
+gist:
+  noscript: false
+permalink: /blog/:year/:month:day:title
+
+#lsi: false
+#safe: true
+#source: [your repo's top level directory]
+#incremental: false
+#highlighter: rouge
+#kramdown:
+#  math_engine: mathjax
+#  syntax_highlighter: rouge

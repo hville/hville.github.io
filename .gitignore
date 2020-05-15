@@ -1,0 +1,9 @@
+.git/
+node_modules/
+bld/
+old/
+info/
+note/
+todo/
+*.log
+_site/
