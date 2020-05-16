@@ -30,8 +30,3 @@ input(function(x) { return Math.pow(x,1/3) })
 function(x) { return Math.pow(x,1/3) }
 //[+] simple/clean [-] parsing
 ```
-
-```javascript run:input
-function(x) { return Math.pow(x,1/3) }
-//[+] simple/clean [-] parsing/risk
-```
