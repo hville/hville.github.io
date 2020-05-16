@@ -1,10 +1,14 @@
-# Help
+---
+title: guides for github pages
+layout: default
+---
 
 ## github pages
 
 * [domain](https://help.github.com/en/github/working-with-github-pages/configuring-a-custom-domain-for-your-github-pages-site)
 * [markdown-to-github-pages](https://nicolas-van.github.io/easy-markdown-to-github-pages/)
 * [https://pages.github.com/versions/](https://pages.github.com/versions/)
+* [testing-locally](https://help.github.com/en/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll)
 
 ## plugins
 
@@ -24,8 +28,9 @@
 
 ## emoji
 
-[with text](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md)
-[dense list](https://gist.github.com/roachhd/1f029bd4b50b8a524f3c)
+* [with text](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md)
+* [dense list](https://gist.github.com/roachhd/1f029bd4b50b8a524f3c)
+* :grin: :wink:  :smiley::relaxed::thinking::unamused::grimacing::roll_eyes::mask::confused::open_mouth::skull::skull_and_crossbones::boom::bomb:
 
 ## guide
 
@@ -34,3 +39,12 @@
 ## code
 
 * [html repl](https://repl.it/languages/html)
+
+## mathjax
+
+[mathjax to github pages](http://sgeos.github.io/github/jekyll/2016/08/21/adding_mathjax_to_a_jekyll_github_pages_blog.html)
+
+## markdown
+
+* [mastering-markdown](https://guides.github.com/features/mastering-markdown/)
+* [basic-writing-and-formatting-syntax](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)

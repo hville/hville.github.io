@@ -1,4 +1,7 @@
-# CDN
+---
+title: CDNS for github pages
+layout: default
+---
 
 ## [unpkg.com](unpkg.com)
 
