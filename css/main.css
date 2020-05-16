@@ -1,4 +1,13 @@
-body { margin: 60px auto; width: 70%; }
+body{
+	margin:0;
+	padding:0;
+	font-weight:normal;
+	background:#252525;
+	color:#eaeaea;
+	font-size:14px;
+	line-height:1.5;
+	font-family:Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace
+}
 
 a { text-decoration: none; color: #999; }
 a:hover { text-decoration: underline; }
@@ -20,15 +29,9 @@ footer { border-top: 1px solid #d5d5d5; font-size: .8em; }
 ul.posts { margin: 20px auto 40px; font-size: 1.5em; }
 ul.posts li { list-style: none; }
 
-/* CV */
-.cv { margin: 0px 0px 60px; }
-.cv h1 { font-size: 3em; }
-.cv h2 { font-size: 2em; }
-.cv address, .cv .download { font-family: 'Helvetica', 'Arial', 'Sans-Serif'; }
-.cv address, .cv p { font-size: 1.2em; }
-.cv .download { float: right; font-size: .8em; text-transform: uppercase; }
-
 /* rouge */
+pre{background:rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.15);padding:10px;font-size:16px;color:#b5e853;border-radius:2px;word-wrap:normal;overflow:auto;overflow-y:hidden}
+code.highlighter-rouge{background:rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.15);padding:0px 3px;margin:0px -3px;color:#aa759f;border-radius:2px}
 .highlight{color:#d0d0d0}
 .highlight table td{padding:5px}
 .highlight table pre{margin:0}

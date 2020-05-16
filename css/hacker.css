@@ -1,12 +1,3 @@
-body{
-	margin:0;
-	padding:0;
-	background:#151515;
-	color:#eaeaea;
-	font-size:16px;
-	line-height:1.5;
-	font-family:Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace
-}
 .container{width:90%;max-width:1000px;margin:0 auto}
 section{display:block;margin:0 0 20px 0}
 h1,h2,h3,h4,h5,h6{margin:0 0 20px}
@@ -30,8 +21,6 @@ h1,h2,h3,h4,h5,h6{font-weight:normal;font-family:Monaco, "Bitstream Vera Sans Mo
 dt{font-style:italic;font-weight:bold}
 ul li{list-style-image:url("../images/bullet.png")}
 blockquote{color:#aaa;padding-left:10px;border-left:1px dotted #666}
-pre{background:rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.15);padding:10px;font-size:16px;color:#b5e853;border-radius:2px;word-wrap:normal;overflow:auto;overflow-y:hidden}
-code.highlighter-rouge{background:rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.15);padding:0px 3px;margin:0px -3px;color:#aa759f;border-radius:2px}
 table{width:100%;margin:0 0 20px 0}
 th{text-align:left;border-bottom:1px dashed #b5e853;padding:5px 10px}
 td{padding:5px 10px}
@@ -44,5 +33,8 @@ a{color:#63c0f5;text-shadow:0 0 5px rgba(104,182,255,0.5)}
 .cf:before,.cf:after{content:"";display:table}
 .cf:after{clear:both}
 .cf{zoom:1}
-#a-title{text-decoration:none}
 
+
+
+body { margin: 60px auto; width: 70%; }
+#a-title{text-decoration:none}

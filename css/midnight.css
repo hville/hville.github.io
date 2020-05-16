@@ -8,12 +8,6 @@ html,button,input,select,textarea{font-family:sans-serif}
 body{margin:0}
 a:focus{outline:thin dotted}
 a:hover,a:active{outline:0}
-h1{font-size:2em;margin:0.67em 0}
-h2{font-size:1.5em;margin:0.83em 0}
-h3{font-size:1.17em;margin:1em 0}
-h4{font-size:1em;margin:1.33em 0}
-h5{font-size:0.83em;margin:1.67em 0}
-h6{font-size:0.75em;margin:2.33em 0}
 abbr[title]{border-bottom:1px dotted}
 b,strong{font-weight:bold}
 blockquote{margin:1em 40px}
@@ -81,7 +75,9 @@ table{border-collapse:collapse;border-spacing:0}
 .highlight .na{color:#6a9fb5}
 .highlight .m,.highlight .mf,.highlight .mh,.highlight .mi,.highlight .il,.highlight .mo,.highlight .mb,.highlight .mx{color:#90a959}
 .highlight .ss{color:#90a959}
-body{padding:0px 0 20px 0px;margin:0px;font:14px/1.5 "OpenSansRegular", "Helvetica Neue", Helvetica, Arial, sans-serif;color:#f0e7d5;font-weight:normal;background:#252525;background-attachment:fixed !important;background:linear-gradient(#2a2a29, #1c1c1c)}
+
+
+
 h1,h2,h3,h4,h5,h6{color:#e8e8e8;margin:0 0 10px;font-family:'OpenSansRegular', "Helvetica Neue", Helvetica, Arial, sans-serif;font-weight:normal}
 p,ul,ol,table,pre,dl{margin:0 0 20px}
 h1,h2,h3{line-height:1.1}
