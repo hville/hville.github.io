@@ -22,6 +22,11 @@
   * `page.title = first header`
 * [jekyll-relative-links](https://github.com/benbalter/jekyll-relative-links)
 
+## emoji
+
+[with text](https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md)
+[dense list](https://gist.github.com/roachhd/1f029bd4b50b8a524f3c)
+
 ## guide
 
 * [HankQuinlan](http://jmcglone.com/guides/github-pages/)
