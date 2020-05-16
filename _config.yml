@@ -1,5 +1,7 @@
 name: config.yml
 permalink: /blog/:year/:month:day:title
+plugins:
+  - jemoji
 # theme: jekyll-theme-midnight
 # jekyll-theme-midnight options
 # title: [The title of your site]
