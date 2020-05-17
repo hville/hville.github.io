@@ -29,24 +29,20 @@
 </head>
 <body>
   <nav><ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="/about">About</a></li>
+    <li><a href="/">{{ site.title | default: site.github.repository_name }}</a></li>
+		<li><a href="/about">About</a></li>
+		<li class="floatright">{{ site.description | default: site.github.project_tagline }}</li>
   </ul></nav>
   <div class="wrapper">
     <section>
-      <div id="title">
-        <h2>{{ site.title | default: site.github.repository_name }}</h2>
-        <p>{{ site.description | default: site.github.project_tagline }}</p>
-        <hr>
-        <span class="credits left">Project maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></span>
-        <span class="credits right">Hosted on GitHub Pages &mdash; <a href="{{ site.github.repository_url }}">View On GitHub</a></span>
-      </div>
       {{ content }}
     </section>
   </div>
   <footer><ul>
-    <li><a href="mailto:hugov@runbox.com">email</a></li>
-    <li><a href="atom.xml">feed</a></li>
+    <li><a href="mailto:hugov@runbox.com">hugov@runbox.com</a></li>
+		<li><a href="/feed.xml">rss feed</a></li>
+		<li class="credits left">Project maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></li>
+		<li class="floatright">Hosted on<a href="{{ site.github.repository_url }}">GitHub Pages</a></li>
   </ul></footer>
 </body>
 </html>
