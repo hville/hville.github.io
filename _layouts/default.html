@@ -6,8 +6,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- <script href="/js/note.js"></script> -->
 	{% if page.mathjax %}
+	<script type="text/x-mathjax-config">
+		MathJax.Hub.Config({
+			tex2jax: {
+				inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+				processEscapes: true
+			},
+			asciimath2jax: {
+				delimiters: [['`','`'], ['$','$']]
+			}
+		});
+	</script>
 	<script async
-		src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=AM_CHTML-full">
+		src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML">
 	</script>
   <script
     type="text/javascript"
