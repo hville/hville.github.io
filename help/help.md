@@ -48,3 +48,5 @@ layout: default
 
 * [mastering-markdown](https://guides.github.com/features/mastering-markdown/)
 * [basic-writing-and-formatting-syntax](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)
+* [syntaxhighlighting](https://github.com/github/linguist/blob/master/vendor/README.md)
+
