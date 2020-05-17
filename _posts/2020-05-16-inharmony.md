@@ -18,10 +18,12 @@ $Fréquence = \frac 1 {2L} \sqrt \frac {Tension} {MasseUnitaire}$
 ## asciimath
 
 ```asciimath
-$Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))$
+`Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))`
 ```
 
-$Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))$
+`Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))`
+\`Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))\`
+
 
 ## unicode
 
@@ -31,11 +33,11 @@ $Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))$
 
 ```javascript
 //declaration
-function fréquence(masseUnitaire, longueur, tension) { return Math.sqrt(tension/masseUnitaire) / longueur / 2 }
+function frequence(masseUnitaire, longueur, tension) { return Math.sqrt(tension/masseUnitaire) / longueur / 2 }
 //arrow
-const fréquence = (masseUnitaire, longueur, tension) => Math.sqrt(tension/masseUnitaire) / longueur / 2
+const frequence = (masseUnitaire, longueur, tension) => Math.sqrt(tension/masseUnitaire) / longueur / 2
 //implied variable declaration
-fréquence =  Math.sqrt(tension/masseUnitaire) / longueur / 2
+frequence =  Math.sqrt(tension/masseUnitaire) / longueur / 2
 ```
 
 ## le graph
