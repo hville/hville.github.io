@@ -2,7 +2,7 @@ name: config.yml
 permalink: /blog/:year/:month:day:title
 plugins:
   - jemoji
-	- jekyll-feed
-	#https://github.com/jekyll/jekyll-feed
-	#automatic /feed.xml; uses name|title, description, url|site.github.url, author
-	#use post date, title, excerpt, id, category, tags
+  - jekyll-feed
+  #https://github.com/jekyll/jekyll-feed
+  #automatic /feed.xml; uses name|title, description, url|site.github.url, author
+  #use post date, title, excerpt, id, category, tags
