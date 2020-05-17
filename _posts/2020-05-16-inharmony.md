@@ -21,7 +21,6 @@ $Fréquence = \frac 1 {2L} \sqrt \frac {Tension} {MasseUnitaire}$
 `Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))`
 ```
 
-`Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))`
 \`Fréquence=1/(2L) sqrt ((Tension)/(MasseUnitaire))\`
 
 
@@ -44,9 +43,9 @@ frequence =  Math.sqrt(tension/masseUnitaire) / longueur / 2
 
 :hear_no_evil: [inharmonicity](https://www.sevenstring.org/threads/string-gauges-and-inharmonicity.10064/)
 
-:ear: [inharmonicity factor](https://www.ele.uri.edu/courses/ele369g/14a_Inharmonicity.pdf) $\sqrt T \propto D^2/L \Rightarrow F\propto D/L^2 \Rightarrow note\propto D-scale/2$
+:ear: [inharmonicity factor](https://www.ele.uri.edu/courses/ele369g/14a_Inharmonicity.pdf) \`sqrt T prop D^2/L => F prop D/L^2 => note prop log(D) - 2 scale\`
 
-:guitar::violin: $scale \propto 3 note$
+:guitar::violin: \`=> scale prop -note/3\`
 
 ![inharmony](/help/20200517_inharmony.jpg)
 ![scale_to_note](/help/20200516_base.jpg)
