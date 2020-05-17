@@ -42,9 +42,9 @@ frequence =  Math.sqrt(tension/masseUnitaire) / longueur / 2
 
 :hear_no_evil: [inharmonicity](https://www.sevenstring.org/threads/string-gauges-and-inharmonicity.10064/)
 
-:ear: [inharmonicity factor](https://www.ele.uri.edu/courses/ele369g/14a_Inharmonicity.pdf) \`sqrt T prop D^2/L => F prop D/L^2 => ("note") prop log(D) - 2("scale")\`
+:ear: [inharmonicity factor](https://www.ele.uri.edu/courses/ele369g/14a_Inharmonicity.pdf) \`sqrt T prop D^2/L => F prop D/L^2 => ("note") prop log(D) - 2"scale"\`
 
-:guitar::violin: \`=> ("scale") prop -("note")/3\`
+:guitar::violin: \`=> "scale" prop -(note)/3\`
 
 ![inharmony](/help/20200517_inharmonicity.jpg)
 
