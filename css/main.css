@@ -9,6 +9,8 @@ body{
 	font-family:Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace
 }
 
+section img{max-width:100%}
+
 a { text-decoration: none; color: #999; }
 a:hover { text-decoration: underline; }
 
