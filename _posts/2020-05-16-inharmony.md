@@ -1,5 +1,5 @@
 ---
-title: "low string"
+title: "inharmony"
 date: 2015-05-16
 layout: post
 mathjax: true

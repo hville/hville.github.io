@@ -5,34 +5,25 @@
   <link rel="stylesheet" type="text/css" href="/css/main.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- <script href="/js/note.js"></script> -->
-  {% if page.mathjax %}
-  <script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-      tex2jax: {
-        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-        processEscapes: true
-      }
-    });
-  </script>
+	{% if page.mathjax %}
+	<script>
+		MathJax = {
+			loader: {load: ['input/asciimath', 'output/chtml', 'ui/menu']},
+			asciimath: { delimiters: [['$','$'], ['`','`']] },
+			tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+		}
+	</script>
+	<script type="text/javascript" id="MathJax-script" async
+		src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js">//tex-chtml:: input/tex + output/chtml + startup
+	</script>
+	<script type="text/javascript" id="MathJax-script" async
+		src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+	</script>
   <script
     type="text/javascript"
     charset="utf-8"
-    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_CHTML"
-  > /*
-	https://docs.mathjax.org/en/v2.7-latest/config-files.html#common-configurations
-	TeX-MML-AM_CHTML: TeX|MathML|AsciiMath ==> HTML
-	TeX-MML-AM_HTMLorMML config: : TeX|MathML|AsciiMath ==> HTML|MML
-	* AM_CHTML:  AsciiMath ==> HTML
-});
-})
-	*/
-  </script>
-  <script
-    type="text/javascript"
-    charset="utf-8"
-    src="https://vincenttam.github.io/javascripts/MathJaxLocal.js"
-  >
-  </script>
+		src="https://vincenttam.github.io/javascripts/MathJaxLocal.js">
+	</script>
   {% endif %}
 </head>
 <body>
