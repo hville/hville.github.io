@@ -24,7 +24,7 @@ h2 { font-size: 1.2em; }
 h3 { font-size: 1.1em; }
 h4 { font-size: 1em; }
 
-nav ul, footer ul { font-size: 1em; padding: 0px; list-style: none; font-weight: bold; }
+nav ul, footer ul { font-size: 1em; padding: 0px; list-style: none; }
 nav ul li, footer ul li { display: inline; margin-right: 20px; }
 nav { border-bottom: 1px solid #d5d5d5; }
 footer { border-top: 1px solid #d5d5d5; }
