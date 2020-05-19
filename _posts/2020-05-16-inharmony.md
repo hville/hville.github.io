@@ -2,7 +2,7 @@
 title: ":hear_no_evil: inharmony"
 date: 2015-05-16
 layout: post
-mathjax: true
+tex: true
 ---
 
 [Marin Mersenne](https://en.wikipedia.org/wiki/Marin_Mersenne), 1637, *Traité de l'harmonie universelle*:
