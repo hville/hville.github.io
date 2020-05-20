@@ -18,8 +18,8 @@ body{
 img.emoji { vertical-align: middle; /* display: inline-table; vertical-align: middle; */ }
 .floatright { float:right; }
 
-p img { max-width:100%; }
-tr img { max-width:50%; }
+img { max-width:100%; }
+table { max-width:100%; }
 
 
 a { text-decoration: none; color: #999; }
