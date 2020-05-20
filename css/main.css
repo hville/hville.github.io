@@ -14,7 +14,7 @@ body{
   height: 1em;
 	width: 1em;
 }
-img.emoji { vertical-align: middle; }
+img.emoji { display: inline-table; /* vertical-align: middle; */ }
 .floatright { float:right; }
 
 section img { max-width:100%; }
