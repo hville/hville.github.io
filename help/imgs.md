@@ -12,4 +12,11 @@ in a ![inharmony](/help/20200517_inharmonicity.jpg) line of text
 * list
 
 
+![inharmony](/help/20200517_inharmonicity.jpg)
+
+
+> ![inharmony](/help/20200517_inharmonicity.jpg)
+
+
+
 

@@ -11,10 +11,11 @@ body{
 }
 .icon svg {
 	position: relative;
+	vertical-align: bottom;
   height: 1em;
 	width: 1em;
 }
-img.emoji { display: inline-table; /* vertical-align: middle; */ }
+img.emoji { vertical-align: bottom; /* display: inline-table; vertical-align: middle; */ }
 .floatright { float:right; }
 
 section img { max-width:100%; }
