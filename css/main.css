@@ -10,14 +10,14 @@ body{
 	font-family:Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace
 }
 .icon svg {
+	position: relative;
   height: 1em;
 	width: 1em;
-	fill: white;
-	stroke: none;
 }
-.floatright{float:right}
+img.emoji { vertical-align: middle; }
+.floatright { float:right; }
 
-section img{max-width:100%}
+section img { max-width:100%; }
 
 a { text-decoration: none; color: #999; }
 a:hover { text-decoration: underline; }
