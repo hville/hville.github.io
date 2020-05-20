@@ -30,17 +30,17 @@ in a ![inharmony](/help/20200517_inharmonicity.jpg) line of text
 **![inharmony](/help/20200517_inharmonicity_25.jpg)**
 
 
- | ![inharmony](/help/20200517_inharmonicity_50.jpg)
+text on the left | ![inharmony](/help/20200517_inharmonicity_50.jpg)
 -|-
-![inharmony](/help/20200517_inharmonicity_50.jpg)|
+![inharmony](/help/20200517_inharmonicity_50.jpg)| text on the right
 
 
--|-
-![inharmony](/help/20200517_inharmonicity_50.jpg)| text
+
+![inharmony](/help/20200517_inharmonicity_50.jpg)| text on the right
 
 
--|-
-text|![inharmony](/help/20200517_inharmonicity_50.jpg)
+
+text on the left | ![inharmony](/help/20200517_inharmonicity_50.jpg)
 
 
 ~~![inharmony](/help/20200517_inharmonicity_50.jpg)~~
