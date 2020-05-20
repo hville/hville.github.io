@@ -13,6 +13,7 @@ body{
 	position: relative;
 	vertical-align: middle;
   height: 16px;
+	width: 16px;
 }
 img.emoji { vertical-align: middle; /* display: inline-table; vertical-align: middle; */ }
 .floatright { float:right; }
