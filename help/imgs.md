@@ -32,7 +32,7 @@ in a ![inharmony](/help/20200517_inharmonicity.jpg) line of text
 
 text on the left | ![inharmony](/help/20200517_inharmonicity_50.jpg)
 -|-
-![inharmony](/help/20200517_inharmonicity_50.jpg)| text on the right
+![inharmony](/help/20200517_inharmonicity_50.jpg)| text on the right and much much more to elaborate on this could take a long time
 
 
 
