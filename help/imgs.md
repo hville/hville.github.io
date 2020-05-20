@@ -18,5 +18,9 @@ in a ![inharmony](/help/20200517_inharmonicity.jpg) line of text
 > ![inharmony](/help/20200517_inharmonicity.jpg)
 
 
+![inharmony](/help/20200517_inharmonicity_50.jpg)
+
+
+![inharmony](/help/20200517_inharmonicity_25.jpg)
 
 
