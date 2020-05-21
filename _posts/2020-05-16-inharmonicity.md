@@ -46,6 +46,11 @@ frequence =  Math.sqrt(tension/masseUnitaire) / longueur / 2
 
 :guitar::violin: \`=> "scale" prop -(note)/3\`
 
+https://en.wikipedia.org/wiki/Inharmonicity
+https://fr.wikipedia.org/wiki/Inharmonicit%C3%A9_du_piano
+https://fr.wikipedia.org/wiki/Inharmonicit%C3%A9
+
+
 ![inharmony](/help/20200517_inharmonicity.jpg)
 
 

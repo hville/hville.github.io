@@ -12,15 +12,15 @@ body{
 .icon svg {
 	position: relative;
 	vertical-align: middle;
-  height: 1.1em;
-	width: 1.1em;
+  height: 16px;
+	width: 16px;
 }
 img.emoji { vertical-align: middle; /* display: inline-table; vertical-align: middle; */ }
 .floatright { float:right; }
 
 img { max-width:100%; }
-table { max-width:100%; }
-
+table { max-width:100%; table-layout: auto; }
+th, td { max-width:70%; }
 
 a { text-decoration: none; color: #999; }
 a:hover { text-decoration: underline; }
@@ -30,7 +30,7 @@ p, ul { font-size: 1em; line-height: 1.4em; }
 h1 { font-size: 1.3em;  }
 h2 { font-size: 1.2em; }
 h3 { font-size: 1.1em; }
-h4 { font-size: 1em; }
+h4,h5,h6 { font-size: 1em; }
 
 nav ul, footer ul { font-size: 1em; padding: 0px; list-style: none; }
 nav ul li, footer ul li { display: inline; margin-right: 20px; }
