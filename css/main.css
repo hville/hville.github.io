@@ -22,7 +22,7 @@ img { max-width:100%; }
 table { max-width:100%; table-layout: auto; }
 th, td { max-width:70%; }
 
-a { text-decoration: none; color: #999; }
+a { text-decoration: none; color: #AAC; }
 a:hover { text-decoration: underline; }
 
 p, ul { font-size: 1em; line-height: 1.4em; }
