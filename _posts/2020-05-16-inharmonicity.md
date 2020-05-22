@@ -1,19 +1,17 @@
 ---
-title: ":hear_no_evil: inharmony"
+title: ":hear_no_evil: inharmonicité"
 date: 2015-05-16
 layout: post
 tex: true
 ---
 
-![inharmony](/help/20200517_inharmonicity.jpg)
+![inharmonicity](/help/20200517_inharmonicity.jpg)
 
 En théorie:
+* $Fréquence = \frac 1 {2L} \sqrt \frac {Tension} {MasseUnitaire}$
 
-$Fréquence = \frac 1 {2L} \sqrt \frac {Tension} {MasseUnitaire}$
-
-En pratique (graphe):
-
-:guitar::violin: $scale \propto - \frac note 3$
+En pratique :guitar::violin:
+* ${scale} \propto - \frac {note} 3$
 
 
 * [Marin Mersenne](https://en.wikipedia.org/wiki/Marin_Mersenne), 1637, *Traité de l'harmonie universelle*:
