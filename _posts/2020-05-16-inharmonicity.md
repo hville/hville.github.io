@@ -8,10 +8,10 @@ tex: true
 ![inharmonicity](/help/20200517_inharmonicity.jpg)
 
 En théorie:
-* $Fréquence = \frac 1 {2L} \sqrt \frac {Tension} {MasseUnitaire}$
+* $f = \frac 1 {2L} \sqrt \frac T μ$
 
 En pratique :guitar::violin:
-* ${scale} \propto - \frac {note} 3$
+* ${scale} \propto -(note / 3)$
 
 
 * [Marin Mersenne](https://en.wikipedia.org/wiki/Marin_Mersenne), 1637, *Traité de l'harmonie universelle*:
