@@ -7,11 +7,9 @@ tex: true
 
 ![inharmonicity](/help/20200517_inharmonicity.jpg)
 
-En théorie:
-* $f = \frac 1 {2L} \sqrt \frac T μ$
-
-En pratique :guitar::violin:
+Graphiquement, pour les cordes filées, la relation suivante semble gouverner la limite du son le plus grave pour une longeur donné.
 * ${scale} \propto -(note / 3)$
+Trop grave et l'inharmonicité devient trop présente, la corde sonne comme un élastique qui change de fréquence avec l'amplitude.
 
 * [en.wikipedia.org/wiki/Marin_Mersenne](https://en.wikipedia.org/wiki/Marin_Mersenne), 1637, *Traité de l'harmonie universelle*:
 * [www.sevenstring.org/threads/string-gauges-and-inharmonicity.10064](https://www.sevenstring.org/threads/string-gauges-and-inharmonicity.10064/)
@@ -19,3 +17,7 @@ En pratique :guitar::violin:
 * [en.wikipedia.org/wiki/Inharmonicity](https://en.wikipedia.org/wiki/Inharmonicity)
 * [fr.wikipedia.org/wiki/Inharmonicité_du_piano](https://fr.wikipedia.org/wiki/Inharmonicit%C3%A9_du_piano)
 * [fr.wikipedia.org/wiki/Inharmonicité](https://fr.wikipedia.org/wiki/Inharmonicit%C3%A9)
+
+En théorie:
+* $f = \frac 1 {2L} \sqrt \frac T μ$
+
