@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>benchmark</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="in browser benchmarking">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
+	<style>
+		body {
+			max-width: initial;
+		}
+	</style>
+</head>
+<body>
+	<h2><a href="../">&#9884;</a> Javascript Benchmark</h1>
+	<details>
+		<summary>templates and examples &#x1f3e0;</summary>
+		<li><a href="./index.html#7hJ)/8GQ+ExJfWvkYWW=uxSsKc2Lbv&T.e+~N1AzL86I/ztyianBhj)*'NqGl&~8eeDN?,u@7I*)B)yv;Q5be2pSsx@;;G_6s4*rDZO&4tvAJqiid:b0mm$GxrZonHE9lm-:vzhua/jtNl0*,J8.f~O2=Jo(WP18uJvdmwWNu_fzu_WAAV?Xsvcw+Ze4TOV?iwS8,IKa_.36wHDxBO:'QVz29CMD5ils!s9p-;Nl3qik3.vB*3o7SZBL0Y$cudBW~FnDiM:um!;Li1*MrS+7:W=W&W7;PfO_d">
+			selecting a single element in a tree of 30
+		</a></li>
+		<li><a href="./index.html#dYpY-Fae5f@sm@_ed7VOp)h1&cL@bvU+aVVJ?ho6P4Qs7_wpTIG?ljd2OQ=7lsJ7C;J-E57eh~@dxHm~=@L)=RI@qwtiSI$pwmNClu,,ZKeDHdTEA(Zt*Qs5f*jYQmrF(N*eE_@IAKc)NbHU!:hU-dUf*:9X$S+M/cc==u;tk@9d!D6CI5=a7CAUfnHmCDXqO:F.kDkI&s:+cI*7fM0NIgM91$C8v_a+:M!.r)Fi&Pb~jM&OLoKB67D1Em*cch2UYErgG!Et9/IY!(+='!S1Vy*ro.6hk@Tn?hTJd;*/ws4ba)aKzux,;Hh(-~1">
+			selecting elements in a tree of 30
+		</a></li>
+		<!--
+			TODO https://www.toptal.com/designers/htmlarrows/symbols/
+			lang=en-US
+			on save/load extra params - lang,version,...
+			dwld key files from cdn
+		 -->
+	</details>
+<table>
+<colgroup>
+	<col style="width:70%;">
+	<col>
+</colgroup>
+<thead>
+	<tr>
+		<th>imports and setup</th>
+	</tr>
+	<tr>
+		<td>
+			<pre><code id=init contenteditable=true></code></pre>
+		</td>
+		<td style="text-align: center; vertical-align: middle;">
+			<button id=run >run tests!<br> (takes a few seconds)</button>
+		</td>
+	</tr>
+	<tr>
+		<th>code</th>
+		<th style="text-align: center; vertical-align: middle;">result</th>
+	</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<template>
+	<tr id=row>
+		<td>
+			<pre><code id=code contenteditable=true></code></pre>
+		</td>
+		<td id=time style="text-align: center; vertical-align: middle;"></td>
+	</tr>
+</template>
+<script type=module>
+	import {cast, list, frame, $} from 'https://cdn.skypack.dev/@hugov/inhtml'
+	import {enc, dec, QUERY} from 'https://cdn.skypack.dev/@hugov/shorter-string'
+
+	const init = $('#init'),
+				tbody = $('tbody'),
+				rows = tbody.children
+
+	// row factory
+	const makeRow = cast('template', ({row, code, time}, codeVal='') => {
+		code.textContent = codeVal
+
+		time.update = res => time.textContent = !res ? '' : res.IQR.map( v => v.toPrecision(3) ).join(' - ')
+
+		code.oninput = function() {
+			time.textContent = ''
+			if (!this.textContent) row.remove()
+			if (this.textContent && !row.nextSibling) row.after(makeRow())
+			save()
+		}
+
+		row.$ids = {code, time}
+		return row
+	})
+
+	// simulation button handler
+	$('#run').onclick = () => {
+		const initCode = `import bench from 'https://cdn.skypack.dev/@hugov/bench@0.6.0';${ init.textContent };`
+		const execCode = `()=>bench([${
+			Array.from(rows).slice(0,-1).map( row => `function(){${row.$ids.code.textContent}}` ).join(',\n')
+		}])`
+		const sandbox = frame( execCode, initCode )
+		sandbox.run()
+		.then( res => Array.from(rows).forEach( ({$ids}, i) => $ids.time.update( res[i] ) ) )
+		.catch( err => console.log('error in test', err) )
+		.finally( () => sandbox.end() )
+	}
+
+	// save data in hash
+	function save() {
+		//TODO language and options ?
+		const values = [init.textContent]
+		//get all rows but the last
+		for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
+		location.hash = '#' + enc( values.join('\x00'), QUERY )
+	}
+
+	// load any data in hash, if any
+	function load() {
+		if (rows.length) tbody.textContent = '' //reset rows
+		if (location.hash.length > 1) {
+			const data = dec(location.hash.slice(1), QUERY).split('\x00')
+			init.textContent = data.shift()
+			data.forEach( code => { if (code) tbody.append(makeRow(code)) } )
+		}
+		// one last empty line to allow adding new lines
+		tbody.appendChild( makeRow() )
+	}
+
+	init.oninput = save
+	onhashchange = ({oldURL, newURL}) => { if (oldURL !== newURL) load() }
+	load()
+</script>
+</body>
