@@ -1,0 +1,17 @@
+@import '../_lib/water-dark2.css';
+
+body {
+	max-width: initial;
+}
+
+input[type="radio"][name=langswap] {
+	display:none;
+}
+input[type="radio"][name=langswap]+span {
+	font-family: monospace;
+}
+input[type="radio"][name=langswap]:checked+span {
+	background: #161f27;
+	color: #ffbe85;
+	border-radius: 3px;
+}

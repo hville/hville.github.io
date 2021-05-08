@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang=en data-lang="fr en es">
+<head>
+	<title>schem.ist</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="schem.ist home">
+	<link rel="stylesheet" href="../_src/main.css">
+</head>
+<body>
+	<div style="display: flex; justify-content: space-between;">
+		<span>Left</span>
+		<span id=pikl></span>
+	</div>
+	<hr>
+
+	<h2 data-lang="fr en es">
+		français // english // español
+	</h2>
+
+	<div data-lang>
+		<p lang=fr>sans éviter les accents là où il y en a</p>
+		<p lang=en>it would be naïve to think there is not an ångström of diacritics</p>
+		<p lang=es>pingüino, piñata, química, cuestión</p>
+	</div>
+
+	<script type=module>
+		import pick from '../_src/lang-form.js'
+		document.getElementById('pikl').append(pick('es fr en'))
+	</script>
+</body>
+</html>
