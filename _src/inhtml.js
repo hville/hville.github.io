@@ -25,13 +25,11 @@ export function $ids(el) {
 }
 
 export function cast(template, decorator) {
-	const node = template.nodeName === 'TEMPLATE' ? template.content
-		: template.nodeName ? template
-		: template[0] === '<' ? html(template)
-		: $(template)
+	template = template.nodeName ? template : template[0] === '<' ? html(template) : $(template)
+	if (template.nodeName === 'TEMPLATE') template = template.content
 
 	return function(v,k) {
-		const el = node.cloneNode(true)
+		const el = template.cloneNode(true)
 		const res = decorator.call(this, $ids(el), v, k)
 		return res?.nodeType ? res : el
 	}

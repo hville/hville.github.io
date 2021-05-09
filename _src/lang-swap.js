@@ -6,9 +6,8 @@ const langRE = /(?<=^#)[^/]*/,
 Select the node that will be observed for mutations
 align hash and html.lang
 */
-export default langs => {
-	const ls = langs.split(' '),
-				mo = new MutationObserver( onlang ),
+export default (ls, cb) => {
+	const	mo = new MutationObserver( onlang ),
 				kids = new Map
 
 	function onlang() {
@@ -16,14 +15,15 @@ export default langs => {
 		else {
 			if (gethashlang() !== H.lang) sethashlang(H.lang)
 			H.querySelectorAll('[data-lang]').forEach(pick)
+			cb?.(H.lang)
 		}
 	}
 
 	function pick(el) {
 		if (!kids.has(el)) {
 			// pre-set list forces extraction from text
-			if (el.dataset.lang) {
-				const langs = el.dataset.lang.split(' ')
+			if (!el.firstElementChild) {
+				const langs = el.dataset.lang ? el.dataset.lang.split(' ') : ls
 				el.innerHTML = el.textContent.split(div)
 				.map( (t,i) => `<span lang=${ langs[i] }>${ t.trim() }</span>`)
 				.join('')
