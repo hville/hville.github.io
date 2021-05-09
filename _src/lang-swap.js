@@ -37,9 +37,16 @@ export default (ls, cb) => {
 		el.replaceChildren( kids.get(el)[H.lang] )
 	}
 
+/**
+ * picks a supported language from the following sources (in that order)
+ * location.hash > navigator.languages > document.documentElement.lang
+ */
 	function onhash() {
 		const lang = gethashlang()
-		if(!ls.includes(lang)) sethashlang(H.lang)
+		//language in hash is empty or not supported, change it
+		if(!ls.includes(lang)) sethashlang(
+			navigator.languages.find( l => ls.includes( l.split('-', 1) ) ) || H.lang
+		)
 		else if (lang !== H.lang) H.lang = lang
 	}
 
