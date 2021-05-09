@@ -14,6 +14,6 @@ export default langs => {
 		if (el.value === L) el.checked = true
 	})
 
-	langswap()
+	langswap(langs)
 	return cnt
 }

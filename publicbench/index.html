@@ -117,7 +117,7 @@
 	}
 
 	init.oninput = save
-	onhashchange = ({oldURL, newURL}) => { if (oldURL !== newURL) load() }
+	onhashchange = load //TODO add event listener and get lang
 	load()
 </script>
 </body>
