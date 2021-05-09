@@ -1,0 +1,18 @@
+﻿Station Name		MCTAVISH
+Province		QUEBEC
+Current Station Operator	Environment and Climate Change Canada - Meteorological Service of Canada
+Latitude		45.50
+Longitude		-73.58
+Elevation		72.80
+Climate Identifier	7024745
+WMO Identifier		71612
+TC Identifier		WTA
+"If Local Standard Time (LST) was selected, add 1 hour to adjust for Daylight Saving Time where and when it is observed."
+
+Legend
+E	Estimated
+M	Missing
+NA	Not Available*
+[empty]	Indicates an unobserved value
+
+*https://climate.weather.gc.ca/FAQ_e.html#Q5

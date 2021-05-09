@@ -1,0 +1,2565 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0081)http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+<title>Microsoft Project XML Schema</title>
+<style>
+	body	{font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 70%;}
+
+	ul		{font-size: 100%; margin-top: .5em; margin-bottom: 0em;}
+	li		{margin-bottom: .7em;}
+
+	pre	{font-size: 100%; margin-top: 1.2em; margin-bottom: 1.5em;}
+	code	{font-family: courier new, courier; font-size: 125%; }
+	
+	table	{font-size: 100%; margin-top: 1em; margin-bottom: 1em;}
+	th		{text-align: left; background: #DDDDDD; margin: .25em; vertical-align: bottom;}
+	tr		{vertical-align: top;}
+	td		{margin: .25em; vertical-align: top;}
+
+	p		{margin-top: .6em; margin-bottom: .6em;}
+
+	h1		{font-size: 125%; margin-bottom: .5em;}
+	h2		{font-size: 110%; margin-top: 2em; margin-bottom: .5em;}
+	h3		{font-size: 100%; margin-top: 1.2em; margin-bottom: .5em; font-weight: bold;}
+
+	.ttl	{font-weight: bold;}
+	.cf	{font-weight: bold; color: #0000FF;}
+</style>
+</head>
+<body>
+<center>
+<h1 class="RH1"><a name="top">Microsoft Project XML Schema</a></h1>
+(C) 2002 Microsoft Corporation. All rights reserved.</center>
+<h2>Contents</h2>
+<p class="t"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#overview">Overview</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#openFromXMLDOM">Open a project from an XML DOM document</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#openFromXMLFile">Open a project from an XML file</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#openFromString">Open a project from a string containing XML</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#saveToXMLDOM">Saving a project to an XML DOM document</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#saveAsXML">Save a project file as an XML file that conforms to the Microsoft Project XML Schema</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#append">Appending XML data to existing projects</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#elementTypes">Microsoft Project XML element and data types</a><br><br><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#tableIntro">The Microsoft Project XML Schema</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#TimePhasedDataType">TimephasedDataType</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#Project">Project</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#OutlineCodes">OutlineCode</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#WBSMasks">WBSMasks</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#ExtendedAttributes">ExtendedAttribute</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#Calendars">Calendar</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#Tasks">Task</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#Resources">Resource</a><br>&nbsp;&nbsp;<a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#Assignments">Assignment</a><br></p><h2 class="RH2"><a name="overview">Overview</a></h2><a name="overview">
+<p class="t">This document provides the information necessary to understand individual elements of the Microsoft Project XML Schema. In addition to descriptions for each element within the schema, the overall structure of the schema is detailed, and some sample macros that show how to use the XML Document Object Model (DOM) to access the Microsoft Project XML Schema are included. </p><p class="NT"><span class="ttl">Note</span>&nbsp;&nbsp;
+To ensure that all required elements and default settings are included when you create a project in XML, it is recommended that you start by saving an empty project to XML that you can use as a template.</p>
+</a><p class="T"><a name="overview"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h3 class="RH3"><a name="openFromXMLDOM">Open a project from an XML DOM document</a></h3><a name="openFromXMLDOM">
+<p class="t">The following code sample shows how to transform a DOM document into a project XML DOM document and open it in Microsoft Project. This method is useful when transforming an XML document containing project data that does not conform to the Microsoft Project Data Interchange Schema.</p><pre><code>Public Sub fileopen_xmldom(xml As String)
+
+    On Error GoTo err_fileopen_xmldom
+    
+    Dim app As New MSProject.Application
+    Dim xmlDom, xslDom, projDom, xslFileName As String
+    
+    'Load the XML string parameter into a DOM document
+    Set xmlDom = CreateObject("MSXML2.DOMDocument")
+    xmlDom.async = False
+    xmlDom.loadXML xml
+    
+    'Specify an XSL template file name
+    xslFileName = "C:\project\xml\project.xsl"
+    
+    'Load the XSL template into a DOM document
+    Set xslDom = CreateObject("MSXML2.DOMDocument")
+    xslDom.async = False
+    xslDom.Load xslFileName
+    
+    'Transform the XML input into a project XML document
+    Set projDom = CreateObject("MSXML2.DOMDocument")
+    projDom.Load xmlDom.transformNode(xslDom)
+    
+    'Open a project from the XML DOM document
+    app.FileOpen FormatID:="MSProject.XMLDOM", XMLName:=projDom
+
+exit_fileopen_xmldom:
+    Exit Sub
+    
+err_fileopen_xmldom:
+    MsgBox "error: " &amp; Err.Description
+    GoTo exit_fileopen_xmldom
+End Sub
+
+Public Sub Fileopen_xmldom_test()
+    Dim xmlDom, XMLfileName As String
+    XMLfileName = "C:\proj10\xml\xmldemo\x1.xml"
+    Set xmlDom = CreateObject("MSXML2.DOMdocument")
+    xmlDom.async = False
+    xmlDom.Load XMLfileName
+    fileopen_xmldom (xmlDom.xml)
+End Sub</code></pre></a><p class="T"><a name="openFromXMLDOM"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h3 class="RH3"><a name="openFromXMLFile">Open a project from an XML file</a></h3><a name="openFromXMLFile">
+<p class="t">The following code sample shows how to use a project XML document file created by a third party application to create a project in Microsoft Project. This sample assumes that the file created by a third party application already contains valid XML that conforms to the Microsoft Project XML Schema.</p><pre><code>Public Sub fileopen_xmlfile()
+
+    On Error GoTo err_fileopen_xmlfile
+    
+    Dim app As New MSProject.Application, xmlFile As String
+    
+    'Specify a Microsoft Project XML file name
+    xmlFile = "C:\project\xml\someProject.xml"
+    
+    'Open a project from the XML file
+    app.FileOpen Name:=xmlFile, FormatID:="MSProject.XML"
+
+exit_fileopen_xmlfile:
+    Exit Sub
+    
+err_fileopen_xmlfile:
+    MsgBox "error: " &amp; Err.Description
+    GoTo exit_fileopen_xmlfile
+
+End Sub</code></pre></a><p class="T"><a name="openFromXMLFile"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h3 class="RH3"><a name="openFromString">Open a project from a string containing XML</a></h3><a name="openFromString">
+<p class="t">The following code sample shows how to use Simple Object Access Protocol (SOAP) to call a web page that returns an XML string that conforms to the Microsoft Project XML Schema.</p><p class="NT"><span class="ttl">Note</span>&nbsp;&nbsp;
+The Microsoft SOAP client must be installed to use this sample.</p>
+<pre><code>Public Sub openxml_xmlstring(xmlRequest As String)
+
+    On Error GoTo err_openxml_xmlstring
+    
+    Dim app As New MSProject.Application
+    Dim XMLHttp As XMLHttp
+    Dim xmlResponse As String, URL As String
+    
+    'Specify the web page to call
+    URL = "http://myserver/getProjectXML.asp"
+    
+    'Create the SOAP client and call the page
+    Set XMLHttp = New XMLHttp
+    XMLHttp.Open "POST", URL, False
+    XMLHttp.send xmlRequest
+    xmlResponse = XMLHttp.responseXML.xml
+    
+    'Open a project from the response string
+    app.OpenXML xmlResponse
+
+exit_openxml_xmlstring:
+    Exit Sub
+    
+err_openxml_xmlstring:
+    MsgBox "error: " &amp; Err.Description
+    GoTo exit_openxml_xmlstring
+
+End Sub</code></pre></a><p class="T"><a name="openFromString"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h3 class="RH3"><a name="saveToXMLDOM">Saving a project to an XML DOM document</a></h3><a name="saveToXMLDOM">
+<p class="t">The following code sample shows how to save a project created in Microsoft Project as an XML DOM document that conforms to the Microsoft Project XML Schema. This will allow users to use the properties and methods of the DOM to manipulate and extract project data.</p><pre><code>Public Sub filesaveas_xmldom()
+
+    On Error GoTo err_filesaveas_xmldom
+    
+    Dim app As New MSProject.Application
+    Dim doc
+    
+    'Create an XML DOM document
+    Set doc = CreateObject("MSXML2.DOMDocument")
+    
+    'Save the project to the DOM document
+    app.FileSaveAs FormatID:="MSProject.XMLDOM", XMLName:=doc
+
+exit_filesaveas_xmldom:
+    Exit Sub
+    
+err_filesaveas_xmldom:
+    MsgBox "error: " &amp; Err.Description
+    GoTo exit_filesaveas_xmldom
+
+End Sub</code></pre></a><p class="T"><a name="saveToXMLDOM"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h3 class="RH3"><a name="saveAsXML">Save a project file as an XML file that conforms to the Microsoft Project XML Schema</a></h3><a name="saveAsXML">
+<p class="t">The following code sample shows how to save Microsoft Project data as an XML file that conforms to the Microsoft Project XML Schema.  This code sample can be used to drop a project XML document to a file share to be picked up and used later by an asynchronous process.</p><pre><code>Public Sub filesaveas_xmlfile()
+
+    On Error GoTo err_filesaveas_xmlfile
+    
+    Dim app As New MSProject.Application, xmlFile As String
+    
+    'Specify a Microsoft Project XML file name
+    xmlFile = "C:\path to location\fileName.xml"
+    
+    'Open a project from the XML file
+    app.FileSaveAs Name:=xmlFile, FormatID:="MSProject.XML"
+
+exit_filesaveas_xmlfile:
+    Exit Sub
+    
+err_filesaveas_xmlfile:
+    MsgBox "error: " &amp; Err.Description
+    GoTo exit_filesaveas_xmlfile
+
+End Sub</code></pre></a><p class="T"><a name="saveAsXML"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h3 class="RH3"><a name="append">Appending XML data to existing projects</a></h3><a name="append">
+<p class="t">When Microsoft Project appends XML data to an existing project, a summary task's unique ID is incremented from 0 to 1. Microsoft Project then checks for duplicate unique IDs elsewhere in the appending XML data; if any are found, the duplicate unique IDs are given new unique IDs. This process can cause assignments, tasks, resources, and cross-project links to become disassociated with original data.
+ </p><p class="NT"><span class="ttl">Note</span>&nbsp;&nbsp;
+To ensure that data doesn't end up in unintended locations, it is recommended that you separate this data into its smallest possible component: a task, a resource, an assignment, and so on, before appending. You can also create a custom solution using Microsoft Project VBA and MSXML. See Microsoft Project VBA Help for more information. </p>
+</a><p class="T"><a name="append"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h3 class="RH3"><a name="elementTypes">Microsoft Project XML element and data types</a></h3><a name="elementTypes">
+<p class="t">The following XML Schema Definition (XSD) element types are used in the Microsoft Project XML Schema:</p><table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><th>Element Types</th>
+<th>Description</th>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">schema</td>
+<td class="TT" bgcolor="#FFFFFF">Contains the definition of the schema.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">annotation</td>
+<td class="TT" bgcolor="#FFFFFF">Defines an annotation.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">complexType</td>
+<td class="TT" bgcolor="#FFFFFF">A type definition for elements that contains elements and attributes. This data can contain elements and attributes.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">documentation</td>
+<td class="TT" bgcolor="#FFFFFF">Specifies information to be read or used by users within the annotation element.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">sequence</td>
+<td class="TT" bgcolor="#FFFFFF">Requires the elements in the group to appear in the specified sequence within the containing element.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">element</td>
+<td class="TT" bgcolor="#FFFFFF">Declares an element.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">simpleType</td>
+<td class="TT" bgcolor="#FFFFFF">A type definition for a value that can be used as the content of an element or attribute. This data type cannot contain elements or have attributes.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">restriction</td>
+<td class="TT" bgcolor="#FFFFFF">Defines constraints on a simpleType definition.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">enumeration</td>
+<td class="TT" bgcolor="#FFFFFF">A specified set of values for an element. Data is constrained to the specific values described.</td>
+</tr>
+</tbody></table>
+<p class="t">The following data types are used in the Microsoft Project XML Schema:</p><table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><th>Data Types</th>
+<th>Description</th>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">integer</td>
+<td class="TT" bgcolor="#FFFFFF">A sequence of decimal digits with an optional leading sign (+ or -). This data type is derived from decimal.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">float</td>
+<td class="TT" bgcolor="#FFFFFF">A single-precision, 32-bit floating point number.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">string</td>
+<td class="TT" bgcolor="#FFFFFF">A character string.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">datetime</td>
+<td class="TT" bgcolor="#FFFFFF">A specific instance of time.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">time</td>
+<td class="TT" bgcolor="#FFFFFF">An instance of time that recurs every day.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">duration</td>
+<td class="TT" bgcolor="#FFFFFF">A duration of time.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">Boolean</td>
+<td class="TT" bgcolor="#FFFFFF">A Boolean value, which is either true or false.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">decimal</td>
+<td class="TT" bgcolor="#FFFFFF">An arbitrary precision number.</td>
+</tr>
+</tbody></table>
+</a><p class="T"><a name="elementTypes"></a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h2 class="RH2"><a name="tableIntro">The Microsoft Project XML Schema</a></h2><a name="tableIntro">
+<p class="t">The tables below explain each individual element of the Microsoft Project XML Schema. The schema is broken into tables in this document by concept of data in relation to how it exists in Microsoft Project, Microsoft Project Server, and the OLE databases, rather than being based on the literal organization of the actual schema itself. For example:</p><pre><code>&lt;xsd:element name="Project"&gt;
+   &lt;xsd:complexType&gt;
+      &lt;xsd:sequence&gt;
+         &lt;xsd:element name="UID" minOccurs="0"&gt;
+            &lt;xsd:simpleType&gt;
+               &lt;xsd:restriction base="xsd:string"&gt;
+                  &lt;xsd:maxLength value="16" /&gt;
+               &lt;/xsd:restriction&gt;
+            &lt;/xsd:simpleType&gt;
+         &lt;/xsd:element&gt;
+         &lt;xsd:element name="CreationDate"&gt;
+         &lt;/xsd:element&gt;
+      &lt;/xsd:sequence&gt;
+   &lt;/xsd:complexType&gt;
+&lt;/xsd:element&gt;</code></pre></a><p class="t"><a name="tableIntro">The elements in the  example shown above  are contained in the </a><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#Project">Project</a> table below. Both <code>UID</code> and <code>CreationDate</code> have their own descriptions in the table. Another way the data is described in this document is as follows:</p><pre><code>&lt;xsd:element name="Calendars"&gt;
+...
+...
+   &lt;xsd:element name="Weekday"&gt;
+      &lt;xsd:complexType&gt;
+         &lt;xsd:sequence&gt;
+            &lt;xsd:element name="DayWorking" minOccurs="0"&gt;
+            &lt;xsd:element name="DayType" minOccurs="0"&gt;
+            ...
+               &lt;xsd:element name="FromTime" minOccurs="0"&gt;
+               &lt;xsd:element name="ToTime" minOccurs="0"&gt;
+            ...
+         &lt;/xsd:sequence&gt;
+      &lt;/xsd:complexType&gt;
+   &lt;/xsd:element&gt;
+...
+...
+&lt;/xsd:element&gt;</code></pre><p class="t">The elements in the example shown above are contained in the <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#Calendars">Calendar</a> table below. Both <code>FromTime</code> and <code>ToTime</code> are part of the <code>WorkingTimes</code> element (note the plural). <code>WorkingTimes</code> is a collection of the singular <code>WorkingTime</code>, which is defined by a <code>FromTime</code> and <code>ToTime</code>.</p><p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p><h2><a name="timephasedDataType">TimephasedDataType</a></h2><p class="T">This section defines timephased data, including the type of timephased data, the start and finish time, and the unit of time and the length of time each unit spans. This section represented as XML is as follows:</p><pre><code>&lt;TimephasedDataType&gt;
+	&lt;Type /&gt;
+	&lt;UID /&gt;
+	&lt;Start /&gt;
+	&lt;Finish /&gt;
+	&lt;Unit /&gt;
+	&lt;Value /&gt;
+&lt;/TimephasedDataType&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Type</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The type of timephased data:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Remaining Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Actual Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Actual Overtime Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline Cost</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Actual Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">Task Percent Complete</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">16</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 1 Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">17</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 1 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">18</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 1 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 1 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 1 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">21</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 1 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">22</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 2 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">23</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 2 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">24</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 2 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">25</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 2 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">26</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 2 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">27</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 2 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">28</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 3 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">29</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 3 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">30</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 3 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">31</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 3 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">32</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 3 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">33</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 3 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">34</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 4 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 4 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 4 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 4 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 4 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 4 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 5 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 5 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 5 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 5 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 5 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">45</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 5 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">46</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 6 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">47</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 6 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">48</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 6 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">49</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 6 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">50</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 6 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 6 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 7 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">53</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 7 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">54</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 7 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">55</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 7 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">56</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 7 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">57</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 7 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">58</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 8 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">59</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 8 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">60</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 8 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">61</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 8 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">62</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 8 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">63</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 8 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">64</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 9 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">65</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 9 Cost </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">66</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 9 Work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">67</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 9 Cost</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">68</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 9 Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">69</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 9 Cost</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">70</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 10 Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">71</td>
+<td class="TT" bgcolor="#FFFFFF">Assignment Baseline 10 Cost</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">72</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 10 Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">73</td>
+<td class="TT" bgcolor="#FFFFFF">Task Baseline 10 Cost</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">74</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 10 Work </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">75</td>
+<td class="TT" bgcolor="#FFFFFF">Resource Baseline 10 Cost</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">76</td>
+<td class="TT" bgcolor="#FFFFFF">Physical Percent Complete</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the timephased data record.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Start</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The start date for the timephased data record.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Finish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The finish date for the timephased data record.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Unit</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The time unit for the timephased data record.<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Minute </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Hour </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Day </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Week</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Month</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">Year</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Value</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The value for each unit in the timephased data record.</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="project">Project</a></h2><p class="T">This section stores all data for each project, including calendars, assignments, tasks, resources, extended attributes, work breakdown structure (WBS codes), and custom outline codes. <br><br><span class="ttl">Note</span>: You will experience a rounding error with the <code>MoveCompletedEndsBack</code>, <code>MoveRemainingStartsBack
+	</code>, <code>MoveRemainingStartsForward</code>, and <code>MoveCompletedEndsForward</code> elements. The internal work values for these elements have eight digits; they will lose .001 seconds for every minute, causing a rounding error.<br><br>This section represented as XML is as follows:</p><pre><code>&lt;Project&gt;
+	&lt;UID /&gt;
+	&lt;Name /&gt;
+	&lt;Title /&gt;
+	&lt;Subject /&gt;
+	&lt;Category /&gt;
+	&lt;Company /&gt;
+	&lt;Manager /&gt;
+	&lt;Author /&gt;
+	&lt;CreationDate /&gt;
+	&lt;Revision /&gt;
+	&lt;LastSaved /&gt;
+	&lt;ScheduleFromStart /&gt;
+	&lt;StartDate /&gt;
+	&lt;FinishDate /&gt;
+	&lt;FYStartDate /&gt;
+	&lt;CriticalSlackLimit /&gt;
+	&lt;CurrencyDigits /&gt;
+	&lt;CurrencySymbol /&gt;
+	&lt;CurrencySymbolPosition /&gt;
+	&lt;CalendarUID /&gt;
+	&lt;DefaultStartTime /&gt;
+	&lt;DefaultFinishTime /&gt;
+	&lt;MinutesPerDay /&gt;
+	&lt;MinutesPerWeek /&gt;
+	&lt;DaysPerMonth /&gt;
+	&lt;DefaultTaskType /&gt;
+	&lt;DefaultFixedCostAccrual /&gt;
+	&lt;DefaultStandardRate /&gt;
+	&lt;DefaultOvertimeRate /&gt;
+	&lt;DurationFormat /&gt;
+	&lt;WorkFormat /&gt;
+	&lt;EditableActualCosts /&gt;
+	&lt;HonorConstraints /&gt;
+	&lt;EarnedValueMethod /&gt;
+	&lt;InsertedProjectsLikeSummary /&gt;
+	&lt;MultipleCriticalPaths /&gt;
+	&lt;NewTasksEffortDriven /&gt;
+	&lt;NewTasksEstimated /&gt;
+	&lt;SplitsInProgressTasks /&gt;
+	&lt;SpreadActualCost /&gt;
+	&lt;SpreadPercentComplete /&gt;
+	&lt;TaskUpdatesResource /&gt;
+	&lt;FiscalYearStart /&gt;
+	&lt;WeekStartDay /&gt;
+	&lt;MoveCompletedEndsBack /&gt;
+	&lt;MoveRemainingStartsBack /&gt;
+	&lt;MoveRemainingStartsForward /&gt;
+	&lt;MoveCompletedEndsForward /&gt;
+	&lt;BaselineForEarnedValue /&gt;
+	&lt;AutoAddNewResourcesAndTasks /&gt;
+	&lt;StatusDate /&gt;
+	&lt;CurrentDate /&gt;
+	&lt;MicrosoftProjectServerURL /&gt;
+	&lt;Autolink /&gt;
+	&lt;NewTaskStartDate /&gt;
+	&lt;DefaultTaskEVMethod /&gt;
+	&lt;ProjectExternallyEdited /&gt;
+	&lt;OutlineCodes&gt;
+		...
+	&lt;/OutlineCodes&gt;
+	&lt;WBSMasks&gt;
+		...
+	&lt;/WBSMasks&gt;
+	&lt;ExtendedAttributes&gt;
+		...
+	&lt;/ExtendedAttributes&gt;
+	&lt;Calendars&gt;
+		...
+	&lt;/Calendars&gt;
+	&lt;Tasks /&gt;
+		...
+	&lt;/Tasks&gt;
+	&lt;Resources&gt;
+		...
+	&lt;/Resources&gt;
+	&lt;Assignments /&gt;
+		...
+	&lt;/Assignments&gt;
+&lt;/Project&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID</td><td bgcolor="#EEEEEE">string(16)</td><td bgcolor="#EEEEEE">The unique ID for the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Name</td><td bgcolor="#EEEEEE">string(255)</td><td bgcolor="#EEEEEE">The name of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Title</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The title of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Subject</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The subject of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Category</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The category the project belongs to.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Company</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The name of the company that created the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Manager</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The manager of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Author</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The author of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CreationDate</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date the project was created.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Revision</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The number of times that the project has been saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LastSaved</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date the project was last saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ScheduleFromStart</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the project is scheduled from its start date or finish date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StartDate</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a project is scheduled to begin; required if ScheduleFromStart is true.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FinishDate</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a project is scheduled to end; required if ScheduleFromStart is false.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FYStartDate</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The month
+				the fiscal year begins:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">January (default)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">February</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">March</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">April</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">May</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">June</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">July</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">August</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">September</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">October</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">November</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">December</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CriticalSlackLimit</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The number of days past its end date that a task can go before Microsoft Project marks that task as a critical task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CurrencyDigits</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The number of digits that appear after the decimal when currency values are shown in Microsoft Project:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">No digits after the decimal: $0</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">One digit after the decimal: $0.0</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Two digits after the decimal: $0.00</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CurrencySymbol</td><td bgcolor="#EEEEEE">string(20)</td><td bgcolor="#EEEEEE">The currency symbol used to represent the type of currency used in the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CurrencySymbolPosition</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates the placement of the currency symbol in relation to the currency value:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Before, no space (default): $0</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">After, no space: 0$</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Before, with space: $ 0</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">After, with space: 0 $</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CalendarUID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the calendar used in the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DefaultStartTime</td><td bgcolor="#EEEEEE">Time</td><td bgcolor="#EEEEEE">The default start time for all new tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DefaultFinishTime</td><td bgcolor="#EEEEEE">Time</td><td bgcolor="#EEEEEE">The default finish time for all new tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MinutesPerDay</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default number of minutes per day.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MinutesPerWeek</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default number of minutes per week.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DaysPerMonth</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default number of working days per month.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DefaultTaskType</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default type for all new tasks in the project:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Fixed units (default); the number of resources (Assignment Units) remains constant, regardless of the amount of work or duration on the task</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Fixed duration; the duration of the task remains constant, regardless of the number of resources (Assignment Units) assigned or the amount of work</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Fixed work; the amount of work remains constant, regardless of any change in duration or the number of resources (Assignment Units) assigned to the task</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DefaultFixedCostAccrual</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default measuring point when fixed costs are accrued:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Start</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Prorated</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">End</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DefaultStandardRate</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The default standard rate for new resources.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DefaultOvertimeRate</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The default overtime rate for new resources.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DurationFormat</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default format for all durations in the project:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">m </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">em </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">eh </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">ed </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">ew </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">emo </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">e% </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">21</td>
+<td class="TT" bgcolor="#FFFFFF">Null </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">m?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">em? </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">h?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">eh?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">d?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">ed?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">w?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">ew?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">mo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">emo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">e%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">53</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WorkFormat</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default format for all work durations in the project.<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">m </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">h </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">w </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">y </td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EditableActualCosts</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether Microsoft Project automatically calculates actual costs.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HonorConstraints</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether Microsoft Project schedules tasks according to their constraint dates instead of any task dependencies.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EarnedValueMethod</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default method for calculating earned value:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Percent complete </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1	</td>
+<td class="TT" bgcolor="#FFFFFF">Physical percent complete</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">InsertedProjectsLikeSummary</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether inserted projects are treated as summary tasks rather than as separate projects for schedule calculation.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MultipleCriticalPaths</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether Microsoft Project calculates and displays a critical path for each independent network of tasks within a project.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">NewTasksEffortDriven</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether new tasks are effort-driven.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">NewTasksEstimated</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether new tasks have 
+				estimated durations.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">SplitsInProgressTasks</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether in-progress tasks may be split.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">SpreadActualCost</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether actual costs are spread to the status date.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">SpreadPercentComplete</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether percent complete is spread to the status date.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TaskUpdatesResource</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether updates to tasks update resources.
+				
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FiscalYearStart</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether fiscal year numbering is used.
+				
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WeekStartDay</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The start day of the week:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Sunday </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Monday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Tuesday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Wednesday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Thursday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Friday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">Saturday</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MoveCompletedEndsBack</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the end of completed portions of tasks scheduled to begin after the status date, but begun early, should be moved back to the status date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MoveRemainingStartsBack</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the beginning of remaining portions of tasks scheduled to begin after the status date, but begun early, should be moved back to the status date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MoveRemainingStartsForward</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the beginning of remaining portions of tasks scheduled to have begun late should be moved up to the status date.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MoveCompletedEndsForward</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the end of completed portions of tasks scheduled to have been completed before the status date, but begun late, should be moved up to the status date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BaselineForEarnedValue</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">The specific baseline used to calculate Variance values:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 1</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 2</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 3</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 4</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 5</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 6</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 7 </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 8</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 9</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">Baseline 10 </td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AutoAddNewResourcesAndTasks</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether to automatically add new resources to the resource pool.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StatusDate</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">Date used for calculation and reporting.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CurrentDate</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The system date that the XML was generated.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MicrosoftProjectServerURL</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the project was created by a Microsoft Project Server user or a Microsoft Windows NT user.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Autolink</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether to autolink inserted or moved tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">NewTaskStartDate</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default start date for a new task:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Project start date </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Current date</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DefaultTaskEVMethod</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The default earned value method for tasks:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Percent complete </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Physical percent complete</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ProjectExternallyEdited</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the project was edited externally. </td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OutlineCodes</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The collection of outline code definitions associated with the project; these codes may be associated with any number of projects; see <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#outlineCodes">OutlineCode</a> below.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WBSMasks</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The table of entries that define an outline code mask; see <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#wbsMasks">WBSMasks</a> below.
+				
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ExtendedAttributes</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The collection of extended attribute (custom field) definitions associated with a project; see <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#extendedAttributes">ExtendedAttribute</a> below.
+				
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Calendars</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The collection of calendars associated with the project; see <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#calendars">Calendar</a> below.
+				
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Tasks</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The collection of tasks that make up the project; see <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#tasks">Task</a> below.
+				
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Resources</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The collection of resources that make up the project; see <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#resources">Resource</a> below.
+				
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Assignments</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The collection of assignments that make up the project; see <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#assignments">Assignment</a> below.
+				
+				</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="outlineCodes">OutlineCode</a></h2><p class="T">This section stores information related to the collection of custom outline codes associated with the project. These codes can be associated with more than one project. This section represented as XML is as follows:</p><pre><code>	&lt;OutlineCodes&gt;
+		&lt;OutlineCode&gt;
+			&lt;FieldID /&gt;
+			&lt;FieldName /&gt;
+			&lt;Alias /&gt;
+			&lt;PhoneticAlias /&gt;
+			&lt;Values&gt;
+				&lt;Value&gt;
+					&lt;ValueID /&gt;
+					&lt;ParentValueID /&gt;
+					&lt;Value /&gt;
+					&lt;Description /&gt;
+				&lt;/Value&gt;
+			&lt;/Values&gt;
+			&lt;Enterprise /&gt;
+			&lt;EnterpriseOutlineCodeAlias /&gt;
+			&lt;ResourceSubstitutionEnabled /&gt;
+			&lt;LeafOnly /&gt;
+			&lt;AllLevelsRequired /&gt;
+			&lt;OnlyTableValuesAllowed /&gt;
+			&lt;Masks&gt;
+				&lt;Mask&gt;
+					&lt;Level /&gt;
+					&lt;Type /&gt;
+					&lt;Length /&gt;
+					&lt;Separator /&gt;
+				&lt;/Mask&gt;
+			&lt;/Masks&gt;
+		&lt;/OutlineCode&gt;
+	&lt;/OutlineCodes&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldID</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The field number the outline code refers to.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldName</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The name of the custom outline code.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Alias</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The alias of the custom outline code.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PhoneticAlias</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">Contains phonetic information in either Hiragana or Katakana for a custom outline code; used only in the Japanese version of Microsoft Project.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ID (Value)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the custom outline code.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ParentID (Value)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the parent node of the custom outline code.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Value (Value)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The actual value of the custom outline code.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Description (Value)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The description of the custom outline code.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Enterprise</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the custom outline code is an enterprise custom outline code.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EnterpriseOutlineCodeAlias</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Refers to another custom field for which this is an alias.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE"> ResourceSubstitutionEnabled</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the custom outline code is used with the Resource Substitution Wizard in Microsoft Project; only used with enterprise custom outline codes.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LeafOnly</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the values specified in the custom outline code must be leaf values.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AllLevelsRequired</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether new codes must have all levels present; not used for enterprise custom outline codes.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OnlyTableValuesAllowed</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the custom outline code value must come from the values table.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Masks</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the custom outline code must be used with all related resources and tasks.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Level (Mask)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The level that has been assigned to each custom outline code, beginning with 1.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Type (Mask)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The type of code string for first-level tasks:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Numbers (ordered); a numeric WBS code for this level (default).</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Uppercase Letters (ordered); uppercase, alphabetical WBS codes (for example, A, B, and C for the first three summary tasks in the project).</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Lowercase Letters (ordered); lowercase, alphabetical WBS codes (for example, a, b, and c for the first three summary tasks in the project).</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Characters (unordered); any combination of numbers and uppercase or lowercase letters (for example, Arch1, Const1, or Insp1) for the first three summary tasks in the project). Microsoft Project displays an asterisk (*) in the custom outline field until you type or enter a string of characters for this code.</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Length (Mask)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The maximum length in characters of the outline code values, from 1 - 255. If length is any, the value is zero.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Separator (Mask)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The character used to separate custom outline code levels. The following values are examples; however, any symbol may be used as the custom outline code separator:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">.</td>
+<td class="TT" bgcolor="#FFFFFF">Period (default)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">-</td>
+<td class="TT" bgcolor="#FFFFFF">Minus</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">+</td>
+<td class="TT" bgcolor="#FFFFFF">Plus</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">/</td>
+<td class="TT" bgcolor="#FFFFFF">Forward slash</td>
+</tr>
+</tbody></table>
+</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="wbsMasks">WBSMasks</a></h2><p class="T">The table of entries that define an outline code mask. This section represented as XML is as follows:</p><pre><code>	&lt;WBSMasks&gt;
+		&lt;VerifyUniqueCodes /&gt;
+		&lt;GenerateCodes /&gt;
+		&lt;Prefix /&gt;
+		&lt;WBSMask&gt;
+			&lt;Level /&gt;
+			&lt;Type /&gt;
+			&lt;Length /&gt;
+			&lt;Separator /&gt;
+		&lt;/WBSMask&gt;
+	&lt;/WBSMasks&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">VerifyUniqueCodes</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether WBS codes are unique for new tasks.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">GenerateCodes</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether WBS codes are generated for new tasks.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Prefix</td><td bgcolor="#EEEEEE">string(50)</td><td bgcolor="#EEEEEE">The prefix for all WBS codes.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Level (WBSMask)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The level that has been assigned to each WBS level, beginning with 1.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Type (WBSMask)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The type of code string for first-level tasks:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Numbers (ordered); a numeric WBS code for this level (default).</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Uppercase Letters (ordered); uppercase, alphabetical WBS codes (for example, A, B, and C for the first three summary tasks in the project).</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Lowercase Letters (ordered); lowercase, alphabetical WBS codes (for example, a, b, and c for the first three summary tasks in the project).</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Characters (unordered); any combination of numbers and uppercase or lowercase letters (for example, Arch1, Const1, or Insp1) for the first three summary tasks in the project). Microsoft Project displays an asterisk (*) in the custom outline field until you type or enter a string of characters for this code.</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Length (WBSMask)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The maximum length in characters of the WBS mask values, from 1 - 255. If length is any, the value is zero.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Separator (WBSMask)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The character used to separate the WBS mask. The following values are examples, however any symbol may be used as the WBS Mask separator:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">.</td>
+<td class="TT" bgcolor="#FFFFFF">Period (default)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">-</td>
+<td class="TT" bgcolor="#FFFFFF">Minus</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">+</td>
+<td class="TT" bgcolor="#FFFFFF">Plus</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">/</td>
+<td class="TT" bgcolor="#FFFFFF">Forward slash</td>
+</tr>
+</tbody></table>
+</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="extendedAttributes">ExtendedAttribute</a></h2><p class="T">Each of the individual extended attributes are defined with the following elements. There are no limits to the number of children that may appear, but Microsoft Project will only accept the default names for extended attributes (for example, Flag1, Flag2 ).<br><br><span class="ttl">Note</span> When loading a project stored as XML data, a maximum of 5000 <code>ValueList</code> elements and 128 <code>Indicators</code> elements will be recognized by Microsoft Project. All others will be ignored.<br><br>This section represented as XML is as follows:</p><pre><code>	&lt;ExtendedAttributes&gt;
+		&lt;ExtendedAttribute&gt;
+			&lt;FieldID /&gt;
+			&lt;FieldName /&gt;
+			&lt;Alias /&gt;
+			&lt;PhoneticAlias /&gt;
+			&lt;RollupType /&gt;
+			&lt;CalculationType /&gt;
+			&lt;Formula /&gt;
+			&lt;RestrictValues /&gt;
+			&lt;AppendNewValues /&gt;
+			&lt;Default /&gt;
+			&lt;ValueList&gt;
+	 			&lt;Value&gt;
+		 			&lt;ID /&gt;
+			 		&lt;Value /&gt;
+				 	&lt;Description /&gt;
+				 &lt;/Value&gt;
+			 &lt;/ValueList&gt;
+			&lt;Type /&gt;
+		&lt;/ExtendedAttribute&gt;	
+	&lt;/ExtendedAttributes&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldID</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The localized name of the field; you should not use this to identify uniqueness across versions.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldName</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The name of the custom field.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Alias</td><td bgcolor="#EEEEEE">string(50)</td><td bgcolor="#EEEEEE">The alias of the custom field.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PhoneticAlias</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">Contains phonetic information in either Hiragana or Katakana for an extended attribute; used only in the Japanese version of Microsoft Project.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RollupType</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates the method used to calculate roll-ups:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Maximum (OR for flag fields)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Minimum (AND for flag fields)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Count all</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Sum</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Average</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Average, first sub-level</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Count, first sub-level</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Count, nonsummaries</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CalculationType</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates whether roll-ups are calculated for task and group summary rows:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">None</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Rollup</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Calculation</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Formula</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The formula that Microsoft Project uses to populate the custom field.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RestrictValues</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether only values in the list are allowed in the file.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AppendNewValues</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether new values added to the project are automatically added to the list.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Default</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Refers to the ID of the default value in the list; not used if there is no default set.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ID (Value)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID of the value across the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Value (Value)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The actual value.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Description (Value)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The description of the value in the list.</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="calendars">Calendar</a></h2><p class="T">Calendars are used to define standard working and nonworking times. A project must have one base calendar. Tasks and resources may have their own calendars, which are based on a base calendar. This section represented as XML is as follows:</p><pre><code>	&lt;Calendars&gt;
+		&lt;Calendar&gt;
+			&lt;UID /&gt;
+			&lt;Name /&gt;
+			&lt;IsBaseCalendar /&gt;
+			&lt;BaseCalendarUID /&gt;
+			&lt;WeekDays&gt;
+				&lt;WeekDay&gt;
+					&lt;DayType /&gt;
+					&lt;DayWorking /&gt;
+					&lt;TimePeriod&gt;
+						&lt;FromDate /&gt;
+						&lt;ToDate /&gt;
+					&lt;/TimePeriod&gt;
+					&lt;WorkingTimes&gt;
+						&lt;WorkingTime&gt;
+							&lt;FromTime /&gt;
+							&lt;ToTime /&gt;
+						&lt;/WorkingTime&gt;
+					&lt;/WorkingTimes&gt;
+				&lt;/Weekday&gt;
+			&lt;/Weekdays&gt;
+		&lt;/Calendar&gt;
+	&lt;/Calendars&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the calendar.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Name</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The name of the calendar.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IsBaseCalendar</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the calendar is a base calendar.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BaseCalendarUID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the base calendar on which this calendar depends; only used if this calendar is not a base calendar.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DayType (Weekday)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The type of working day:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Exception</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Monday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Tuesday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Wednesday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Thursday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Friday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">Saturday</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">Sunday</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DayWorking (Weekday)</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the specified date or date type is a working day.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TimePeriod (Weekday)</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">Defines a set of exception days:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">FromDate</td>
+<td class="TT" bgcolor="#FFFFFF">datetime </td>
+<td class="TT" bgcolor="#FFFFFF">The start of the exception time.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">ToDate	</td>
+<td class="TT" bgcolor="#FFFFFF">datetime</td>
+<td class="TT" bgcolor="#FFFFFF">The end of the exception time.</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WorkingTimes (Weekday)</td><td bgcolor="#EEEEEE"></td><td bgcolor="#EEEEEE">The collection of working times that define the time worked during the weekday. There must be at least one working time, and there may be no more than five. The following elements make up the collection of working times:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">FromTime</td>
+<td class="TT" bgcolor="#FFFFFF">time </td>
+<td class="TT" bgcolor="#FFFFFF">The start of the working time.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">ToTime	</td>
+<td class="TT" bgcolor="#FFFFFF">time</td>
+<td class="TT" bgcolor="#FFFFFF">The end of the working time.</td>
+</tr>
+</tbody></table>
+</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="tasks">Task</a></h2><p class="T">The collection of tasks that make up a project. There must be at least one task in a <code>Tasks</code> collection. This section represented as XML is as follows:</p><pre><code>	&lt;Tasks&gt;
+		&lt;Task&gt;
+			&lt;UID /&gt;
+			&lt;ID /&gt;
+			&lt;Name /&gt;
+			&lt;Type /&gt;
+			&lt;IsNull /&gt;
+			&lt;CreateDate /&gt;
+			&lt;Contact /&gt;
+			&lt;WBS /&gt;
+			&lt;WBSLevel /&gt;
+			&lt;OutlineNumber /&gt;
+			&lt;OutlineLevel /&gt;
+			&lt;Priority /&gt;
+			&lt;Start /&gt;
+			&lt;Finish /&gt;
+			&lt;Duration /&gt;
+			&lt;DurationFormat /&gt;
+			&lt;Work /&gt;
+			&lt;Stop /&gt;
+			&lt;Resume /&gt;
+			&lt;ResumeValid /&gt;
+			&lt;EffortDriven /&gt;
+			&lt;Recurring /&gt;
+			&lt;OverAllocated /&gt;
+			&lt;Estimated /&gt;
+			&lt;Milestone /&gt;
+			&lt;Summary /&gt;
+			&lt;Critical /&gt;
+			&lt;IsSubproject /&gt;
+			&lt;IsSubprojectReadOnly /&gt;
+			&lt;SubprojectName /&gt;
+			&lt;ExternalTask /&gt;
+			&lt;ExternalTaskProject /&gt;
+			&lt;EarlyStart /&gt;
+			&lt;EarlyFinish /&gt;
+			&lt;LateStart /&gt;
+			&lt;LateFinish /&gt;
+			&lt;StartVariance /&gt;
+			&lt;FinishVariance /&gt;
+			&lt;WorkVariance /&gt;
+			&lt;FreeSlack /&gt;
+			&lt;TotalSlack /&gt;
+			&lt;FixedCost /&gt;
+			&lt;FixedCostAccrual /&gt;
+			&lt;PercentComplete /&gt;
+			&lt;PercentWorkComplete /&gt;
+			&lt;Cost /&gt;
+			&lt;OvertimeCost /&gt;
+			&lt;OvertimeWork /&gt;
+			&lt;ActualStart /&gt;
+			&lt;ActualFinish /&gt;
+			&lt;ActualDuration /&gt;
+			&lt;ActualCost /&gt;
+			&lt;ActualOvertimeCost /&gt;
+			&lt;ActualWork /&gt;
+			&lt;ActualOvertimeWork /&gt;
+			&lt;RegularWork /&gt;
+			&lt;RemainingDuration /&gt;
+			&lt;RemainingCost /&gt;
+			&lt;RemainingWork /&gt;
+			&lt;RemainingOvertimeCost /&gt;
+			&lt;RemainingOvertimeWork /&gt;
+			&lt;ACWP /&gt;
+			&lt;CV /&gt;
+			&lt;ConstraintType /&gt;
+			&lt;CalendarUID /&gt;
+			&lt;ConstraintDate /&gt;
+			&lt;Deadline /&gt;
+			&lt;LevelAssignments /&gt;
+			&lt;LevelingCanSplit /&gt;
+			&lt;LevelingDelay /&gt;
+			&lt;PreLeveledStart /&gt;
+			&lt;PreLeveledFinish /&gt;
+			&lt;Hyperlink /&gt;
+			&lt;HyperlinkAddress /&gt;
+			&lt;HyperlinkSubAddress /&gt;
+			&lt;IgnoreResourceCalendar /&gt;
+			&lt;Notes /&gt;
+			&lt;HideBar /&gt;
+			&lt;Rollup /&gt;
+			&lt;BCWS /&gt;
+			&lt;BCWP /&gt;
+			&lt;PhysicalPercentComplete /&gt;
+			&lt;EarnedValueMethod /&gt;
+			&lt;PredecessorLink&gt;
+				&lt;PredecessorUID /&gt;
+				&lt;Type /&gt;
+				&lt;CrossProject /&gt;
+				&lt;CrossProjectName /&gt;
+				&lt;LinkLag /&gt;
+				&lt;LagFormat /&gt;
+			&lt;/PredecessorLink&gt;
+			&lt;ExtendedAttribute&gt;
+				&lt;UID /&gt;
+				&lt;FieldID /&gt;
+				&lt;Value /&gt;
+				&lt;ValueID /&gt;
+				&lt;DurationFormat /&gt;
+			&lt;/ExtendedAttribute&gt;
+			&lt;Baseline&gt;
+				&lt;TimephasedData /&gt;
+				&lt;Number /&gt;
+				&lt;Interim /&gt;
+				&lt;Start /&gt;
+				&lt;Finish /&gt;
+				&lt;Duration /&gt;
+				&lt;DurationFormat /&gt;
+				&lt;EstimatedDuration /&gt;
+				&lt;Work /&gt;
+				&lt;Cost /&gt;
+				&lt;BCWS /&gt;
+				&lt;BCWP /&gt;
+			&lt;/Baseline&gt;
+			&lt;OutlineCode&gt;
+				&lt;UID /&gt;
+				&lt;FieldID /&gt;
+				&lt;ValueID /&gt;
+			&lt;/OutlineCode&gt;
+			&lt;TimephasedData /&gt;
+		&lt;/Task&gt;
+	&lt;/Tasks&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The position identifier of the task in the list of tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Name</td><td bgcolor="#EEEEEE">string(512) </td><td bgcolor="#EEEEEE">The name of the task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Type</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The type of task:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Fixed units </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Fixed duration</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Fixed work</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IsNull</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a task is null.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CreateDate</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a task was added to a project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Contact</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The name of the individual who is responsible for a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WBS</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">A unique code (WBS) used to represent a task's position within the hierarchical structure of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WBSLevel</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The right-most level of the task. For example, if the task level was A.01.03, the right-most level would be 03.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OutlineNumber</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The number that indicates the level of a task in the project outline hierarchy.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OutlineLevel</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates the exact position of a task in the outline. For example, 7.2 indicates that a task is the second subtask under the seventh top-level summary task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Priority</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates the level of importance assigned to a task, with 500 being no priority; the higher the number, the higher the priority:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Lowest priority; task will always be leveled</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1000</td>
+<td class="TT" bgcolor="#FFFFFF">Highest priority; task will never be leveled</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Start</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a task is scheduled to begin.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Finish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a task is scheduled to be completed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Duration</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The total span of active working time for a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DurationFormat</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The format used to show the duration of the task:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">m </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">em </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">eh </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">ed </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">ew </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">emo </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">e% </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">21</td>
+<td class="TT" bgcolor="#FFFFFF">Null </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">m?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">em? </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">h?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">eh?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">d?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">ed?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">w?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">ew?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">mo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">emo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">e%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">53</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Work</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The total amount of work scheduled to be performed on a task by all assigned resources.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Stop</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date that represents the end of the actual portion of a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Resume</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date the remaining portion of a task is scheduled to resume.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ResumeValid</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the task can be resumed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EffortDriven</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether scheduling for a task is effort-driven.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Recurring</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a task is a recurring task.			</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OverAllocated</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether an assigned resource on a task has been assigned to more work on the task than can be done within the normal working capacity.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Estimated</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the task's duration is flagged as an estimate.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Milestone</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a task is a milestone.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Summary</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a task is a summary task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Critical</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a task has room in the schedule to slip, or if it is on the critical path.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IsSubproject</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the task is an inserted project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IsSubprojectReadOnly</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the inserted project is a read-only project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">SubprojectName</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The source location of the inserted project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ExternalTask</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the task is linked from another project or whether it originated in the current project.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ExternalTaskProject</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The source of an external task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EarlyStart</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The 
+				earliest date that a task could possibly begin, based on the early start dates of predecessor and successor tasks and other constraints.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EarlyFinish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The earliest date that a task could possibly finish, based on early finish dates of predecessor and successor tasks, other constraints, and any leveling delay.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LateStart</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The latest date that a task can start without delaying the finish of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LateFinish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The latest date that a task can finish without delaying the finish of the project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StartVariance</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The difference between a task's baseline start date and its currently scheduled start date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FinishVariance</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The amount of time that represents the difference between a task's baseline finish date and its current finish date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WorkVariance</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The difference between a task's baseline work and the currently scheduled work.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FreeSlack</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The amount of time that a task can be delayed without delaying any successor tasks; if a task has zero successor tasks, free slack is the amount of time a task can be delayed without delaying the entire project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TotalSlack</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The amount of time a task can be delayed without delaying a project's finish date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FixedCost</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">A task expense that is not associated with a resource cost.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FixedCostAccrual</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates how fixed costs are to be charged, or accrued, to the cost of a task:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Start; costs are accrued as soon as the task starts, as indicated by a date entered in the ActualStart field.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Prorated (default); costs accrue as work is scheduled to occur and as actual work is reported.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">End; costs are not incurred until remaining work is zero.</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PercentComplete</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The current status of a task, expressed as the percentage of the task's duration that has been completed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PercentWorkComplete</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The current status of a task, expressed as the percentage of the task's work that has been completed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Cost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The total scheduled, or projected, cost for a task, based on costs already incurred for work performed by all resources assigned to the task, in addition to the costs planned for the remaining work for the assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The sum of the actual overtime cost for the task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of overtime scheduled to be performed by all resources assigned to a task and charged at overtime rates.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualStart</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a task actually began.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualFinish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a task actually finished.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualDuration</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The span of actual working time for a task so far, based on the scheduled duration and current remaining work or percent complete. Actual duration can be calculated in two ways, either based on Percent Complete or Remaining Duration.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The costs incurred for work already performed by all resources on a task, along with any other recorded costs associated with the task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualOvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The costs incurred for overtime work already performed on a task by all assigned resources.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of work that has already been done by the resources assigned to a task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualOvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The actual amount of overtime work already performed by all resources assigned to a task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RegularWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The total amount of non-overtime work scheduled to be performed by all resources assigned to a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingDuration</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of time required to complete the unfinished portion of a task. Remaining duration can be calculated in two ways (either based on Percent Complete or Actual Duration).</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The remaining scheduled expense of a task that will be incurred in completing the remaining scheduled work by all resources assigned to a task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of time still required by all assigned resources to complete a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingOvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The remaining scheduled overtime expense for a task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingOvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of remaining overtime scheduled by all assigned resources to complete a task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ACWP</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The costs incurred for work already done on a task, up to the project status date or today's date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CV</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The difference between how much it should have cost to achieve the current level of completion on the task and how much it has actually cost to achieve the current level of completion up to the status date or today's date; also called cost variance.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ConstraintType</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The constraint on a scheduled task:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">As soon as possible</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">As late as possible</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Must start on</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Must finish on</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Start no earlier than</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Start no later than</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">Finish no earlier than</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">Finish no later than</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CalendarUID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Refers to a valid UID in the <a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#calendars">Calendar</a> section of the Microsoft Project XML Schema.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ConstraintDate</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">Indicates the constrained start or finish date as defined in TaskConstraintType. Required unless TaskContstraintType is set to As late as possible or As soon as possible.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Deadline</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date entered as a deadline for the task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LevelAssignments</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the leveling function can delay and split individual assignments (rather than the entire task) to resolve overallocations.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LevelingCanSplit</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the resource leveling function can cause splits on remaining work on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LevelingDelay</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The amount of time that a task is to be delayed from its early start date as a result of resource leveling.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PreLeveledStart</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The start date of a task as it was before resource leveling was done.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PreLeveledFinish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The finish date of a task as it was before resource leveling was done.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Hyperlink</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The title or explanatory text for a hyperlink associated with a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HyperlinkAddress</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The address for a hyperlink associated with a task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HyperlinkSubAddress</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The specific location in a document within a hyperlink associated with a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IgnoreResourceCalendar</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the scheduling of the task takes into account the calendars of the resources assigned to the task.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Notes</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">Notes entered about a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HideBar</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the Gantt bars and Calendar bars for a task are hidden.
+					
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Rollup</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the summary task bar displays rolled-up bars or whether information on the subtask Gantt bars will be rolled up to the summary task bar; must be set to True for subtasks to be rolled up to summary tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWS</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cumulative timephased baseline costs up to the status date or today's date; also known as budgeted cost of work performed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWP</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cumulative value of the task's timephased percent complete multiplied by the task's timephased baseline cost, up to the status date or today's date; also known as budgeted cost of work performed.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PhysicalPercentComplete</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The physical percent of the total work on a task that has been completed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EarnedValueMethod</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates the type of earned value method to use:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Use % complete</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Use physical % complete</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PredecessorUID (PredecessorLink)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID number for the predecessor tasks on which this task depends before it can be started or finished.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Type (PredecessorLink)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE"><table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">FF (finish-to-finish)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">FS (finish-to-start)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">SF (start-to-finish)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">SS (start-to-start)</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CrossProject (PredecessorLink)</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the task predecessor is part of another project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CrossProjectName (PredecessorLink)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The external predecessor project.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LinkLag (PredecessorLink)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The amount of lag.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LagFormat (PredecessorLink)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates the format for the amount of lag specified in PredecessorLag:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">em</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">eh</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">ed</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">ew</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">emo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">e%</td>
+</tr>
+<tr></tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">m?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">em?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">h?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">eh?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">d?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">ed?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">w?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">ew?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">mo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">emo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">e%?</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the extended attribute. </td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The field ID for the extended attribute.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Value (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The actual value of the extended attribute.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ValueID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The ID of the value in the extended attribute lookup table.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DurationFormat (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The duration format for the extended attribute:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">em</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">eh</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">ed</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">ew</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">emo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">e%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">21</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">m?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">em?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">h?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">eh?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">d?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">ed?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">w?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">ew?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">mo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">emo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">e%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">53</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TimephasedData (Baseline)</td><td bgcolor="#EEEEEE">TimePhased DataType</td><td bgcolor="#EEEEEE">The timephased data block associated with the task baseline.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Number (Baseline)</td><td bgcolor="#EEEEEE">intetger</td><td bgcolor="#EEEEEE">The unique number of the baseline data record.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Interim (Baseline)</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the baseline is an interim baseline.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Start (Baseline)</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The scheduled start date of the task when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Finish (Baseline)</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The scheduled finish date of the task when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Duration (Baseline)</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The scheduled duration of the task when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DurationFormat (Baseline)</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The format for expressing the Duration of the Task baseline:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">m </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">em </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">eh </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">ed </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">ew </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">emo </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">e% </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">21</td>
+<td class="TT" bgcolor="#FFFFFF">Null </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">m?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">em? </td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">h?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">eh?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">d?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">ed?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">w?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">ew?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">mo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">emo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">e%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">53</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EstimatedDuration (Baseline)</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the duration of the task is estimated.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Work (Baseline)</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The scheduled work for the task when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Cost (Baseline)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The projected cost of the task when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWS (Baseline)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cumulative timephased baseline costs up to the status date or today's date; also known as budgeted cost of work scheduled.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWP (Baseline)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cumulative value of the task's timephased percent complete multiplied by the task's timephased baseline cost, up to the status date or today's date; also known as budgeted cost of work performed.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID (OutlineCode)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the value in the outline code collection.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldID (OutlineCode)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The localized name of the field.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ValueID (OutlineCode)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID in the value list associated with the definition in the outline code collection.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TimephasedData</td><td bgcolor="#EEEEEE">TimePhased DataType</td><td bgcolor="#EEEEEE">The timephased data block associated with the task.</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="resources">Resource</a></h2><p class="T">The collection of resources that make up the project. There must be at least one resource in each <code>Resources</code> collection. This section represented as XML is as follows:</p><pre><code>	&lt;Resources&gt;
+		&lt;Resource&gt;
+			&lt;UID /&gt;
+			&lt;ID /&gt;
+			&lt;Name /&gt;
+			&lt;Type /&gt;
+			&lt;IsNull /&gt;
+			&lt;Initials /&gt;
+			&lt;Phonetics /&gt;
+			&lt;NTAccount /&gt;
+			&lt;MaterialLabel /&gt;
+			&lt;Code /&gt;
+			&lt;Group /&gt;
+			&lt;WorkGroup /&gt;
+			&lt;EmailAddress /&gt;
+			&lt;Hyperlink /&gt;
+			&lt;HyperlinkAddress /&gt;
+			&lt;HyperlinkSubAddress /&gt;
+			&lt;MaxUnits /&gt;
+			&lt;PeakUnits /&gt;
+			&lt;OverAllocated /&gt;
+			&lt;AvailableFrom /&gt;
+			&lt;AvailableTo /&gt;
+			&lt;Start /&gt;
+			&lt;Finish /&gt;
+			&lt;CanLevel /&gt;
+			&lt;AccrueAt /&gt;
+			&lt;Work /&gt;
+			&lt;RegularWork /&gt;
+			&lt;OvertimeWork /&gt;
+			&lt;ActualWork /&gt;
+			&lt;RemainingWork /&gt;
+			&lt;ActualOvertimeWork /&gt;
+			&lt;RemainingOvertimeWork /&gt;
+			&lt;PercentWorkComplete /&gt;
+			&lt;StandardRate /&gt;
+			&lt;StandardRateFormat /&gt;
+			&lt;Cost /&gt;
+			&lt;OvertimeRate /&gt;
+			&lt;OvertimeRateFormat /&gt;
+			&lt;OvertimeCost /&gt;
+			&lt;CostPerUse /&gt;
+			&lt;ActualCost /&gt;
+			&lt;ActualOvertimeCost /&gt;
+			&lt;RemainingCost /&gt;
+			&lt;RemainingOvertimeCost /&gt;
+			&lt;WorkVariance /&gt;
+			&lt;CostVariance /&gt;
+			&lt;SV /&gt;
+			&lt;CV /&gt;
+			&lt;ACWP /&gt;
+			&lt;CalendarUID /&gt;
+			&lt;Notes /&gt;
+			&lt;BCWS /&gt;
+			&lt;BCWP /&gt;
+			&lt;IsGeneric /&gt;
+			&lt;IsInactive /&gt;
+			&lt;ExtendedAttribute&gt;
+				&lt;UID /&gt;
+				&lt;FieldID /&gt;
+				&lt;Value /&gt;
+				&lt;ValueID /&gt;
+				&lt;DurationFormat /&gt;
+			&lt;/ExtendedAttribute&gt;
+			&lt;Baseline&gt;
+				&lt;Number /&gt;
+				&lt;Work /&gt;
+				&lt;Cost /&gt;
+				&lt;BCWS /&gt;
+				&lt;BCWP /&gt;
+			&lt;/Baseline&gt;
+			&lt;OutlineCode&gt;
+				&lt;UID /&gt;
+				&lt;FieldID /&gt;
+				&lt;ValueID /&gt;
+			&lt;/OutlineCode&gt;	
+			&lt;AvailabilityPeriods&gt;
+				&lt;AvailabilityPeriod&gt;
+					&lt;AvailableFrom /&gt;
+					&lt;AvailableTo /&gt;
+					&lt;AvailableUnits /&gt;
+				&lt;/AvailabilityPeriod&gt;
+			&lt;/AvailabilityPeriods&gt;
+			&lt;Rates&gt;
+				&lt;Rate&gt;
+					&lt;RatesFrom /&gt;
+					&lt;RatesTo /&gt;
+					&lt;RateTable /&gt;
+					&lt;StandardRate /&gt;
+					&lt;StandardRateFormat /&gt;
+					&lt;OvertimeRate /&gt;
+					&lt;OvertimeRateFormat /&gt;
+					&lt;CostPerUse /&gt;
+				&lt;/Rate&gt;
+			&lt;/Rates&gt;
+			&lt;TimephasedData /&gt;
+		&lt;/Resource&gt;
+	&lt;/Resources&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The position identifier of the resource within the list of resources.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Name</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The name of the resource; must be unique within the enterprise whether or not the resource is active.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Type</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The resource type (work or material):
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Material (consumable supplies like steel, concrete, or soil)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Work (people and equipment)</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IsNull</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the resource is a null resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Initials</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The initials of a resource name.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Phonetics</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">Contains phonetic information in either Hiragana or Katakana for resource names; used only in the Japanese version of Microsoft Project.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">NTAccount</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The Windows NT Account name for a resource; for example: <i>domain name\user name</i>.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MaterialLabel</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The unit of measurement entered for a material resource, for example, tons, boxes, or cubic yards. This is used in conjunction with the material resource's Assignment Units and is only available if Type is set to 1.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Code</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">A code, abbreviation, or number entered as part of a resource's information.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Group</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The name of the group the resource belongs to.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WorkGroup</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The messaging method used to communicate with a project team:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Default</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">None; workgroup messaging is not used on this project</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">E-mail only</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Web (Microsoft Project Web Access)</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">EmailAddress</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The e-mail address of a resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Hyperlink</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The title or explanatory text for a hyperlink associated with a resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HyperlinkAddress</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The address for a hyperlink associated with a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HyperlinkSubAddress</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The specific location in a document within a hyperlink associated with a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">MaxUnits</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The maximum percentage, or number of units, that represents the maximum capacity that a resource is available to accomplish any tasks during the current time period:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">.00-.99</td>
+<td class="TT" bgcolor="#FFFFFF">Resource is 0%-99% available for the specified task</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1.00</td>
+<td class="TT" bgcolor="#FFFFFF">Resource is 100% available for the specified task (default)</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PeakUnits</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The maximum percentage, or number of units, that a resource is assigned at any one time for all tasks assigned to the resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OverAllocated</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a resource is assigned to do more work on all assigned tasks than can be done within the resource's normal work capacity.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AvailableFrom</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The starting date that a resource is available for work at the units specified for the current time period.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AvailableTo</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The ending date that a resource will be available for work at the units specified for the current time period.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Start		</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a resource is scheduled to start work on all assigned tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Finish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that a resource is scheduled to complete work on all assigned tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CanLevel</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether resource leveling can be done with a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AccrueAt</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates how and when resource standard and overtime costs are to be charged, or accrued, to the cost of a task:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Start; costs are accrued as soon as the task starts, as indicated by a date entered in the ActualStart field.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">End; costs are not incurred until remaining work is zero.</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Pro-rated (default); costs accrue as work is scheduled to occur and as actual work is reported.</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Work</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The total amount of work scheduled to be performed by a resource on all assigned tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RegularWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The total amount of non-overtime work scheduled to be performed for all assignments assigned to a resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of overtime to be performed for all tasks assigned to a resource and charged at the resource's overtime rate.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The actual amount of work that has already been done for all assignments assigned to a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of time, or person-hours, still required by a resource to complete all assigned tasks.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualOvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The actual amount of overtime work already performed for all assignments assigned to a resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingOvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The remaining amount of overtime required by a resource to complete all tasks.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PercentWorkComplete</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The current status of all tasks assigned to a resource, expressed as the total percentage of the resource's work that has been completed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StandardRate</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The rate of pay for regular, non-overtime work performed by a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StandardRateFormat</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The units used to display the standard rate:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">y</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Cost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The total scheduled cost for a resource for all assigned tasks, based on costs already incurred for work performed by the resource on all assigned tasks in addition to the costs planned for all remaining work.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeRate</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The rate of pay for overtime work performed by a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeRateFormat</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The units used to display the standard rate:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">y</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The total overtime cost for a resource on all assigned tasks.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CostPerUse</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cost that accrues each time a resource is used.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The sum of costs incurred for the work already performed by a resource for all assigned tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualOvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cost incurred for overtime work already performed by a resource for all assigned tasks.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The remaining scheduled expense that will be incurred in completing the remaining work assigned to a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingOvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The remaining scheduled overtime expense of a resource that will be incurred in completing the remaining planned overtime work by a resource on all assigned tasks.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WorkVariance</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The difference between a resource's total baseline work and the currently scheduled work.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CostVariance</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The difference between the baseline cost and total cost for a resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">SV</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The difference in cost between the current progress and the baseline plan of all the resource's assigned tasks up to the status date or today's date; also called Earned Value Schedule Variance.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CV</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The difference between how much it should have cost for the resource to achieve the current level of completion, and how much it has actually cost to achieve the current level of completion, up to the status date or today's date.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ACWP</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The sum of actual cost of work performed (ACWP) values for all of a resource's assignments, up to the status date or today's date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CalendarUID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the calendar associated with this resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Notes</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Notes about a resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWS</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The rolled-up summary of a resource's BCWS values for all assigned tasks; also called budgeted cost of work scheduled.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWP</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The rolled-up summary of a resource's BCWP values for all assigned tasks, calculated up to the status date or today's date; also called budgeted cost of work performed.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IsGeneric</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the resource is an enterprise-level generic resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">IsInactive</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the resource is an Active (Enabled) or Inactive user.
+					</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the extended attribute. </td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The field ID for the extended attribute.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Value (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The actual value of the extended attribute.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ValueID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The ID of the value in the extended attribute lookup table.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DurationFormat (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The duration format for the extended attribute:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">em</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">eh</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">ed</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">ew</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">emo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">e%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">21</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">m?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">em?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">h?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">eh?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">d?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">ed?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">w?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">ew?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">mo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">emo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">e%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">53</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Number (Baseline)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique number for the baseline data record.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Work (Baseline)</td><td bgcolor="#EEEEEE">float</td><td bgcolor="#EEEEEE">The work assigned to the resource when the baseline is saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Cost (Baseline)</td><td bgcolor="#EEEEEE">float</td><td bgcolor="#EEEEEE">The projected cost for the resource when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWS (Baseline)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The budgeted cost of work performed for the resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWP (Baseline)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The budgeted cost of the work performed by the resource on the project to-date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID (OutlineCode)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the value in the outline code collection.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldID (OutlineCode)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The localized name of the field.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ValueID (OutlineCode)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID in the value list associated with the definition in the outline code collection.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AvailableFrom (AvailabiltyPeriod)</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The starting date that a resource is available for work at the units specified for the current time period.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AvailableTo (AvailabiltyPeriod)</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The ending date that a resource will be available for work at the units specified for the current time period.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">AvailableUnits (AvailabiltyPeriod)</td><td bgcolor="#EEEEEE">float</td><td bgcolor="#EEEEEE">The percentage that the resource is available during the specified time period.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RatesFrom (Rate)</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date the rate becomes available.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RatesTo (Rate)</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The last date the rate is available.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RateTable (Rate)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique identifier of the cost rate table for the resource:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">A</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">B</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">C</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">D</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">E</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StandardRate (Rate)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The standard rate for the resource for the defined period.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StandardRateFormat (Rate)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The units used to display the standard rate:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">y</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeRate (Rate)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The overtime rate for the resource for the defined period</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeRateFormat (Rate)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The units used to display the overtime rate:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">y</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CostPerUse (Rate)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cost per use of the resource. This value is as of the current date if a rate table exists for the resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TimephasedData</td><td bgcolor="#EEEEEE">TimePhased DataType</td><td bgcolor="#EEEEEE">The timephased data block associated with the task.</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+<h2><a name="assignments">Assignment</a></h2><p class="T">The collection of assignments that make up the project. There must be at least one assignment in each <code>Assignments</code> collection. This section represented as XML is as follows:</p><pre><code>	&lt;Assignments&gt;
+		&lt;Assignment&gt;
+			&lt;UID /&gt;
+			&lt;TaskUID /&gt;
+			&lt;ResourceUID /&gt;
+			&lt;PercentWorkComplete /&gt;
+			&lt;ActualCost /&gt;
+			&lt;ActualFinish /&gt;
+			&lt;ActualOvertimeCost /&gt;
+			&lt;ActualOvertimeWork /&gt;
+			&lt;ActualStart /&gt;
+			&lt;ActualWork /&gt;
+			&lt;ACWP /&gt;
+			&lt;Confirmed /&gt;
+			&lt;Cost /&gt;
+			&lt;CostRateTable /&gt;
+			&lt;CostVariance /&gt;
+			&lt;CV /&gt;
+			&lt;Delay /&gt;
+			&lt;Finish /&gt;
+			&lt;FinishVariance /&gt;
+			&lt;Hyperlink /&gt;
+			&lt;HyperlinkAddress /&gt;
+			&lt;HyperlinkSubAddress /&gt;
+			&lt;WorkVariance /&gt;
+			&lt;HasFixedRateUnits /&gt;
+			&lt;FixedMaterial /&gt;
+			&lt;LevelingDelay /&gt;
+			&lt;LinkedFields /&gt;
+			&lt;Milestone /&gt;
+			&lt;Notes /&gt;
+			&lt;Overallocated /&gt;
+			&lt;OvertimeCost /&gt;
+			&lt;OvertimeWork /&gt;
+			&lt;RegularWork /&gt;
+			&lt;RemainingCost /&gt;
+			&lt;RemainingOvertimeCost /&gt;
+			&lt;RemainingOvertimeWork /&gt;
+			&lt;RemainingWork /&gt;
+			&lt;ResponsePending /&gt;
+			&lt;Start /&gt;
+			&lt;Stop /&gt;
+			&lt;Resume /&gt;
+			&lt;StartVariance /&gt;
+			&lt;Units /&gt;
+			&lt;UpdateNeeded /&gt;
+			&lt;VAC /&gt;
+			&lt;Work /&gt;
+			&lt;WorkContour /&gt;
+			&lt;BCWS /&gt;
+			&lt;BCWP /&gt;
+			&lt;ExtendedAttribute&gt;
+				&lt;UID /&gt;
+				&lt;FieldID /&gt;
+				&lt;Value /&gt;
+				&lt;ValueID /&gt;
+				&lt;DurationFormat /&gt;
+			&lt;/ExtendedAttribute&gt;
+			&lt;Baseline&gt;
+				&lt;TimephasedData /&gt;
+				&lt;Number /&gt;
+				&lt;Start /&gt;
+				&lt;Finish /&gt;
+				&lt;Work /&gt;
+				&lt;Cost /&gt;
+				&lt;BCWS /&gt;
+				&lt;BCWP /&gt;
+			&lt;/Baseline&gt;
+			&lt;TimephasedDataType /&gt;
+		&lt;/Assignment&gt;
+	&lt;/Assignments&gt;</code></pre><p></p><table cellpadding="4" cellspacing="2">
+<tbody><tr bgcolor="#AAAAAA"><th>&nbsp;</th><th width="275">Column Name</th><th>Data Type</th><th>Description</th></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TaskUID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ResourceUID</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the resource.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">PercentWorkComplete</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The current status of an assignment, expressed as the percentage of the assignment's work that has been completed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cost incurred for work already performed by a resource on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualFinish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time when an assignment was actually completed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualOvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The cost incurred for overtime work already performed by a resource on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualOvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The actual amount of overtime work already performed by a resource on an assigned task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualStart</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that an assignment actually began.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ActualWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of work that has already been done by a resource on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ACWP</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The costs incurred for work already performed by a resource on a task up to the project status date or today's date; also called actual cost of work performed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Confirmed</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a resource assigned to a task has accepted or rejected the task assignment in response to a message assigning tasks to the resource.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Cost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The total scheduled (or projected) cost for an assignment
+				based on costs already incurred for work performed by the resource on a task, in addition to the costs planned for the remaining work for the assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CostRateTable</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates which cost rate table to use for a resource on an assignment:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">A (default)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">B</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">C</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">D</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">E</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CostVariance</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The difference between the baseline cost and total cost for an assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">CV</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The difference between how much it should have cost to achieve the current level of completion on the assignment and how much it has actually cost to achieve the current level of completion up to the status date or today's date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Delay</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The amount of time a resource is to wait after the task start date before starting work on an assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Finish</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that an assigned resource is scheduled to complete work on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FinishVariance</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The difference between an assignment's baseline finish date and its scheduled finish date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Hyperlink</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The title or explanatory text for a hyperlink associated with an assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HyperlinkAddress</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The address for a hyperlink associated with an assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HyperlinkSubAddress</td><td bgcolor="#EEEEEE">string(512)</td><td bgcolor="#EEEEEE">The specific location in a document within a hyperlink associated with an assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WorkVariance</td><td bgcolor="#EEEEEE">Float</td><td bgcolor="#EEEEEE">The difference between an assignment's baseline work and the currently scheduled work.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">HasFixedRateUnits</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether an assignment has fixed rate units.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FixedMaterial</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the consumption of the assigned material resource occurs in a single, fixed amount.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LevelingDelay</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The amount of time that an assignment is to be delayed from the scheduled start date as a result of resource leveling.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">LinkedFields</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether there are OLE links to the assignment.
+				
+					</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Milestone</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether the assignment task is a milestone.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Notes</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">Notes about an assignment.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Overallocated</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a resource is assigned to more work on a specific task than can be done within the resource's normal working capacity.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The total overtime cost for a resource assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">OvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of overtime to be performed by a resource on a task; charged at the resource's overtime rate.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RegularWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The total amount of non-overtime work scheduled to be performed by a resource assigned to a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The costs associated with completing all remaining scheduled work by any resources on a specific task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingOvertimeCost</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The remaining scheduled overtime expense for an assignment.
+				</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingOvertimeWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of overtime work that remains on an assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">RemainingWork</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The amount of time required by a resource assigned to a task to complete an assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ResponsePending</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether an answer has been received from a message sent to a resource assigned to a task notifying the resource of the assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Start</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date and time that an assigned resource is scheduled to begin working on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Stop</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date the assignment was stopped.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Resume</td><td bgcolor="#EEEEEE">datetime</td><td bgcolor="#EEEEEE">The date the assignment was resumed.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">StartVariance</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The difference between an assignment's baseline start date and its currently scheduled start date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Units</td><td bgcolor="#EEEEEE">float</td><td bgcolor="#EEEEEE">The number of units for which a resource is assigned to a task, expressed as a percentage of 100 %, assuming a resource's MaxUnits value is 100%.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UpdateNeeded</td><td bgcolor="#EEEEEE">Boolean</td><td bgcolor="#EEEEEE">Indicates whether a TeamUpdate message should be sent to the resource assigned to a task because of changes to the start date, finish date, or resource reassignments.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">VAC</td><td bgcolor="#EEEEEE">float</td><td bgcolor="#EEEEEE">The variance at completion (VAC) between the baseline cost and the total cost for an assignment on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Work</td><td bgcolor="#EEEEEE">duration</td><td bgcolor="#EEEEEE">The total amount of work scheduled to be performed by a resource on a task.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">WorkContour</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">Indicates how work for an assignment is to be distributed across the duration of the assignment:
+<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">0</td>
+<td class="TT" bgcolor="#FFFFFF">Flat (default)</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">1</td>
+<td class="TT" bgcolor="#FFFFFF">Back Loaded</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">2</td>
+<td class="TT" bgcolor="#FFFFFF">Front Loaded</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">Double Peak</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">Early Peak</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">Late Peak</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">Bell</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">Turtle</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">Contoured</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWS</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The budgeted cost of work on the assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWP</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The budgeted cost of the work performed on the assignment to-date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">UID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The unique ID for the extended attribute.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">FieldID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The field ID for the extended attribute.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Value (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The actual value of the extended attribute.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">ValueID (ExtendedAttribute)</td><td bgcolor="#EEEEEE">integer</td><td bgcolor="#EEEEEE">The ID of the value in the extended attribute lookup table.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">DurationFormat (ExtendedAttribute)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The duration format for the extended attribute:<table cellpadding="2" cellspacing="2" bgcolor="#EEEEEE" border="0"><tbody><tr><td class="TT" bgcolor="#FFFFFF">3</td>
+<td class="TT" bgcolor="#FFFFFF">m</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">4</td>
+<td class="TT" bgcolor="#FFFFFF">em</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">5</td>
+<td class="TT" bgcolor="#FFFFFF">h</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">6</td>
+<td class="TT" bgcolor="#FFFFFF">eh</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">7</td>
+<td class="TT" bgcolor="#FFFFFF">d</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">8</td>
+<td class="TT" bgcolor="#FFFFFF">ed</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">9</td>
+<td class="TT" bgcolor="#FFFFFF">w</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">10</td>
+<td class="TT" bgcolor="#FFFFFF">ew</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">11</td>
+<td class="TT" bgcolor="#FFFFFF">mo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">12</td>
+<td class="TT" bgcolor="#FFFFFF">emo</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">19</td>
+<td class="TT" bgcolor="#FFFFFF">%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">20</td>
+<td class="TT" bgcolor="#FFFFFF">e%</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">21</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">35</td>
+<td class="TT" bgcolor="#FFFFFF">m?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">36</td>
+<td class="TT" bgcolor="#FFFFFF">em?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">37</td>
+<td class="TT" bgcolor="#FFFFFF">h?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">38</td>
+<td class="TT" bgcolor="#FFFFFF">eh?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">39</td>
+<td class="TT" bgcolor="#FFFFFF">d?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">40</td>
+<td class="TT" bgcolor="#FFFFFF">ed?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">41</td>
+<td class="TT" bgcolor="#FFFFFF">w?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">42</td>
+<td class="TT" bgcolor="#FFFFFF">ew?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">43</td>
+<td class="TT" bgcolor="#FFFFFF">mo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">44</td>
+<td class="TT" bgcolor="#FFFFFF">emo?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">51</td>
+<td class="TT" bgcolor="#FFFFFF">%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">52</td>
+<td class="TT" bgcolor="#FFFFFF">e%?</td>
+</tr>
+<tr><td class="TT" bgcolor="#FFFFFF">53</td>
+<td class="TT" bgcolor="#FFFFFF">Null</td>
+</tr>
+</tbody></table>
+</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TimephasedData (Baseline)</td><td bgcolor="#EEEEEE">TimePhased DataType</td><td bgcolor="#EEEEEE">The timephased data associated with the baseline.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Number (Baseline)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The unique number for the baseline data record.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Start (Baseline)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The scheduled start date of the assignment when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Finish (Baseline)</td><td bgcolor="#EEEEEE">string</td><td bgcolor="#EEEEEE">The planned finish date for assignments.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Work (Baseline)</td><td bgcolor="#EEEEEE">float</td><td bgcolor="#EEEEEE">The total amount of work scheduled on the assignment when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">Cost (Baseline)</td><td bgcolor="#EEEEEE">float</td><td bgcolor="#EEEEEE">The total projected cost of the assignment when the baseline was saved.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWS (Baseline)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The budgeted cost of work on the assignment.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">BCWP (Baseline)</td><td bgcolor="#EEEEEE">decimal</td><td bgcolor="#EEEEEE">The budgeted cost of the work performed on the assignment to-date.</td></tr>
+<tr><td bgcolor="#EEEEEE"><span class="ttl"></span></td><td bgcolor="#EEEEEE">TimephasedData</td><td bgcolor="#EEEEEE">TimePhased DataType</td><td bgcolor="#EEEEEE">The timephased data block associated with the task.</td></tr>
+</tbody></table>
+<p class="T"><a href="http://my.fit.edu/~locurcio/20-MS%20Project-student%20trial/DOCS/1033/PROJXML.HTM#top">Top</a></p>
+
+
+</body></html>
