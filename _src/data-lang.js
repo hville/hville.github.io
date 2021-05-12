@@ -2,7 +2,7 @@ import langswap from './lang-swap.js'
 
 const	H = document.documentElement
 
-customElements.define('lang-pick', class extends HTMLElement {
+customElements.define('data-lang', class extends HTMLElement {
   constructor() {
     super()
 		const langs = this.textContent.split(/\s+/)
