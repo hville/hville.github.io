@@ -16,6 +16,10 @@ input[type="radio"][name=langswap]:checked+span {
 	border-radius: 3px;
 }
 
+*[contenteditable=true] {
+	-webkit-user-modify: read-write-plaintext-only;
+}
+
 /*
 https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css
 https://cdn.jsdelivr.net/npm/water.css@2/out/water.css
