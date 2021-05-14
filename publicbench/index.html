@@ -39,7 +39,7 @@
 <table>
 <!-- TODO table caption ? -->
 <colgroup>
-	<col style="width:70%;">
+	<col style="width:75%;">
 	<col>
 </colgroup>
 <thead>
@@ -81,36 +81,26 @@
 
 import {cast, frame, $, $$} from '../_src/inhtml.js'
 import hashData from '../_src/hash-data.js'
+import editable from '../_src/editable.js'
 
 const init = $('#init'),
 			tbody = $('tbody'),
-			rows = tbody.children,
-			hasEOL = /\n$/,
-			changed = new WeakSet
+			rows = tbody.children
 
 // row factory
 const makeRow = cast('template', ({row, code, time}, codeVal='') => {
+	editable(code)
 	code.textContent = codeVal
-
 	time.update = res => time.textContent = !res ? '' : res.IQR.map( v => v.toPrecision(3) ).join(' - ')
-	code.oninput = oninput
-	// to simulate onchange
-	code.onblur = () => {
-		if (!changed.delete(code)) return
+	code.onchange = () => {
 		time.textContent = ''
 		if (!code.textContent) row.remove()
-		if (code.textContent && !row.nextSibling) row.after(makeRow())
+		else if (!row.nextSibling) row.after(makeRow())
 		save()
 	}
-
 	row.$ids = {code, time}
 	return row
 })
-function oninput(evt) {
-	const el = evt.currentTarget
-	changed.add(el)
-	while(el.children.length) el.children[0].outerHTML = hasEOL.test(el.textContent) ? '\n' : '\n\n'
-}
 
 
 // simulation button handler
@@ -126,8 +116,8 @@ $('#run').onclick = () => {
 	.finally( () => sandbox.end() )
 }
 
-// load
-function loadData(dataString) {
+// save / load
+const saveData = hashData(dataString => {
 	if (rows.length) tbody.textContent = '' //reset rows
 	if (dataString) {
 		const data = dataString.split('\x00')
@@ -136,22 +126,16 @@ function loadData(dataString) {
 	}
 	// one last empty line to allow adding new lines
 	tbody.appendChild( makeRow() )
-}
-
-// save
-const saveData = hashData(loadData)
+})
 
 function save() {
+	//TODO might be easier to to all rows and replace last with init
 	const values = [init.textContent]
 	//get all rows but the last
 	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
 	saveData( values.join('\x00') )
 }
-
-init.oninput = oninput
-init.onblur = () => {
-	if (!changed.delete(init)) return
-	save()
-}
+editable(init)
+init.onchange = save
 </script>
 </body>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>monte carlo</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="in browser benchmarking">
+	<link rel="stylesheet" href="../_src/main.css">
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a href="../">&#9884;</a> schem.ist - <span data-lang>monte carlo simulation // simulation monte carlo</span></h1>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<details>
+	<summary data-lang>templates and examples // exemples de modèles</summary>
+	<li data-lang><a lang=en href="./#en/X5/75D8Wa48'7194u0~iA:zuB=n/FSt7y2@/fJ6ZCj*R1y*C3N-DGBJa@5*~:'L/!ZEwXXrBI_aGtq~hO~ySlsWk!CMY/3FfnuDaM')!Omo3aM5co">
+		variable rate and duration investment
+	</a><a lang=fr href="./#fr/X5/75D8Wa48'7194u0~iA:zuB=n/FSt7y2@/fJ6ZCj*R1y*C3N-DGBJa@5*~:'L/!ZEwXXrBI_aGtq~hO~ySlsWk!CMY/3FfnuDaM')!Omo3aM5co">
+		investissement à durée et rendement variable
+	</a></li>
+</details>
+
+<h4 data-lang>imports and setup // imports et initialisation</h4>
+
+
+<table>
+<!-- TODO table caption ? -->
+<colgroup>
+	<col style="width:15%;">
+	<col style="width:65%;">
+	<col style="width: 5%;">
+	<col style="width:15%;">
+</colgroup>
+<thead>
+	<tr>
+		<th>variable</th>
+		<th>code</th>
+		<th>?</th>
+		<th data-lang>results // résultats</th>
+	</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<template>
+	<tr id=row>
+		<td>
+			<pre><code id=name contenteditable=true></code></pre>
+		</td>
+		<td>
+			<pre><code id=code contenteditable=true></code></pre>
+		</td>
+		<td>
+			<input id=type type=checkbox>
+		</td>
+		<td id=span style="text-align: center; vertical-align: middle;"></td>
+	</tr>
+</template>
+
+<button id=run data-lang>
+	<span lang=en>run tests! (takes a few seconds)</span>
+	<span lang=fr>exécution! (quelques secondes)</span>
+</button>
+
+<script type=module>
+
+import {cast, $, $$} from '../_src/inhtml.js'
+import hashData from '../_src/hash-data.js'
+import SIM from 'https://cdn.skypack.dev/@hugov/correl-range@0.1.0'
+import editable from '../_src/editable.js'
+
+const tbody = $('tbody'),
+			rows = tbody.children
+
+// row factory
+const makeRow = cast('template', ({row, name, code, type, span}, data='') => {
+	editable(name)
+	editable(code)
+	if (data) [name.textContent, code.textContent] = data.split('\x01')
+	else name.textContent = code.textContent = data
+	span.update = res => span.textContent = !res ? '' : [.25, .75].map( p => res.Q(p).toPrecision(3) ).join(' ')
+
+	name.onchange = code.onchange = () => {
+		span.textContent = ''
+		if (!code.textContent && !name.textContent) row.remove()
+		else if (!row.nextSibling) row.after(makeRow())
+		save()
+	}
+
+	row.$ids = {name, code, span}
+	return row
+})
+
+// save / load
+const saveData = hashData(dataString => {
+	if (rows.length) tbody.textContent = '' //reset rows
+	if (dataString) dataString.split('\x00').forEach( data => { if (data) tbody.append(makeRow(data)) } )
+	// one last empty line to allow adding new lines
+	tbody.appendChild( makeRow() )
+})
+
+function save() {
+	const values = []
+	//get all rows but the last
+	for (let i=0; i<rows.length-1; ++i) {
+		const {name, code} = rows[i].$ids,
+					data = `${ name.textContent }\x01${ code.textContent }`
+		values.push(data.length === 1 ? '' : data)
+	}
+	saveData( values.join('\x00') )
+}
+
+// simulation button handler
+$('#run').onclick = () => {
+	//const res = SIM()
+	console.log('click')
+}
+
+</script>
+</body>
