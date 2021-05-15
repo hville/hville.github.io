@@ -7,7 +7,7 @@ customElements.define('data-lang', class extends HTMLElement {
     super()
 		const langs = this.textContent.split(/\s+/)
 		this.innerHTML = langs.map(
-			l => `<label><input type=radio name=langswap value=${l}><span>${l}</span></label>`
+			l => `<label><input type=radio name=datalang value=${l}><span>${l}</span></label>`
 		).join(' ')
 
 		this.querySelectorAll('input').forEach( el => {

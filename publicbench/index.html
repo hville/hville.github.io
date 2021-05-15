@@ -59,8 +59,8 @@
 	</tr>
 	<tr>
 		<th>code</th>
-		<th style="text-align: center; vertical-align: middle;" data-lang>
-			result in nanoseconds Q25-Q75 // résultats en nanosecondes Q25-Q75
+		<th style="text-align: center; vertical-align: middle; white-space: pre-wrap;" data-lang>
+			result in nanoseconds ( Q25   Q75 ) // résultats en nanosecondes ( Q25   Q75 )
 		</th>
 	</tr>
 </thead>
@@ -73,7 +73,9 @@
 		<td>
 			<pre><code id=code contenteditable=true></code></pre>
 		</td>
-		<td id=time style="text-align: center; vertical-align: middle;"></td>
+		<td style="text-align: center; vertical-align: middle;">
+			<out id=time style="white-space: pre-wrap;"></out>
+		</td>
 	</tr>
 </template>
 
@@ -91,7 +93,7 @@ const init = $('#init'),
 const makeRow = cast('template', ({row, code, time}, codeVal='') => {
 	editable(code)
 	code.textContent = codeVal
-	time.update = res => time.textContent = !res ? '' : res.IQR.map( v => v.toPrecision(3) ).join(' - ')
+	time.update = res => time.textContent = !res ? '' : `( ${ res.IQR.map( v => v.toPrecision(3) ).join('   ') } )`
 	code.onchange = () => {
 		time.textContent = ''
 		if (!code.textContent) row.remove()

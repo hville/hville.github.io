@@ -4,13 +4,15 @@ body {
 	max-width: initial;
 }
 
-input[type="radio"][name=langswap] {
+input[type="radio"][name=datalang] {
 	display:none;
 }
-input[type="radio"][name=langswap]+span {
-	font-family: monospace;
+input[type="radio"][name=datalang]+span {
+	font-family: "Lucida Console", monospace;
+	font-weight: 200;
+	font-size: 80%;
 }
-input[type="radio"][name=langswap]:checked+span {
+input[type="radio"][name=datalang]:checked+span {
 	background: #161f27;
 	color: #ffbe85;
 	border-radius: 3px;
