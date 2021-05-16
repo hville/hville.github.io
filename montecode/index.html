@@ -19,30 +19,32 @@
 
 <details>
 	<summary data-lang>templates and examples // exemples de modèles</summary>
-	<li data-lang><a lang=en href="./#en/X5/75D8Wa48'7194u0~iA:zuB=n/FSt7y2@/fJ6ZCj*R1y*C3N-DGBJa@5*~:'L/!ZEwXXrBI_aGtq~hO~ySlsWk!CMY/3FfnuDaM')!Omo3aM5co">
+	<li data-lang><a lang=en href="./#en/1*Kie0U9Kd0O,g7!nrR_QP4b+FEPlz,XEpV8gz=Ewc!os$7ilHx'CITw3u3*f5(sySzudR3Ox(n6oNtjnk=byGjUb_y7.KwJLzi8-=,Bm+.jGD">
 		variable rate and duration investment
-	</a><a lang=fr href="./#fr/X5/75D8Wa48'7194u0~iA:zuB=n/FSt7y2@/fJ6ZCj*R1y*C3N-DGBJa@5*~:'L/!ZEwXXrBI_aGtq~hO~ySlsWk!CMY/3FfnuDaM')!Omo3aM5co">
+	</a><a lang=fr href="./#fr/1*Kie0U9Kd0O,g7!nrR_QP4b+FEPlz,XEpV8gz=Ewc!os$7ilHx'CITw3u3*f5(sySzudR3Ox(n6oNtjnk=byGjUb_y7.KwJLzi8-=,Bm+.jGD">
 		investissement à durée et rendement variable
 	</a></li>
 </details>
-
-<h4 data-lang>imports and setup // imports et initialisation</h4>
-
+<!--
+	TODO
+	instruction
+	single code block instead of lines
+	no table
+	graph
+ -->
 
 <table>
 <!-- TODO table caption ? -->
 <colgroup>
-	<col style="width:15%;">
-	<col style="width:65%;">
-	<col style="width: 5%;">
-	<col style="width:15%;">
+	<col style="width:75%;">
+	<col>
 </colgroup>
 <thead>
 	<tr>
-		<th>variable</th>
 		<th>code</th>
-		<th>?</th>
-		<th data-lang>results // résultats</th>
+		<th style="text-align: center; vertical-align: middle;">
+			<button id=run data-lang>results // résultats</button>
+		</th>
 	</tr>
 </thead>
 <tbody></tbody>
@@ -51,22 +53,13 @@
 <template>
 	<tr id=row>
 		<td>
-			<pre><code id=name contenteditable=true></code></pre>
-		</td>
-		<td>
 			<pre><code id=code contenteditable=true></code></pre>
 		</td>
-		<td>
-			<input id=type type=checkbox>
+		<td style="text-align: center; vertical-align: middle;">
+			<out id=span style="white-space: pre-wrap;"></out>
 		</td>
-		<td id=span style="text-align: center; vertical-align: middle;"></td>
 	</tr>
 </template>
-
-<button id=run data-lang>
-	<span lang=en>run tests! (takes a few seconds)</span>
-	<span lang=fr>exécution! (quelques secondes)</span>
-</button>
 
 <script type=module>
 
@@ -74,26 +67,25 @@ import {cast, $, $$} from '../_src/inhtml.js'
 import hashData from '../_src/hash-data.js'
 import SIM from 'https://cdn.skypack.dev/@hugov/correl-range@0.1.0'
 import editable from '../_src/editable.js'
+import parse from './parse.js'
 
 const tbody = $('tbody'),
 			rows = tbody.children
 
 // row factory
-const makeRow = cast('template', ({row, name, code, type, span}, data='') => {
-	editable(name)
+const makeRow = cast('template', ({row, code, span}, data='') => {
 	editable(code)
-	if (data) [name.textContent, code.textContent] = data.split('\x01')
-	else name.textContent = code.textContent = data
+	code.textContent = data
 	span.update = res => span.textContent = !res ? '' : [.25, .75].map( p => res.Q(p).toPrecision(3) ).join(' ')
 
-	name.onchange = code.onchange = () => {
+	code.onchange = () => {
 		span.textContent = ''
-		if (!code.textContent && !name.textContent) row.remove()
+		if (!code.textContent) row.remove()
 		else if (!row.nextSibling) row.after(makeRow())
-		save()
+		saveData( getRows().join('\x00') )
 	}
 
-	row.$ids = {name, code, span}
+	row.$ids = {code, span}
 	return row
 })
 
@@ -105,21 +97,27 @@ const saveData = hashData(dataString => {
 	tbody.appendChild( makeRow() )
 })
 
-function save() {
+function getRows() {
 	const values = []
 	//get all rows but the last
-	for (let i=0; i<rows.length-1; ++i) {
-		const {name, code} = rows[i].$ids,
-					data = `${ name.textContent }\x01${ code.textContent }`
-		values.push(data.length === 1 ? '' : data)
-	}
-	saveData( values.join('\x00') )
+	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
+	return values
 }
 
 // simulation button handler
+const inRE = /[LNUW]\([^)]\)/g
 $('#run').onclick = () => {
-	//const res = SIM()
-	console.log('click')
+	try {
+		const fcn = parse(getRows()),
+					res = SIM(fcn).run(50_000).stats
+		Object.keys(res).forEach( k => {
+			const span = `( ${res[k].Q(.25).toPrecision(3)}   ${res[k].Q(.75).toPrecision(3)} )`
+			console.log(k, fcn[k], span)
+			rows[fcn[k]].$ids.span.textContent = span
+		})
+	} catch (e) {
+		console.log('fail', e)
+	}
 }
 
 </script>

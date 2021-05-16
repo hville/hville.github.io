@@ -2,7 +2,11 @@
 const langRE = /(?<=^#)[^/]*/,
 			H = document.documentElement,
 			div = '//'
+
 /*
+TODO save in local storage to avoid loosing language between links and to simblify links
+
+
 Select the node that will be observed for mutations
 align hash and html.lang
 */
