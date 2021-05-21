@@ -100,19 +100,43 @@ function listener(event) {
 
 //TODO not tested or documented
 const ISMOD = /^[\s]*import[\s'"`*{;]/
-export function frame(func, init='', attributes=ISMOD.test(init) ? 'type=module' : '') {
-	const frm = D.createElement('iframe')
-	frm.hidden = true
-	frm.sandbox = 'allow-scripts allow-same-origin'
-	frm.srcdoc = `<script ${ attributes }>${''+init}; window.framedFunction=${''+func}<\/script>` //escape closing tag for html inserts
-	const framed = new Promise( (p, f) => {
-		frm.onload = () => p(frm.contentWindow.framedFunction.bind(frm.contentWindow))
-		frm.onerror = f
-	})
-	D.body.appendChild(frm)
 
-	return {
-		run: async (...args) => (await framed)(...args),
-		end: () => void frm.remove()
-	}
+export function frame(func, init='', attributes=ISMOD.test(init) ? 'type=module' : '') {
+/*
+	SANDBOX
+*/
+const frm = D.createElement('iframe')
+frm.hidden = true
+frm.sandbox = 'allow-scripts'
+// script tag js content
+const code = `
+const func = eval(${ func })
+window.addEventListener('message', evt => {
+const W = evt.source
+try {
+	W.postMessage([func.apply(this,evt.data)], evt.origin)
+} catch (err) {
+	console.log('catch')
+	W.postMessage([,err.message], evt.origin)
+}})`
+// script tag html
+frm.srcdoc = `<script ${ attributes }>${init};${code}<\/script>` //escape closing tag for html inserts
+/*
+	CLIENT
+	todo reject promise on error?
+*/
+const Q = [],
+			fW = new Promise( p => frm.onload = () => p(frm.contentWindow) )
+window.addEventListener('message', evt => { if (evt.origin==='null' && evt.source===frm.contentWindow) {
+	evt.data[1] ? Q.shift()[1](evt.data[1]) : Q.shift()[0](evt.data[0])
+}})
+D.body.appendChild(frm)
+
+return {
+	run: (...args) => new Promise( async (p,f) => {
+		Q.push([p,f])
+		;(await fW).postMessage(args, '*')
+	}),
+	end: () => void frm.remove()
+}
 }
