@@ -60,7 +60,7 @@ Starting to think that *node.js* is a mixed blessing but going for *deno.js* for
   * served as-is, bare imports not resolved
   * top level await not allowed
 * failed sometimes: [cdn.jsdelivr.net](https://cdn.jsdelivr.net)
-  * `/npm/[@scope/]name[@version][/file][+esm]`
+  * `/_npm/[@scope/]name[@version][/file][+esm]`
   * minified
   * couldn't find the requested file - likely an issue with bare imports or top level await
 * failed sometimes: [cdn.skypack.dev](https://cdn.skypack.dev)

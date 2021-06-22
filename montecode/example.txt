@@ -1,0 +1,5 @@
+discount: L(1.045 1.065)
+duration: U(0.5 1.5)
+npv1 = .15 / discount ** duration
+npv2 = .20 / discount ** (1 + duration)
+npv : npv1 + npv2

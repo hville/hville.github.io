@@ -1,0 +1,65 @@
+====
+imports and setup
+const walker = document.createTreeWalker(document, 1),
+      xpath = '//*[@id]',
+      xexpr = (new XPathEvaluator).createExpression(xpath)
+let xpathResult = null,
+    last = document.body
+for (let i=0; i<30; ++i) last = last.appendChild( document.createElement('div') )
+last.setAttribute('id', 'id')
+for (let i=0; i<10; ++i) last = last.appendChild( document.createElement('div') )
+
+run tests!
+(takes a few seconds)
+code	result in nanoseconds ( Q25   Q75 )
+return document.querySelector('[id]')
+walker.currentNode = document.body
+while(!walker.nextNode().id);
+return walker.currentNode
+xpathResult = xexpr.evaluate(document.body, XPathResult.FIRST_ORDERED_NODE_TYPE, xpathResult)
+return xpathResult.singleNodeValue
+=======
+mports and setup
+const walker = document.createTreeWalker(document, 1),
+      xpath = '//*[@id]',
+      xexpr = (new XPathEvaluator).createExpression(xpath)
+let xpathResult = null,
+    last = document.body
+for (let i=0; i<30; ++i) last = last.appendChild( document.createElement('div') )
+last.setAttribute('id', 'id')
+for (let i=0; i<10; ++i) last = last.appendChild( document.createElement('div') )
+
+run tests!
+(takes a few seconds)
+code	result in nanoseconds ( Q25   Q75 )
+return document.querySelectorAll('[id]')
+walker.currentNode = document.body
+const result = []
+while(walker.nextNode())
+  if (walker.currentNode.id)
+    result.push(walker.currentNode)
+return result
+xpathResult = xexpr.evaluate(document.body, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, xpathResult)
+return xpathResult
+==============
+imports and setup
+// iterating object keys and values
+const vals = {}
+for (let i=0; i<40; ++i) vals[i] = i
+run tests!
+(takes a few seconds)
+code	result in nanoseconds ( Q25   Q75 )
+// for loop
+let s=0
+for (let i=0, ks=Object.keys(vals); i<ks.length; ++i) s += vals[ks[i]] + vals[ks[i]] + i
+return s
+// forEach keys
+let s=0
+Object.keys(vals).forEach( (k,i) => s += vals[k] + vals[k] + i )
+return s
+// reduce keys
+return Object.keys(vals).reduce( (s,k,i) => s + vals[k] + vals[k] + i, 0 )
+let s=0
+Object.entries(vals).forEach( ([k,v],i) => s += v + vals[k] + i )
+return s
+===
