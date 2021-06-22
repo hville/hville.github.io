@@ -18,6 +18,7 @@
   "dependencies": {
     "@hugov/correl-range": "^0.1.1",
     "@hugov/inhtml": "^0.4.1",
+    "@hugov/shorter-string": "^0.2.1",
     "array-order": "^2.2.0",
     "grosso-modo": "^4.1.0",
     "lazy-stats": "^3.1.1",

@@ -1,4 +1,4 @@
-import {enc, dec, QUERY} from 'https://cdn.skypack.dev/@hugov/shorter-string@0.1.0'
+import {enc, dec, QUERY} from '/_npm/@hugov.shorter-string.js'
 
 const dataRE = /(?<=^#[^/]+\/)[^]+/,
 			langRE = /(?<=^#)[^/]+/

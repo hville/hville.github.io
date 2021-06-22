@@ -1,5 +1,10 @@
-====
-imports and setup
+http://127.0.0.1:5500/publicbench/#fr/JoY@AB$I:F4c3m9mU-5A2XX5F3hMh;G.$_9=4rgPz3ZWUy$r!O_tyEuK=_dP8?HR0+r,zjcA7KRu:NxoorI&XVGe0VaT_Qk/7tJ5+aaCi0lXW2Oq0NYF&_=:sV3AveFBrrZLnWh!xlA@MWJfqjiGwufB,ptwTfHkl1nWyZbAt)=jL_6_jcWdbjRnM5=y~EpRF6IgVJ4Kwqk.7KJA3oi4q9QY~azkUht~Qx!Z(D/b23;D1E$:0t//9ED&isHKov,7m;vPBD!W6j@baRYk,@dy=DEBSC*lu_b5q@v~xitn4bO!1nTCd*_Do3+emA,!TR$x&v;+VNH*9GkKIEXvtAracz:_jEqYGnh$rS0H:EZ42h3LZk(NbXH33:lZRyWFLSn&4YRshcDU@b$*P-IKpLn,*LL37$=p8DgyJS=
+
+
+
+===
+http://127.0.0.1:5500/publicbench/#fr/3/6@,2VZ.J0:mvn+sCn20csn30uqe.ZSli~@G/ubCGt6cCFgzq=*C2*KFS:(1zZbWEwzSPee+WncKH~y$HZ9dS&Lbkbp4QBac-S/w=oN-h_CQ0&50DBKamLi&1(w2Aht2K)xKqwX8,/ee_QIyJ9AGqkU!fgqT+pJ;MjlL.7CFsmx;pgJp~t9-)eYELBs3g-@e2AKFMpwL6i@;_jIY/dtu,L:/u~W2IHwGICcO)Z4zmFMBZAB~0n050vxMGQIq0aqm@(.pWD;?Q~jg6J/(0TqnItTPQpkXJ-TTo7CNV.x7ZbiRS4uMAk;I*=ZY)=EKbj;Hy0&7(_PgEi+LA:=0E+Ie=TBmvSBER.f?Cpu5n~L$qkEtVIqQOC$_0b)P3a$o08Zi.R&!1*G8,~+.P_0(i:e~b.6+2,G+R7KnA20
+===
 const walker = document.createTreeWalker(document, 1),
       xpath = '//*[@id]',
       xexpr = (new XPathEvaluator).createExpression(xpath)
@@ -8,17 +13,17 @@ let xpathResult = null,
 for (let i=0; i<30; ++i) last = last.appendChild( document.createElement('div') )
 last.setAttribute('id', 'id')
 for (let i=0; i<10; ++i) last = last.appendChild( document.createElement('div') )
-
-run tests!
-(takes a few seconds)
-code	result in nanoseconds ( Q25   Q75 )
+===
 return document.querySelector('[id]')
+===
 walker.currentNode = document.body
 while(!walker.nextNode().id);
 return walker.currentNode
+===
 xpathResult = xexpr.evaluate(document.body, XPathResult.FIRST_ORDERED_NODE_TYPE, xpathResult)
 return xpathResult.singleNodeValue
-=======
+===
+
 mports and setup
 const walker = document.createTreeWalker(document, 1),
       xpath = '//*[@id]',
@@ -28,11 +33,8 @@ let xpathResult = null,
 for (let i=0; i<30; ++i) last = last.appendChild( document.createElement('div') )
 last.setAttribute('id', 'id')
 for (let i=0; i<10; ++i) last = last.appendChild( document.createElement('div') )
+===
 
-run tests!
-(takes a few seconds)
-code	result in nanoseconds ( Q25   Q75 )
-return document.querySelectorAll('[id]')
 walker.currentNode = document.body
 const result = []
 while(walker.nextNode())
