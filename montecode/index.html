@@ -13,7 +13,9 @@
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a href="../">&#9884;</a> schem.ist - <span data-lang>monte carlo simulation // simulation monte carlo</span></h1>
+	<h2>
+		<a href="../">&#9884;</a> <span data-lang>monte carlo simulation // simulation monte carlo</span>
+	</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>
@@ -30,7 +32,9 @@
 </details>
 
 <pre><code id=editor></code></pre>
-<button id=run data-lang>results // résultats</button>
+<button id=run5e4>N = 5e4</button>
+<button id=run5e5>N = 5e5</button>
+<button id=run5e6>N = 5e6</button>
 <pre><code id=result></code></pre>
 
 <script type=module>
@@ -46,8 +50,7 @@ import editable from '../_src/editable.js'
 import parse from './parse.js'
 import {CodeJar} from 'https://medv.io/codejar/codejar.js'
 
-const runEl = $('#run'),
-			resEl = $('#result')
+const resEl = $('#result')
 
 const jar = CodeJar($('#editor'), j=>{
 	resEl.textContent=''
@@ -59,18 +62,30 @@ jar.onUpdate(hashData(code => {
 	jar.restore(pos)
 }))
 
-runEl.onclick = () => {
+$('#run5e4').onclick = runSim.bind(null,5e4)
+$('#run5e5').onclick = runSim.bind(null,5e5)
+$('#run5e6').onclick = runSim.bind(null,5e6)
+
+async function runSim(N) {
+	let htm = resEl.textContent = ''
 	try {
-		const fcn = parse(jar.toString()),
-					res = SIM(fcn).run(50_000).stats
-		let htm = ''
+		await nextFrame()
+		const
+					fcn = parse(jar.toString()),
+					ms0 = await nextFrame(),
+					res = SIM(fcn).run(N).stats//,	ms1 = await nextFrame()
+		htm += `${ (performance.now()-ms0).toFixed(0) } ms\n\n`
 		Object.keys(res).forEach( k => {
-			htm += `${k} ( ${res[k].Q(.25).toPrecision(3)}   ${res[k].Q(.75).toPrecision(3)} )<br>`
+			htm += `${k}  ( ${res[k].Q(.25).toPrecision(3)}  ${res[k].Q(.75).toPrecision(3)} )\n`
 		})
-		resEl.innerHTML=htm
 	} catch (e) {
-		console.log('fail', e)
+		htm += e.message
 	}
+	resEl.innerHTML = htm
+}
+
+function nextFrame() {
+  return new Promise(r => requestAnimationFrame(r))
 }
 
 </script>
