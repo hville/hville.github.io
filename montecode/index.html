@@ -6,6 +6,7 @@
 	<meta name=viewport content="width=device-width, initial-scale=1.0">
 	<meta name=description content="in browser benchmarking">
 	<link rel="stylesheet" href="../_src/main.css">
+	<link href="https://unpkg.com/prismjs@1.24.1/themes/prism.css" rel="stylesheet" />
 	<script type=module src="../_src/data-lang.js"></script>
 </head>
 
@@ -20,103 +21,53 @@
 <details>
 	<summary data-lang>templates and examples // exemples de modèles</summary>
 	<li data-lang>
-		<a lang=en href="./#en/3c4*$zy)S1TDhu*AnHVFW2z_J1M5sL6-H+4/!8j/nQ~a7,KnALz?+)@yf&yk+&geD)KqkmbZ,&rvl)=5BnTN*JHMPb+pm(2RIKda1">
+		<a lang=en href="./#en/Yyndvvm-eDptb9VQCD:/0Rw2UAb3._gP~K$s7*Mk_&QWcb5(~gL++4Zw0B,E97w(0CV6+X~EMv;F-d4KQIf!Bne0&@iABVkg@xrG">
 		variable rate and duration investment
 		</a>
-		<a lang=fr href="./#fr/3c4*$zy)S1TDhu*AnHVFW2z_J1M5sL6-H+4/!8j/nQ~a7,KnALz?+)@yf&yk+&geD)KqkmbZ,&rvl)=5BnTN*JHMPb+pm(2RIKda1">
+		<a lang=fr href="./#fr/Yyndvvm-eDptb9VQCD:/0Rw2UAb3._gP~K$s7*Mk_&QWcb5(~gL++4Zw0B,E97w(0CV6+X~EMv;F-d4KQIf!Bne0&@iABVkg@xrG">
 		investissement à durée et rendement variable
 	</a></li>
 </details>
-<!--
-	TODO
-	instruction
-	single code block instead of lines
-	no table
-	graph
- -->
 
-<table>
-<!-- TODO table caption ? -->
-<colgroup>
-	<col style="width:75%;">
-	<col>
-</colgroup>
-<thead>
-	<tr>
-		<th>code</th>
-		<th style="text-align: center; vertical-align: middle;">
-			<button id=run data-lang>results // résultats</button>
-		</th>
-	</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<template>
-	<tr id=row>
-		<td>
-			<pre><code id=code contenteditable=true></code></pre>
-		</td>
-		<td style="text-align: center; vertical-align: middle;">
-			<out id=span style="white-space: pre-wrap;"></out>
-		</td>
-	</tr>
-</template>
+<pre><code id=editor></code></pre>
+<button id=run data-lang>results // résultats</button>
+<pre><code id=result></code></pre>
 
 <script type=module>
-
-import {cast, $, $$} from '/_npm/@hugov.inhtml.js'
+/*
+	TODO
+	instruction
+	graph
+ */
+import {$, $$} from '/_npm/@hugov.inhtml.js'
 import hashData from '../_src/hash-data.js'
 import SIM from '/_npm/@hugov.correl-range.js'
 import editable from '../_src/editable.js'
 import parse from './parse.js'
+import {CodeJar} from 'https://medv.io/codejar/codejar.js'
 
-const tbody = $('tbody'),
-			rows = tbody.children
+const runEl = $('#run'),
+			resEl = $('#result')
 
-// row factory
-const makeRow = cast('template', ({row, code, span}, data='') => {
-	editable(code)
-	code.textContent = data
-	span.update = res => span.textContent = !res ? '' : [.25, .75].map( p => res.Q(p).toPrecision(3) ).join(' ')
-
-	code.onchange = () => {
-		span.textContent = ''
-		if (!code.textContent) row.remove()
-		else if (!row.nextSibling) row.after(makeRow())
-		saveData( getRows().join('\x00') )
-	}
-
-	row.$ids = {code, span}
-	return row
+const jar = CodeJar($('#editor'), j=>{
+	resEl.textContent=''
 })
-
 // save / load
-const saveData = hashData(dataString => {
-	if (rows.length) tbody.textContent = '' //reset rows
-	if (dataString) dataString.split('\x00').forEach( data => { if (data) tbody.append(makeRow(data)) } )
-	// one last empty line to allow adding new lines
-	tbody.appendChild( makeRow() )
-})
+jar.onUpdate(hashData(code => {
+	const pos = jar.save()
+	jar.updateCode(code)
+	jar.restore(pos)
+}))
 
-function getRows() {
-	const values = []
-	//get all rows but the last
-	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
-	return values
-}
-
-// simulation button handler
-const inRE = /[LNUW]\([^)]\)/g
-$('#run').onclick = () => {
+runEl.onclick = () => {
 	try {
-		const fcn = parse(getRows()),
+		const fcn = parse(jar.toString()),
 					res = SIM(fcn).run(50_000).stats
+		let htm = ''
 		Object.keys(res).forEach( k => {
-			const span = `( ${res[k].Q(.25).toPrecision(3)}   ${res[k].Q(.75).toPrecision(3)} )`
-			console.log(k, fcn[k], span)
-			rows[fcn[k]].$ids.span.textContent = span
+			htm += `${k} ( ${res[k].Q(.25).toPrecision(3)}   ${res[k].Q(.75).toPrecision(3)} )<br>`
 		})
+		resEl.innerHTML=htm
 	} catch (e) {
 		console.log('fail', e)
 	}

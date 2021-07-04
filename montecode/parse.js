@@ -24,12 +24,12 @@ function parseLine(line, i) {
 	}
 }
 
-export default function(lines) {
+export default function(code) {
 	const init = Object.create(null),
 				each = Object.create(null),
 				keep = Object.create(null),
 				args = ['{L,N,U,W}']
-	lines.forEach(parseLine, {rand:[], init, each, keep})
+	code.split(/ *\n+\s*(?=\w+\s*[=:])/).forEach(parseLine, {rand:[], init, each, keep})
 
 	for(const n in init) args.push(`${n}=${init[n]}`)
 
