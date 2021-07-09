@@ -10,7 +10,7 @@ function parseLine(line, i) {
 				rexp = expr.match(randRE)?.groups
 	if (rexp) {
 		const {L, H, risk} = rexp,
-					dist = rand.dist || (parseFloat(L)*parseFloat(H) > 0 ? 'L' : 'N')
+					dist = rexp.dist || (parseFloat(L)*parseFloat(H) > 0 ? 'L' : 'N')
 		init[name] = `${dist}(${L},${H}${ risk ? risk.replace(riskRE, (x,r,c) => c ? `,"${r}",${c}` : `,"${r}"`) : '' })`
 		rand.push(name)
 	}

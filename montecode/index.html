@@ -32,10 +32,9 @@
 </details>
 
 <pre><code id=editor></code></pre>
-<button id=run5e3>N = 5e3</button>
-<button id=run5e4>N = 5e4</button>
-<button id=run5e5>N = 5e5</button>
-<button id=run5e6>N = 5e6</button>
+<button id=run1e4>N = 1e4</button>
+<button id=run1e5>N = 1e5</button>
+<button id=run1e6>N = 1e6</button>
 <pre><code id=result></code></pre>
 
 <canvas height=300></canvas>
@@ -66,16 +65,12 @@ jar.onUpdate(hashData(code => {
 	jar.restore(pos)
 }))
 
-$('#run5e3').onclick = runSim.bind(null,5e3)
-$('#run5e4').onclick = runSim.bind(null,5e4)
-$('#run5e5').onclick = runSim.bind(null,5e5)
-$('#run5e6').onclick = runSim.bind(null,5e6)
-
-
+$('#run1e4').onclick = runSim.bind(null,1e4)
+$('#run1e5').onclick = runSim.bind(null,1e5)
+$('#run1e6').onclick = runSim.bind(null,1e6)
 
 const ctx = $('canvas').getContext('2d')
 ctx.strokeStyle = 'silver'
-
 
 async function runSim(N) {
 	resEl.textContent = ''

@@ -3,7 +3,7 @@ export default function(ctx, stat, confidence) {
 				va = stat.Q( .5*(1-confidence) ),
 				vb = stat.Q( .5*(1+confidence) ),
 				Kx = ctx.canvas.width/(vb-va),
-				Ky = ctx.canvas.height*(stat.Q(0.75)-stat.Q(0.25)) / rs[rs.length-1]
+				Ky = ctx.canvas.height / rs[rs.length-1] * (vb-va)/5 //*(stat.Q(0.9)-stat.Q(0.1))
 
 	ctx.save()
 	ctx.setTransform(1, 0, 0, -1, -va*Kx, ctx.canvas.height)
