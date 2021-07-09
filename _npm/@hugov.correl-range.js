@@ -348,6 +348,8 @@ function shfl(src, tgt) {
 	return src
 }
 
+//TODO only random (simulation) and permute (sensitivity) are used
+
 function random(dim) {
 	const zs = dim.length ? dim : new Float64Array(dim);
 	return function() {
@@ -657,8 +659,9 @@ class LazyStats{
  * @typedef {Array|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Uint8ClampedArray|Float32Array|Float64Array} ArrayLike
  */
 
+//TODO test sensitivity oat and ee
 class Sim {
-	constructor(rndNs, risks, model, resolution=128) {
+	constructor(rndNs, risks, model, resolution) {
 		const point = model();
 
 		this.risks = risks;
@@ -800,8 +803,14 @@ class Sim {
 	}
 }
 
-//TODO accept array OR string as factory?
-function sim( factory, confidence=0.5 ) {
+/**
+ * @param {function} factory (...once) => (...each) => ({...sample})
+ * @param {Object} [options]
+ * @param {number} [options.confidence=0.5] either confidence interval (default IQR) or min and max of N samples (eg 3 gives 0.59)
+ * @param {number} [options.resolution=128] number of points in empirical distribution
+ * @returns
+ */
+function sim( factory, {confidence=0.5, resolution=128}={} ) {
 	const	risks = [],
 				rndNs = [],
 				conf = confidence <= 1 ? confidence : Math.pow(2, 1 - 1/confidence) - 1,
@@ -815,7 +824,7 @@ function sim( factory, confidence=0.5 ) {
 	}
 	const model = factory(rndFs);
 	init = true;
-	return new Sim(rndNs, risks, model)
+	return new Sim(rndNs, risks, model, resolution)
 }
 
 export default sim;

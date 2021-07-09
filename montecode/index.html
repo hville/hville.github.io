@@ -32,23 +32,27 @@
 </details>
 
 <pre><code id=editor></code></pre>
+<button id=run5e3>N = 5e3</button>
 <button id=run5e4>N = 5e4</button>
 <button id=run5e5>N = 5e5</button>
 <button id=run5e6>N = 5e6</button>
 <pre><code id=result></code></pre>
 
+<canvas height=300></canvas>
+
 <script type=module>
 /*
 	TODO
 	instruction
-	graph
- */
+	graph legends and options
+*/
 import {$, $$} from '/_npm/@hugov.inhtml.js'
 import hashData from '../_src/hash-data.js'
 import SIM from '/_npm/@hugov.correl-range.js'
 import editable from '../_src/editable.js'
 import parse from './parse.js'
 import {CodeJar} from 'https://medv.io/codejar/codejar.js'
+import plot2D from './2d.js'
 
 const resEl = $('#result')
 
@@ -62,30 +66,54 @@ jar.onUpdate(hashData(code => {
 	jar.restore(pos)
 }))
 
+$('#run5e3').onclick = runSim.bind(null,5e3)
 $('#run5e4').onclick = runSim.bind(null,5e4)
 $('#run5e5').onclick = runSim.bind(null,5e5)
 $('#run5e6').onclick = runSim.bind(null,5e6)
 
+
+
+const ctx = $('canvas').getContext('2d')
+ctx.strokeStyle = 'silver'
+
+
 async function runSim(N) {
-	let htm = resEl.textContent = ''
-	try {
-		await nextFrame()
-		const
-					fcn = parse(jar.toString()),
-					ms0 = await nextFrame(),
-					res = SIM(fcn).run(N).stats//,	ms1 = await nextFrame()
-		htm += `${ (performance.now()-ms0).toFixed(0) } ms\n\n`
-		Object.keys(res).forEach( k => {
-			htm += `${k}  ( ${res[k].Q(.25).toPrecision(3)}  ${res[k].Q(.75).toPrecision(3)} )\n`
-		})
-	} catch (e) {
-		htm += e.message
+	resEl.textContent = ''
+	// look up the size the canvas is being displayed
+	const width = ctx.canvas.clientWidth
+	// If it's resolution does not match change it
+	if (ctx.canvas.width !== width) {
+		ctx.canvas.width = width
+		ctx.strokeStyle = 'silver'
 	}
+	else ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
+	await nextFrame()
+
+	const fcn = parse(jar.toString()),
+				ms0 = await nextFrame()
+
+	let res
+	try {
+		res = SIM(fcn, {resolution:128}).run(N).stats//,	ms1 = await nextFrame()
+	} catch (e) {
+		return resEl.innerHTML = e.message
+	}
+	let htm = `${ (performance.now()-ms0).toFixed(0) } ms\n\n`
+
+	Object.keys(res).forEach( k => {
+		htm += `${k}  ( ${res[k].Q(.25).toPrecision(3)}  ${res[k].Q(.75).toPrecision(3)} )\n`
+		ctx.globalCompositeOperation = 'copy'
+		ctx.drawImage(ctx.canvas, 0, -15)
+		ctx.globalCompositeOperation = 'source-over'
+		plot2D(ctx, res[k], 0.99998, 0)
+	})
+
 	resEl.innerHTML = htm
 }
 
 function nextFrame() {
-  return new Promise(r => requestAnimationFrame(r))
+	return new Promise(r => requestAnimationFrame(r))
 }
 
 </script>

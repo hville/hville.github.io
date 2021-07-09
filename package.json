@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/hville/hville.github.io#readme",
   "dependencies": {
-    "@hugov/correl-range": "^0.1.1",
+    "@hugov/correl-range": "^0.2.1",
     "@hugov/inhtml": "^0.4.1",
     "@hugov/shorter-string": "^0.2.1",
     "array-order": "^2.2.0",

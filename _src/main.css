@@ -22,6 +22,9 @@ input[type="radio"][name=datalang]:checked+span {
 	-webkit-user-modify: read-write-plaintext-only;
 }
 
+canvas {
+  width: 100%;
+}
 /*
 https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css
 https://cdn.jsdelivr.net/npm/water.css@2/out/water.css
