@@ -25,20 +25,34 @@ export default (ls, cb) => {
 
 	function pick(el) {
 		if (!kids.has(el)) {
-			// pre-set list forces extraction from text
-			if (!el.firstElementChild) {
-				const langs = el.dataset.lang ? el.dataset.lang.split(' ') : ls
-				el.innerHTML = el.textContent.split(div)
-				.map( (t,i) => `<span lang=${ langs[i] }>${ t.trim() }</span>`)
-				.join('')
+			if (el.dataset.lang) {
+				try {
+					kids.set(el, eval(el.dataset.lang))
+				} catch {
+					console.warn('invalid data-lang function:', el.dataset.lang)
+					kids.set(el, null)
+				}
 			}
-			// set choices and clear the parent
-			const res = {}
-			el.querySelectorAll('[lang]').forEach( k => res[k.lang] = k )
-			kids.set(el, res)
-			el.textContent = ''
+			else {
+				if (!el.firstElementChild) {
+					const langs = el.dataset.lang ? el.dataset.lang.split(' ') : ls
+					el.innerHTML = el.textContent.split(div)
+					.map( (t,i) => `<span lang=${ langs[i] }>${ t.trim() }</span>`)
+					.join('')
+				}
+				// set choices and clear the parent
+				const res = {}
+				el.querySelectorAll('[lang]').forEach( k => res[k.lang] = k )
+				kids.set(el, res)
+				el.textContent = ''
+			}
 		}
-		el.replaceChildren( kids.get(el)[H.lang] )
+		const setter = kids.get(el)
+		if (typeof setter === 'function') {
+			el.lang = H.lang
+			setter(el)
+		}
+		else if (setter) el.replaceChildren( setter[H.lang] )
 	}
 
 /**
