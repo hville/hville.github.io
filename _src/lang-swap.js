@@ -48,7 +48,6 @@ export default (ls, cb) => {
 			}
 		}
 		const setter = kids.get(el)
-		console.log(typeof setter, setter, !!setter)
 		if (typeof setter === 'function') {
 			el.lang = H.lang
 			setter(el)
