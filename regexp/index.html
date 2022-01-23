@@ -17,7 +17,8 @@
 </div>
 <hr>
 
-<!-- <details>
+<!-- TODO
+	<details>
 	<summary data-lang>examples // exemples // Beispiele // ejemplos</summary>
 	<li data-lang>
 		<a lang=en href="./#en/1sqfEBX,BWl1Cs2xNv;j0kyVf~+tT?zJ,RFoq@j6OntNx_:MP/NMIpSj9s~2_F$kN&?i1hp2jjHE:/f)rbhwzJ/f+3wk0tm5Z=hrG">
@@ -36,36 +37,60 @@
 
 <script type=module>
 import hashData from '../_src/hash-data.js'
+import {$} from '/_npm/@hugov.inhtml.js' //$ = ids => document.getElementById(ids[0])
 
-const $ = ids => document.getElementById(ids[0]),
-			dics = {}
+const regexpEl = $('#regexp'),
+			countEl = $('#count'),
+			resultEl = $('#result'),
+			dics = {},
+			max = 200 //TODO input
 
 async function fetchList(lang) {
 	const url = `https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/${lang}.txt`
 	return dics[lang] || (dics[lang] = (await (await fetch(url)).text()).trim().split(/[ ;,]*[\r\n]\s*/))
 }
 
-let last = ''
+let last = '',
+		wrkr
 
+resetWorker()
+
+function resetWorker() {
+	if (wrkr) wrkr.terminate()
+	wrkr = new Worker('./worker.js')
+	wrkr.onerror = e => {
+		showText(' ! ', e.message)
+		resetWorker()
+	}
+	wrkr.onmessage = e => {
+		const {list, code, lang} = e.data
+		if (lang + code === last) showList(list)
+	}
+}
 function showList(list) {
-	$`result`.textContent=list.join('\n')
-	$`count`.textContent=list.length
+	resultEl.textContent = list.join('\n')
+	countEl.textContent = list[max] === '...' ? `${list.length-1}...` : list.length
+}
+function showText(count, result) {
+	resultEl.textContent = result
+	countEl.textContent = count
 }
 
-const dohash = hashData(data => {
-	const lang = document.documentElement.lang,
-				code = data || $`regexp`.value
-	showList([])
+const dohash = hashData(code => {
+	if (!code) code = regexpEl.value
+	else regexpEl.value = code
+	const lang = document.documentElement.lang
+
+	showText('...', '...')
 	last = lang + code
-	fetchList(lang).then(dic => {
-		if (lang + code === last) { //if not, another callback will follow
-			//TODO RAF
-			showList(dic.filter( w => new RegExp(code, 'iu').test(w)))
-		}
-	}).catch(e=>console.warn(e.message))
+	fetchList(lang)
+		.then(dic => {
+			wrkr.postMessage( {dic, code, lang, max} )
+		 } )
+		.catch( e => console.warn(e.message) )
 })
 
-$`regexp`.oninput = evt => dohash(evt.currentTarget.value)
+regexpEl.oninput = evt => dohash(evt.currentTarget.value)
 
 </script>
 </body>
