@@ -3,11 +3,11 @@ import {enc, dec, QUERY} from '/_npm/@hugov.shorter-string.js'
 const dataRE = /(?<=^#[^/]+\/)[^]+/,
 			langRE = /(?<=^#)[^/]+/
 
-export default function(onhash /* string => void */) {
+export default function(/* string => void */onhash, encode=enc, decode=dec) {
 	const cb = () => {
 		const data = location.hash.match(dataRE)?.[0]
 		//TODO empty string condition can eventually be removed
-		onhash( data ? dec( data, QUERY) : '')
+		onhash( !data ? '' : !decode ? data : decode( data, QUERY))
 	}
 	addEventListener('hashchange', cb)
 	cb()
@@ -15,7 +15,7 @@ export default function(onhash /* string => void */) {
 	return string => {
 		const lang = location.hash.match(langRE)?.[0]
 		//TODO empty string condition can eventually be removed
-		location.hash = `#${ lang }/${ string ? enc( string, QUERY ) : '' }`
+		location.hash = `#${ lang }/${ !string ? '' : !encode ? string : encode( string, QUERY ) }`
 	}
 }
 
