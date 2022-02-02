@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>regexp</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="word filter">
+	<link rel="stylesheet" href="../_src/main.css">
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<h3 data-lang>root of a function // zéro d'une fonction</h3>
+<pre><textarea id=exp rows=1 autofocus>cos(x)</textarea></pre>
+
+<pre>x = <span id=root>0</span></pre>
+
+<script type=module>
+import hashData from '../_src/hash-data.js'
+import {$} from '/_npm/@hugov.inhtml.js' //$ = ids => document.getElementById(ids[0])
+import solve from './solve.js'
+
+const expEl = $('#exp'),
+			rootEl = $('#root'),
+			inMAth = new Set(Object.getOwnPropertyNames(Math))
+
+let last = '',
+		wrkr
+
+function replacer(txt) {
+	return Math.hasOwnProperty(txt) ? `Math.${txt}`
+		: Number.hasOwnProperty(txt) ? `Number.${txt}`
+		: txt
+}
+const dohash = hashData(code => {
+	if (!code) code = expEl.value
+	else expEl.value = code
+	rootEl.textContent = '...'
+	try {
+		const f = Function('x', `return ${code.replace(/[a-zA-Z$_][a-zA-Z$_0-9]*/, replacer)}`)
+		rootEl.textContent = typeof f(0) === 'number' ? solve(f).toPrecision(8) : '...'
+	} catch {
+		rootEl.textContent = `!`
+	}
+}, null, null)
+
+expEl.oninput = evt => dohash(evt.currentTarget.value)
+
+</script>
+</body>
