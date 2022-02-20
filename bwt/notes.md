@@ -1,6 +1,3 @@
-TODO add notes to html
-TODO make dic files local (faster and long-term reliable)
-
 https://github.com/lorenbrichter/Words
 https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/de.txt
 https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/en.txt
