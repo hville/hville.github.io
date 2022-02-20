@@ -1,4 +1,4 @@
-import {enc, dec, QUERY} from '/_npm/@hugov.shorter-string.js'
+import {enc, dec, QUERY} from '/_npm/@hugov/shorter-string.js'
 
 const dataRE = /(?<=^#[^/]+\/)[^]+/,
 			langRE = /(?<=^#)[^/]+/

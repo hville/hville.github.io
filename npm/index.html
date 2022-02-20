@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>regexp</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="word filter">
+	<link rel="stylesheet" href="../_src/main.css">
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<h3 data-lang>root of a function // zéro d'une fonction</h3>
+<pre><textarea id=exp rows=1 autofocus>cos(x)</textarea></pre>
+
+<pre>x = <span id=root>0</span></pre>
+
+<script type=module>
+import hashData from '../_src/hash-data.js'
+import {$} from '/_npm/@hugov/inhtml.js' //$ = ids => document.getElementById(ids[0])
+
+</script>
+<script type="module">
+//const res = await fetch('http://npmsearch.com/query?q=dom&fields=name')
+//console.log(res)
+//https://github.com/npm/registry/tree/master/docs
+///downloads/point/last-month/@slack/client
+//GET https://api.npmjs.org/downloads/point/{period}[/{package}]
+
+//https://api.npmjs.org/downloads/point/last-month/@hugov/xxx
+//https://www.edoardoscibona.com/exploring-the-npm-registry-api
+
+
+const url = new URL('https://registry.npmjs.com/-/v1/search')
+url.search = new URLSearchParams({
+	//https://github.com/npm/registry/blob/master/docs/REGISTRY-API.md#get-v1search
+	text: 'maintainer:hugov',
+	size: 250 //, default 20, max250
+	//quality: 1,
+	//popularity: .5,
+	//maintenance: 0
+})
+
+fetch(url)
+.then(r => r.json())
+.then(data => Promise.all(data.objects.map(
+	({package:{name, date, version}}) => fetch(`https://api.npmjs.org/downloads/point/last-month/${name}`)
+		.then(r => r.json())
+ 		.then(({downloads}) => ({downloads, name, date, version}))
+)))
+.then(arr => {
+	arr.sort( (a,b)=> a.downloads - b.downloads ).forEach(
+		({downloads, name, date, version}, i) => console.log(i, downloads, name, date, version)
+	)
+})
+
+</script>
+</body>

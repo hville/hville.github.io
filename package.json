@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "schem.ist",
   "scripts": {
-    "test": "node ../private/pack-module/cli.js"
+    "build": "unnode _npm",
+    "test": "node ../private/pack-module/cli.js _npm"
   },
   "repository": {
     "type": "git",
@@ -27,5 +28,8 @@
     "pico-parse": "^0.15.1",
     "prismjs": "^1.25.0",
     "sample-distribution": "^1.4.0"
+  },
+  "devDependencies": {
+    "@hugov/unnode": "^0.0.4"
   }
 }
