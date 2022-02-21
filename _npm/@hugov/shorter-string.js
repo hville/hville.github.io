@@ -20,7 +20,7 @@ function get_rotations(s) {
   }
   return rots;
 }
-function bwt(s) {
+function encodeBWT(s) {
   return get_rotations(s).sort((a, b) => {
     let ka = a.k, kb = b.k;
     do {
@@ -47,7 +47,7 @@ function match(str) {
     theta.push(before[c] + (seen[c] ? ++seen[c] : seen[c] = 1) - 1);
   return theta;
 }
-function inv_bwt(str) {
+function decodeBWT(str) {
   const T = match(str), alpha = [];
   for (let j = 0; j < str.length; ++j) {
     if (T[j] !== -1) {
@@ -63,9 +63,28 @@ function inv_bwt(str) {
   return alpha.reverse().join("");
 }
 
+// node_modules/@hugov/shorter-string/src/charset.js
+var LOWER = "abcdefghijklmnopqrstuvwxyz";
+var UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+var DIGIT = "0123456789";
+var BASE62 = DIGIT + UPPER + LOWER;
+var BASE64 = BASE62 + "-_";
+var UNRESERVED = BASE62 + "-._~";
+var PCHAR = UNRESERVED + "%!$&'()*+,;=:@";
+var RFC1924 = BASE62 + "!#$%&()*+-;<=>?@^_`{|}~";
+var QUERY = UNRESERVED + "%!$&()*+,;=:@";
+var HASH = PCHAR + "/?#[]";
+var MTF = charRange(127, 127, charRange(0, 8, charRange(11, 31, " " + LOWER + `,.'":;-?()[]{}
+!` + DIGIT + "+/*=_~<>^`#%	$&@|\\" + UPPER)));
+function charRange(i, j, s) {
+  while (i <= j)
+    s += String.fromCharCode(i++);
+  return s;
+}
+
 // node_modules/@hugov/shorter-string/src/mtf.js
-function dMTF(arr, DIC2) {
-  const dic = DIC2?.slice() || [], res = [];
+function decodeMTF(arr, DIC = MTF) {
+  const res = [], dic = DIC.split("");
   for (let i of arr) {
     if (i >= dic.length)
       for (let j = dic.length; j <= i; ++j)
@@ -78,8 +97,8 @@ function dMTF(arr, DIC2) {
   }
   return res.join("");
 }
-function eMTF(txt, DIC2) {
-  const dic = DIC2?.slice() || [], res = [];
+function encodeMTF(txt, DIC = MTF) {
+  const res = [], dic = DIC.split("");
   for (const c of txt) {
     let i = dic.indexOf(c);
     if (i < 0) {
@@ -95,48 +114,8 @@ function eMTF(txt, DIC2) {
   return res;
 }
 
-// node_modules/@hugov/shorter-string/src/charset.js
-var LOWER = "abcdefghijklmnopqrstuvwxyz";
-var UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-var DIGIT = "0123456789";
-var BASE62 = DIGIT + UPPER + LOWER;
-var UNRESERVED2 = BASE62 + ".-_~";
-var QUERY = UNRESERVED2 + ",?!():;+/*=$&@";
-var FRAGMENT = QUERY + "'";
-
-// node_modules/@hugov/shorter-string/index.js
-var DIC = (" " + LOWER + `,.'":;-?()[]{}
-!` + DIGIT + "+/*=_~<>^`#%	$&@|\\" + UPPER).split("");
-function charRange(i, j, a = []) {
-  while (i <= j)
-    a.push(String.fromCharCode(i++));
-  return a;
-}
-charRange(127, 127, charRange(0, 9, charRange(11, 31, DIC)));
-function enc(text, keys = UNRESERVED, dic = DIC) {
-  return text ? toString(arr_big(eMTF(bwt(text), dic)), keys) : "";
-}
-function dec(code, keys = UNRESERVED, dic = DIC) {
-  return code ? inv_bwt(dMTF(big_arr(parseBig(code, keys)), dic)) : "";
-}
-function toString(big, keys = UNRESERVED) {
-  const len = BigInt(keys.length);
-  let res = [];
-  do {
-    res.unshift(keys[big % len]);
-    big /= len;
-  } while (big);
-  return res.join("");
-}
-function parseBig(txt, keys = COMPONENT) {
-  const len = BigInt(keys.length);
-  let big = 0n;
-  for (const c of txt) {
-    big = big * len + BigInt(keys.indexOf(c));
-  }
-  return big;
-}
-function arr_big(arr) {
+// node_modules/@hugov/shorter-string/src/egc.js
+function encodeEGC(arr) {
   let res = 0n, j = arr.length;
   while (j--) {
     let v = arr[j] + 1, n = -1;
@@ -149,7 +128,7 @@ function arr_big(arr) {
   }
   return res;
 }
-function big_arr(big) {
+function decodeEGC(big) {
   let res = [];
   while (big) {
     let v = 0, n = 1;
@@ -165,14 +144,45 @@ function big_arr(big) {
   }
   return res;
 }
+
+// node_modules/@hugov/shorter-string/src/btt.js
+function encodeBTT(big, keys = HASH) {
+  const len = BigInt(keys.length);
+  let res = [];
+  do {
+    res.unshift(keys[big % len]);
+    big /= len;
+  } while (big);
+  return res.join("");
+}
+function decodeBTT(txt, keys = HASH) {
+  const len = BigInt(keys.length);
+  let big = 0n;
+  for (const c of txt) {
+    big = big * len + BigInt(keys.indexOf(c));
+  }
+  return big;
+}
+
+// node_modules/@hugov/shorter-string/index.js
+function encode(text, keys = HASH, dic = MTF) {
+  return text ? encodeBTT(encodeEGC(encodeMTF(encodeBWT(text), dic)), keys) : "";
+}
+function decode(code, keys = HASH, dic = MTF) {
+  return code ? decodeBWT(decodeMTF(decodeEGC(decodeBTT(code, keys)), dic)) : "";
+}
 export {
   BASE62,
+  BASE64,
   DIGIT,
-  FRAGMENT,
+  HASH,
   LOWER,
+  MTF,
+  PCHAR,
   QUERY,
-  UNRESERVED2 as UNRESERVED,
+  RFC1924,
+  UNRESERVED,
   UPPER,
-  dec,
-  enc
+  decode,
+  encode
 };

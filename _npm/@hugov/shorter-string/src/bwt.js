@@ -20,7 +20,7 @@ function get_rotations(s) {
   }
   return rots;
 }
-function bwt(s) {
+function encodeBWT(s) {
   return get_rotations(s).sort((a, b) => {
     let ka = a.k, kb = b.k;
     do {
@@ -47,7 +47,7 @@ function match(str) {
     theta.push(before[c] + (seen[c] ? ++seen[c] : seen[c] = 1) - 1);
   return theta;
 }
-function inv_bwt(str) {
+function decodeBWT(str) {
   const T = match(str), alpha = [];
   for (let j = 0; j < str.length; ++j) {
     if (T[j] !== -1) {
@@ -63,6 +63,6 @@ function inv_bwt(str) {
   return alpha.reverse().join("");
 }
 export {
-  bwt,
-  inv_bwt
+  decodeBWT,
+  encodeBWT
 };

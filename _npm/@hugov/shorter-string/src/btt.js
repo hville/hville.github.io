@@ -16,16 +16,26 @@ function charRange(i, j, s) {
     s += String.fromCharCode(i++);
   return s;
 }
+
+// node_modules/@hugov/shorter-string/src/btt.js
+function encodeBTT(big, keys = HASH) {
+  const len = BigInt(keys.length);
+  let res = [];
+  do {
+    res.unshift(keys[big % len]);
+    big /= len;
+  } while (big);
+  return res.join("");
+}
+function decodeBTT(txt, keys = HASH) {
+  const len = BigInt(keys.length);
+  let big = 0n;
+  for (const c of txt) {
+    big = big * len + BigInt(keys.indexOf(c));
+  }
+  return big;
+}
 export {
-  BASE62,
-  BASE64,
-  DIGIT,
-  HASH,
-  LOWER,
-  MTF,
-  PCHAR,
-  QUERY,
-  RFC1924,
-  UNRESERVED,
-  UPPER
+  decodeBTT,
+  encodeBTT
 };

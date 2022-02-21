@@ -18,16 +18,16 @@
   },
   "homepage": "https://github.com/hville/hville.github.io#readme",
   "dependencies": {
-    "@hugov/correl-range": "^0.2.2",
+    "@hugov/correl-range": "^0.3.0",
     "@hugov/inhtml": "^0.4.1",
-    "@hugov/shorter-string": "^0.2.1",
+    "@hugov/shorter-string": "^3.0.0",
     "array-order": "^2.2.0",
-    "grosso-modo": "^4.1.0",
+    "grosso-modo": "^4.2.0",
     "lazy-stats": "^3.1.1",
     "norm-dist": "^3.0.1",
     "pico-parse": "^0.15.1",
-    "prismjs": "^1.25.0",
-    "sample-distribution": "^1.4.0"
+    "prismjs": "^1.27.0",
+    "sample-distribution": "^1.5.0"
   },
   "devDependencies": {
     "@hugov/unnode": "^0.0.4"

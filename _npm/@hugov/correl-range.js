@@ -1,47 +1,37 @@
-// node_modules/norm-dist/icdf.js
-var a0 = -39.69683028665376;
-var a1 = 220.9460984245205;
-var a2 = -275.9285104469687;
-var a3 = 138.357751867269;
-var a4 = -30.66479806614716;
-var a5 = 2.506628277459239;
-var b0 = -54.47609879822406;
-var b1 = 161.5858368580409;
-var b2 = -155.6989798598866;
-var b3 = 66.80131188771972;
-var b4 = -13.28068155288572;
-var c0 = -0.007784894002430293;
-var c1 = -0.3223964580411365;
-var c2 = -2.400758277161838;
-var c3 = -2.549732539343734;
-var c4 = 4.374664141464968;
-var c5 = 2.938163982698783;
-var d0 = 0.007784695709041462;
-var d1 = 0.3224671290700398;
-var d2 = 2.445134137142996;
-var d3 = 3.754408661907416;
-var pL = 0.02425;
+// node_modules/norm-dist/icdf-voutier.js
+var pL = 0.025;
 var pH = 1 - pL;
-function icdf_default(p) {
+var a0 = 0.151015505647689;
+var a1 = -0.5303572634357367;
+var a2 = 1.365020122861334;
+var b0 = 0.132089632343748;
+var b1 = -0.7607324991323768;
+var c3 = -1.000182518730158;
+var c0 = 16.682320830719988;
+var c1 = 4.120411523939115;
+var c2 = 0.02981418730820021;
+var d0 = 7.173787663925508;
+var d1 = 8.759693508958634;
+function icdf_voutier_default(p = Math.random()) {
   if (p < pL) {
-    const q2 = Math.sqrt(-Math.log(p) * 2);
-    return (((((c0 * q2 + c1) * q2 + c2) * q2 + c3) * q2 + c4) * q2 + c5) / ((((d0 * q2 + d1) * q2 + d2) * q2 + d3) * q2 + 1);
+    const r2 = Math.sqrt(-Math.log(p) * 2);
+    return (c1 * r2 + c0) / ((r2 + d1) * r2 + d0) + c3 * r2 + c2;
   }
   if (p > pH) {
-    const q2 = Math.sqrt(-Math.log(1 - p) * 2);
-    return -(((((c0 * q2 + c1) * q2 + c2) * q2 + c3) * q2 + c4) * q2 + c5) / ((((d0 * q2 + d1) * q2 + d2) * q2 + d3) * q2 + 1);
+    const r2 = Math.sqrt(-Math.log1p(-p) * 2);
+    return -((c1 * r2 + c0) / ((r2 + d1) * r2 + d0) + c3 * r2 + c2);
   }
   const q = p - 0.5, r = q * q;
-  return (((((a0 * r + a1) * r + a2) * r + a3) * r + a4) * r + a5) * q / (((((b0 * r + b1) * r + b2) * r + b3) * r + b4) * r + 1);
+  return ((a1 * r + a0) / ((r + b1) * r + b0) + a2) * q;
 }
 
 // node_modules/grosso-modo/norm.js
 function norm_default(low, high, prob = 0.5) {
   if (high <= low)
     throw Error("high <= low");
-  const mu = (high + low) / 2, si = (high - low) / icdf_default((1 + prob) / 2) / 2;
+  const mu = (high + low) / 2, si = (high - low) / icdf_voutier_default((1 + prob) / 2) / 2;
   return function(zSeed) {
-    return (zSeed === void 0 ? icdf_default(Math.random()) : zSeed) * si + mu;
+    return (zSeed === void 0 ? icdf_voutier_default(Math.random()) : zSeed) * si + mu;
   };
 }
 
@@ -52,11 +42,11 @@ function logn_default(low, high, prob = 0.5) {
   const hl = high * low;
   if (hl <= 0)
     throw Error("range must not cross 0");
-  const mu = Math.log(hl) / 2, si = Math.log(low > 0 ? high / low : low / high) / 2 / icdf_default((prob + 1) / 2);
+  const mu = Math.log(hl) / 2, si = Math.log(low > 0 ? high / low : low / high) / 2 / icdf_voutier_default((prob + 1) / 2);
   return low > 0 ? function(zSeed) {
-    return Math.exp((zSeed === void 0 ? icdf_default(Math.random()) : zSeed) * si + mu);
+    return Math.exp((zSeed === void 0 ? icdf_voutier_default(Math.random()) : zSeed) * si + mu);
   } : function(zSeed) {
-    return -Math.exp(-(zSeed === void 0 ? icdf_default(Math.random()) : zSeed) * si + mu);
+    return -Math.exp(-(zSeed === void 0 ? icdf_voutier_default(Math.random()) : zSeed) * si + mu);
   };
 }
 
@@ -69,7 +59,7 @@ function dice_default(min, max) {
   const size = max - min + 1, refs = [];
   let i = 1;
   for (; i < size; ++i)
-    refs[i - 1] = icdf_default(i / size);
+    refs[i - 1] = icdf_voutier_default(i / size);
   refs[i - 1] = Infinity;
   return function(zSeed) {
     if (zSeed === void 0)
@@ -89,16 +79,16 @@ function pdf_default(z) {
 // node_modules/norm-dist/cdf.js
 var b02 = 0.2316419;
 var b12 = 0.31938153;
-var b22 = -0.356563782;
-var b32 = 1.781477937;
-var b42 = -1.821255978;
+var b2 = -0.356563782;
+var b3 = 1.781477937;
+var b4 = -1.821255978;
 var b5 = 1.330274429;
 function cdf_default(z) {
   if (z > 6)
     return 1;
   else if (z < -6)
     return 0;
-  const t = 1 / (1 + b02 * Math.abs(z)), t2 = t * t, y = t * (b12 + b22 * t + (b32 + b42 * t + b5 * t2) * t2);
+  const t = 1 / (1 + b02 * Math.abs(z)), t2 = t * t, y = t * (b12 + b2 * t + (b3 + b4 * t + b5 * t2) * t2);
   return z < 0 ? pdf_default(-z) * y : 1 - pdf_default(z) * y;
 }
 
@@ -172,7 +162,7 @@ function riskIndex(risks, itm) {
 // node_modules/@hugov/correl-range/src/utils.js
 function fillZ(arr) {
   for (let i = 0; i < arr.length; ++i)
-    arr[i] = icdf_default((i + 0.5) / arr.length);
+    arr[i] = icdf_voutier_default((i + 0.5) / arr.length);
   return arr;
 }
 
@@ -242,7 +232,7 @@ function random(dim) {
   const zs = dim.length ? dim : new Float64Array(dim);
   return function() {
     for (let i = 0; i < zs.length; ++i)
-      zs[i] = icdf_default(Math.random());
+      zs[i] = icdf_voutier_default(Math.random());
     return zs;
   };
 }
@@ -254,11 +244,14 @@ function permute(dim) {
 // node_modules/sample-distribution/index.js
 var D = class {
   constructor(size = 32) {
-    const vs = size.buffer ? size : new Float64Array(size.byteLength ? size : 2 * size);
+    const buffer = size.buffer || (size.byteLength ? size : new ArrayBuffer(size << 4)), offset = size.byteOffset || 0, byteLn = (size.byteLength || buffer.byteLength) >> 1, length = byteLn >> 3;
     Object.defineProperties(this, {
-      vs: { value: vs },
-      rs: { value: new Float64Array(vs.buffer, vs.byteOffset + vs.byteLength / 2, vs.length / 2) }
+      vs: { value: new Float64Array(buffer, offset, length) },
+      rs: { value: new Float64Array(buffer, offset + byteLn, length) }
     });
+  }
+  get data() {
+    return new DataView(this.vs.buffer, this.vs.byteOffset, this.vs.byteLength << 1);
   }
   get N() {
     return this.rs[this.rs.length - 1];
@@ -275,7 +268,7 @@ var D = class {
     return v < 0 ? 0 : Math.sqrt(v);
   }
   \u03A3(pow) {
-    const vs = this.vs, rs = this.rs, N = Math.min(rs.length, rs[rs.length - 1]), Mm = N - 1, Op = pow + 1;
+    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), Mm = M - 1, Op = pow + 1;
     if (pow === 0)
       return rs[Mm];
     if (pow === 1) {
@@ -285,7 +278,7 @@ var D = class {
       return sum2 / Op;
     }
     let sum = vs[0] ** pow;
-    for (let i = 1; i < N; ++i) {
+    for (let i = 1; i < M; ++i) {
       sum += vs[i] ** pow + (rs[i] - rs[i - 1] - 1) * (vs[i] ** Op - vs[i - 1] ** Op) / (vs[i] - vs[i - 1]) / Op;
     }
     return sum;
@@ -305,8 +298,8 @@ var D = class {
     const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), N = rs[M - 1];
     if (x === vs[0] || x === vs[M - 1])
       return 0.5 / N;
-    const j = topIndex(vs, x, M), i = j - 1;
-    return j === 0 || j === M ? 0 : (rs[j] - rs[i]) / (vs[j] - vs[i]) / N;
+    const j = topIndex(vs, x, M);
+    return j === 0 || j === M ? 0 : (rs[j] - rs[j - 1]) / (vs[j] - vs[j - 1]) / N;
   }
   plotF(ctx, xMin = this.vs[0], xMax = this.vs[this.rs.length - 1]) {
     const rs = this.rs, vs = this.vs, xScale = ctx.canvas.width / (xMax - xMin), yScale = ctx.canvas.height / rs[rs.length - 1], H = ctx.canvas.height;
@@ -316,19 +309,20 @@ var D = class {
       ctx.lineTo((vs[i] - xMin) * xScale, H - (rs[i] - 0.5) * yScale);
     ctx.lineTo((vs[rs.length - 1] - xMin) * xScale, 0);
   }
-  plotf(ctx, xMin = this.vs[0], xMax = this.vs[this.rs.length - 1], yMax = 5 / (this.vs[this.rs.length - 2] - this.vs[1])) {
-    const rs = this.rs, vs = this.vs, xScale = ctx.canvas.width / (xMax - xMin), yScale = ctx.canvas.height * (this.vs[this.rs.length - 1] - this.vs[0]) / (6 * rs[rs.length - 1]), H = ctx.canvas.height;
-    let x = (vs[0] - xMin) * xScale;
+  plotf(ctx, xMin = this.vs[0], xMax = this.vs[this.rs.length - 1], yMax = 2 / (this.Q(0.75) - this.Q(0.25))) {
+    const rs = this.rs, vs = this.vs, xScale = ctx.canvas.width / (xMax - xMin), yScale = ctx.canvas.height / yMax / rs[rs.length - 1], H = ctx.canvas.height;
+    let x = Math.round((vs[0] - xMin) * xScale) + 0.5;
     ctx.beginPath();
     ctx.moveTo(x, H);
     for (let i = 0, j = 1, y = 0; j < rs.length; i = j++) {
-      ctx.lineTo(x, y = H - (rs[j] - rs[i]) / (vs[j] - vs[i]) * yScale);
-      ctx.lineTo(x = (vs[j] - xMin) * xScale, y);
+      ctx.lineTo(x, y = Math.round(H - (rs[j] - rs[i]) / (vs[j] - vs[i]) * yScale) + 0.5);
+      ctx.lineTo(x = Math.round((vs[j] - xMin) * xScale) + 0.5, y);
     }
     ctx.lineTo(x, H);
   }
   push(x) {
-    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), j = topIndex(this.vs, x, M);
+    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]);
+    let j = topIndex(this.vs, x, M);
     if (M < rs.length) {
       for (let ir = M; ir > j; --ir) {
         rs[ir] = ir + 1;
@@ -338,9 +332,20 @@ var D = class {
       vs[j] = x;
       if (M !== rs.length - 1)
         ++rs[rs.length - 1];
-    } else if (j === M)
-      newmax(vs, rs, x);
-    else if (j === 0) {
+    } else if (j === M) {
+      --j;
+      const i = j - 1, h = i - 1, \u0394wv = vs[j] - vs[i], \u0394xu = x - vs[h], rjh = rs[i] * (vs[j] - vs[h]);
+      if (\u0394xu !== 0) {
+        const r_w = (rs[j] * (x - vs[i]) + rjh - rs[h] * \u0394wv) / \u0394xu, r_v = (rs[j] * (x - vs[j]) + rjh - \u0394wv) / \u0394xu;
+        if (r_v < rs[h] || vs[i] + vs[j] < vs[h] + x && r_w < rs[j] + 1) {
+          vs[i] = vs[j];
+          rs[i] = r_w;
+        } else
+          rs[i] = r_v;
+        vs[j] = x;
+      }
+      ++rs[j];
+    } else if (j === 0) {
       const u = vs[0], \u0394wx = vs[2] - x;
       if (\u0394wx !== 0) {
         const r_v = (vs[2] + vs[1] - 2 * x + rs[1] * (vs[2] - u)) / \u0394wx, r_u = r_v - rs[2] * (vs[1] - u) / \u0394wx;
@@ -353,36 +358,38 @@ var D = class {
       }
       for (let ir = 2; ir < rs.length; ++ir)
         ++rs[ir];
-    } else {
-      let i = j === 1 || j !== M - 1 && 2 * x > vs[j] + vs[j - 1] ? j : j - 1;
-      const w = vs[i + 1], v = vs[i], \u0394wu = w - vs[i - 1];
+    } else if (j !== 1 && (j === M - 1 || 2 * x < vs[j + 1] + vs[j - 2])) {
+      --j;
+      let k = j + 1, i = j - 1;
+      const w = vs[k], v = vs[j], \u0394wu = w - vs[i];
       if (\u0394wu !== 0) {
-        const r_x = rs[i] + (w - x + (x - v) * (rs[i + 1] - rs[i - 1])) / \u0394wu;
-        if (v < x ? vs[i - 1] + w < v + x || r_x > rs[i + 1] + 1 : v + x < vs[i - 1] + w || r_x < rs[i - 1])
-          rs[i] += (w + v - 2 * x) / \u0394wu;
+        const r_x\u0394wu = rs[j] * \u0394wu + (w - x + (x - v) * (rs[k] - rs[i]));
+        if (vs[i] + w < v + x || r_x\u0394wu >= (rs[k] + 1) * \u0394wu)
+          rs[j] += (w + v - 2 * x) / \u0394wu;
         else {
-          rs[i] = r_x;
-          vs[i] = x;
+          rs[j] = r_x\u0394wu / \u0394wu;
+          vs[j] = x;
         }
       }
-      while (++i < rs.length)
-        ++rs[i];
+      while (++j < rs.length)
+        ++rs[j];
+    } else {
+      let k = j + 1, i = j - 1;
+      const w = vs[k], v = vs[j], \u0394wu = w - vs[i];
+      if (\u0394wu !== 0) {
+        const r_x\u0394wu = rs[j] * \u0394wu + (w - x + (x - v) * (rs[k] - rs[i]));
+        if (x + v < vs[i] + w || r_x\u0394wu <= rs[i] * \u0394wu)
+          rs[j] += (w + v - 2 * x) / \u0394wu;
+        else {
+          rs[j] = r_x\u0394wu / \u0394wu;
+          vs[j] = x;
+        }
+      }
+      while (++j < rs.length)
+        ++rs[j];
     }
   }
 };
-function newmax(vs, rs, x) {
-  const j = rs.length - 1, i = j - 1, h = i - 1, \u0394wv = vs[j] - vs[i], \u0394xu = x - vs[h], rjh = rs[i] * (vs[j] - vs[h]);
-  if (\u0394xu !== 0) {
-    const r_w = (rs[j] * (x - vs[i]) + rjh - rs[h] * \u0394wv) / \u0394xu, r_v = (rs[j] * (x - vs[j]) + rjh - \u0394wv) / \u0394xu;
-    if (r_v < rs[h] || vs[i] + vs[j] < vs[h] + x && r_w < rs[j] + 1) {
-      vs[i] = vs[j];
-      rs[i] = r_w;
-    } else
-      rs[i] = r_v;
-    vs[j] = x;
-  }
-  ++rs[j];
-}
 function topIndex(arr, v, max) {
   let low = 0;
   while (low < max) {

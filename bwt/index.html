@@ -69,66 +69,47 @@
 	</span>
 	<span lang=fr>
 		<a href="https://fr.wikipedia.org/wiki/Base64">
-		Codage Base80</a>
+		Codage Base85</a>
 		<small>avec [0-9A-Za-z.\-_~,?!():;+/*=$&@]</small>
 	</a>
 	</span>
 </h3>
 <pre id=enc></pre>
 
+<h3 data-lang>Decode Test // Test de décodage</h3>
+<pre id=dec></pre>
+
 <script type=module>
 import hashData from '../_src/hash-data.js'
 import {$} from '/_npm/@hugov/inhtml.js' //$ = ids => document.getElementById(ids[0])
-import {bwt, inv_bwt} from '/_npm/@hugov/shorter-string/src/bwt.js'
-import {eMTF, dMTF} from '/_npm/@hugov/shorter-string/src/mtf.js'
-import {UPPER, LOWER, DIGIT} from '/_npm/@hugov/shorter-string/src/charset.js'
-import {enc, dec, QUERY} from '/_npm/@hugov/shorter-string.js'
-
-const DIC = (' ' + LOWER + `,.'":;-?()[]{}\n!` + DIGIT + '+/*=_~<>^`#%\t$&@|\\' + UPPER).split('')
+import {encodeBWT} from '/_npm/@hugov/shorter-string/src/bwt.js'
+import {encodeMTF} from '/_npm/@hugov/shorter-string/src/mtf.js'
+import {encodeEGC} from '/_npm/@hugov/shorter-string/src/egc.js'
+import {encodeBTT} from '/_npm/@hugov/shorter-string/src/btt.js'
+import {LOWER, DIGIT, UPPER, HASH} from '/_npm/@hugov/shorter-string/src/charset.js'
+import {decode} from '/_npm/@hugov/shorter-string.js'
 
 const $src = $('#src'),
 			$bwt = $('#bwt'),
 			$mtf = $('#mtf'),
 			$egc = $('#egc'),
-			$enc = $('#enc')
+			$enc = $('#enc'),
+			$dec = $('#dec')
 
 const dohash = hashData(src => {
-	const b = bwt(src),
-				m = eMTF(b, DIC),
-				g = arr_big(m)
+	const b = encodeBWT(src),
+				m = encodeMTF(b),
+				g = encodeEGC(m),
+				c = encodeBTT(g)
 	$src.textContent = src
 	$bwt.textContent = b
 	$mtf.textContent = m
 	$egc.textContent = g
-	$enc.textContent = toString(g)
+	$enc.textContent = c
+	$dec.textContent = decode(c)
 })
 
 $src.oninput = evt => dohash(evt.target.value)
-
-function arr_big(arr) {
-	let res = 0n,
-			j = arr.length
-	while(j--) {
-		let v = arr[j]+1, //increment to allow 0
-				n = -1
-		while (v) {
-			res = v&1 ? (res << 1n) | 1n : (res << 1n)
-			v >>>= 1
-			++n
-		}
-		res <<= BigInt(n)
-	}
-	return res
-}
-function toString(big, keys=QUERY) {
-	const len = BigInt(keys.length)
-	let res = []
-	do {
-		res.unshift(keys[big%len])
-		big /= len
-	} while (big)
-	return res.join('')
-}
 
 </script>
 </body>
