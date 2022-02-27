@@ -73,7 +73,7 @@ var UNRESERVED = BASE62 + "-._~";
 var PCHAR = UNRESERVED + "%!$&'()*+,;=:@";
 var RFC1924 = BASE62 + "!#$%&()*+-;<=>?@^_`{|}~";
 var QUERY = UNRESERVED + "%!$&()*+,;=:@";
-var HASH = PCHAR + "/?#[]";
+var HASH = PCHAR + "/?#";
 var MTF = charRange(127, 127, charRange(0, 8, charRange(11, 31, " " + LOWER + `,.'":;-?()[]{}
 !` + DIGIT + "+/*=_~<>^`#%	$&@|\\" + UPPER)));
 function charRange(i, j, s) {

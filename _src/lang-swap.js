@@ -23,7 +23,12 @@ export default (ls, cb) => {
 		}
 	}
 
+	// either
+	// 1. eval data-lang
+	// 2. pick ElementChild matching lang=##
+	// 3. pick text from a // b // c
 	function pick(el) {
+		// first initiation
 		if (!kids.has(el)) {
 			if (el.dataset.lang) {
 				try {

@@ -20,7 +20,7 @@
   "dependencies": {
     "@hugov/correl-range": "^0.3.0",
     "@hugov/inhtml": "^0.4.1",
-    "@hugov/shorter-string": "^3.0.0",
+    "@hugov/shorter-string": "^4.0.1",
     "array-order": "^2.2.0",
     "grosso-modo": "^4.2.0",
     "lazy-stats": "^3.1.1",
