@@ -1,88 +1,42 @@
-// Select the node that will be observed for mutations
-const langRE = /(?<=^#)[^/]*/,
+const langRE = /(?<=^#)[^/]*/, // #en/ ==> en
 			H = document.documentElement,
+			setters = new Map,
 			div = '//'
 
+
+export default (lang, list) => H.querySelectorAll('[data-lang]').forEach(pick, list)
+
 /*
-TODO save in local storage to avoid loosing language between links and to simblify links
-
-
-Select the node that will be observed for mutations
-align hash and html.lang
+either
+	1. eval data-lang
+	2. pick ElementChild matching lang=##
+	3. pick text from a // b // c
+	this::Map of {lang:element, set:function}
 */
-export default (ls, cb) => {
-	const	mo = new MutationObserver( onlang ),
-				kids = new Map
-
-	function onlang() {
-		if(!ls.includes(H.lang)) H.lang = ls[0]
-		else {
-			if (gethashlang() !== H.lang) sethashlang(H.lang)
-			H.querySelectorAll('[data-lang]').forEach(pick)
-			cb?.(H.lang)
-		}
-	}
-
-	// either
-	// 1. eval data-lang
-	// 2. pick ElementChild matching lang=##
-	// 3. pick text from a // b // c
-	function pick(el) {
-		// first initiation
-		if (!kids.has(el)) {
-			if (el.dataset.lang) {
-				try {
-					kids.set(el, eval(el.dataset.lang))
-				} catch {
-					console.warn('invalid data-lang function:', el.dataset.lang)
-					kids.set(el, null)
-				}
-			}
-			else {
-				if (!el.firstElementChild) {
-					const langs = el.dataset.lang ? el.dataset.lang.split(' ') : ls
-					el.innerHTML = el.textContent.split(div)
-					.map( (t,i) => `<span lang=${ langs[i] }>${ t.trim() }</span>`)
-					.join('')
-				}
-				// set choices and clear the parent
-				const res = {}
-				el.querySelectorAll('[lang]').forEach( k => res[k.lang] = k )
-				kids.set(el, res)
-				el.textContent = ''
+function pick(el) {
+	// first initiation
+	if (!setters.has(el)) {
+		const setter = {}
+		if (el.dataset.lang) {
+			try {
+				setter.set = Function(el.dataset.lang)
+			} catch {
+				console.warn('invalid data-lang setter:', el.dataset.lang)
 			}
 		}
-		const setter = kids.get(el)
-		if (typeof setter === 'function') {
-			el.lang = H.lang
-			setter(el)
+		if (!el.firstElementChild) {
+			const langs = el.dataset.lang ? el.dataset.lang.split(' ') : this
+			el.innerHTML = el.textContent.split(div)
+				.map( (t,i) => `<span lang=${ langs[i] }>${ t.trim() }</span>`)
+				.join('')
 		}
-		else if (setter) el.replaceChildren( setter[H.lang] )
+		// set choices and clear the parent
+		el.querySelectorAll('[lang]').forEach( k => el.removeChild(setter[k.lang] = k) )
+		setters.set(el, setter)
 	}
-
-/**
- * picks a supported language from the following sources (in that order)
- * location.hash > navigator.languages > document.documentElement.lang
- */
-	function onhash() {
-		const lang = gethashlang()
-		//language in hash is empty or not supported, change it
-		if(!ls.includes(lang)) sethashlang(
-			navigator.languages.find( l => ls.includes( l.split('-', 1) ) ) || H.lang
-		)
-		else if (lang !== H.lang) H.lang = lang
-	}
-
-	onhash()
-	onlang()
-	mo.observe(H, { attributeFilter: [ 'lang' ] })
-	addEventListener('hashchange', onhash)
+	const setter = setters.get(el)
+	if (setter[H.lang]) el.replaceChildren( setter[H.lang] )
+	el.lang = H.lang
+	setter.set?.call(el)
 }
 
-function gethashlang() {
-	return location.hash.match(langRE)?.[0] || ''
-}
-
-function sethashlang(lang) {
-	location.hash = location.hash ? location.hash.replace(langRE, lang) : `#${lang}`
-}

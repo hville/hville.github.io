@@ -12,7 +12,7 @@
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>
@@ -96,12 +96,12 @@ const $src = $('#src'),
 			$enc = $('#enc'),
 			$dec = $('#dec')
 
-const dohash = hashData(src => {
-	const b = encodeBWT(src),
+const dohash = hashData( ({data, lang}) => {
+	const b = encodeBWT(data),
 				m = encodeMTF(b),
 				g = encodeEGC(m),
 				c = encodeBTT(g)
-	$src.textContent = src
+	$src.textContent = data
 	$bwt.textContent = b
 	$mtf.textContent = m
 	$egc.textContent = g
@@ -109,7 +109,7 @@ const dohash = hashData(src => {
 	$dec.textContent = decode(c)
 })
 
-$src.oninput = evt => dohash(evt.target.value)
+$src.oninput = evt => dohash({data: evt.target.value})
 
 </script>
 </body>

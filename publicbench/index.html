@@ -12,7 +12,7 @@
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>
@@ -125,12 +125,12 @@ $('#run').onclick = () => {
 }
 
 // save / load
-const saveData = hashData(dataString => {
+const saveData = hashData( ({data, lang}) => {
 	if (rows.length) tbody.textContent = '' //reset rows
-	if (dataString) {
-		const data = dataString.split('\v') //vertial tab as seperator
-		init.textContent = data.shift()
-		data.forEach( code => { if (code) tbody.append(makeRow(code)) } )
+	if (data) {
+		const itms = data.split('\v') //vertial tab as seperator
+		init.textContent = itms.shift()
+		itms.forEach( code => { if (code) tbody.append(makeRow(code)) } )
 	}
 	// one last empty line to allow adding new lines
 	tbody.appendChild( makeRow() )
@@ -141,7 +141,7 @@ function save() {
 	const values = [init.textContent]
 	//get all rows but the last
 	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
-	saveData( values.join('\v') )
+	saveData( {data: values.join('\v')} )
 }
 editable(init)
 init.onchange = save

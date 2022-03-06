@@ -7,17 +7,19 @@
 	<meta name=description content="schem.ist home">
 	<link rel="stylesheet" href="./_src/main.css">
 	<script type=module src="./_src/data-lang.js"></script>
+	<script type=module src="./_src/hash-data.js"></script>
 </head>
 
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
 	<data-lang>en fr iu-Cans zh-Hant zh-Hans</data-lang>
 </div>
 <hr>
 
 <h1 style="font-size: 1200%;"">404</h1>
+<!-- https://en.wikipedia.org/wiki/Canadian_Aboriginal_syllabics -->
 <h2 data-lang>Error 404 - page not found // Erreur 404 - page non trouvée // ᑕᒻᒪᖅᓯᒪᔪᖅ 404 - ᒪᒃᐱᖅᑐᒐᖅ ᓇᓂᔭᒃᓴᐅᙱᑦᑐᖅ
 	// 錯誤 404 - 找不到頁面 // 错误 404 - 找不到页面</h2>
 
@@ -37,17 +39,5 @@
 TODO
 1. could check hash for data/request
 2. ajouter des tests ici?!
-
-https://en.wikipedia.org/wiki/Canadian_Aboriginal_syllabics
-
-<script>
-  (function(){
-    var redirect = sessionStorage.redirect;
-    delete sessionStorage.redirect;
-    if (redirect && redirect != location.href) {
-      history.replaceState(null, null, redirect);
-    }
-  })();
-</script>
 -->
 

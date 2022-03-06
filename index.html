@@ -7,13 +7,14 @@
 	<meta name=description content="schem.ist home">
 	<link rel="stylesheet" href="./_src/main.css">
 	<script type=module src="./_src/data-lang.js"></script>
+	<script type=module src="./_src/hash-data.js"></script>
 	<link rel="icon" type="image/svg+xml" href=/favicon.svg>
 </head>
 
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>

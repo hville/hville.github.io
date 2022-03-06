@@ -12,7 +12,7 @@
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>
@@ -29,7 +29,7 @@ import solve from './solve.js'
 
 const expEl = $('#exp'),
 			rootEl = $('#root'),
-			inMAth = new Set(Object.getOwnPropertyNames(Math))
+			inMath = new Set(Object.getOwnPropertyNames(Math))
 
 let last = '',
 		wrkr
@@ -39,19 +39,20 @@ function replacer(txt) {
 		: Number.hasOwnProperty(txt) ? `Number.${txt}`
 		: txt
 }
-const dohash = hashData(code => {
+
+const dohash = hashData( ({lang, code}) => {
 	if (!code) code = expEl.value
 	else expEl.value = code
-	rootEl.textContent = '...'
+	rootEl.textContent = '...' //TODO kossé?
 	try {
 		const f = Function('x', `return ${code.replace(/[a-zA-Z$_][a-zA-Z$_0-9]*/, replacer)}`)
 		rootEl.textContent = typeof f(0) === 'number' ? solve(f).toPrecision(8) : '...'
 	} catch {
-		rootEl.textContent = `!`
+		rootEl.textContent = `!` //TODO kossé?
 	}
 }, null, null)
 
-expEl.oninput = evt => dohash(evt.currentTarget.value)
+expEl.oninput = evt => dohash({data:evt.currentTarget.value})
 
 </script>
 </body>

@@ -12,23 +12,11 @@
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
 	<data-lang>en fr de es</data-lang>
 </div>
 <hr>
 
-<!-- TODO
-	<details>
-	<summary data-lang>examples // exemples // Beispiele // ejemplos</summary>
-	<li data-lang>
-		<a lang=en href="./#en/1sqfEBX,BWl1Cs2xNv;j0kyVf~+tT?zJ,RFoq@j6OntNx_:MP/NMIpSj9s~2_F$kN&?i1hp2jjHE:/f)rbhwzJ/f+3wk0tm5Z=hrG">
-		variable rate and duration investment
-		</a>
-		<a lang=fr href="./#fr/1sqfEBX,BWl1Cs2xNv;j0kyVf~+tT?zJ,RFoq@j6OntNx_:MP/NMIpSj9s~2_F$kN&?i1hp2jjHE:/f)rbhwzJ/f+3wk0tm5Z=hrG">
-		investissement à durée et rendement variable
-	</a></li>
-</details>
- -->
 <h3 data-lang>regex filter // filtre regex // Regex Filter // filtro regexp</h3>
 <pre><textarea id=regexp rows=1 autofocus></textarea></pre>
 
@@ -63,8 +51,9 @@ function resetWorker() {
 		resetWorker()
 	}
 	wrkr.onmessage = e => {
-		const {list, code, lang} = e.data
-		if (lang + code === last) showList(list)
+		const {list, data, lang} = e.data
+		// TODO location.hash instead?
+		if (lang + data === last) showList(list)
 	}
 }
 function showList(list) {
@@ -76,21 +65,20 @@ function showText(count, result) {
 	countEl.textContent = count
 }
 
-const dohash = hashData(code => {
-	if (!code) code = regexpEl.value
-	else regexpEl.value = code
-	const lang = document.documentElement.lang
+const dohash = hashData( ({lang, data}) => {
+	if (!data) data = regexpEl.value
+	else regexpEl.value = data
 
 	showText('...', '...')
-	last = lang + code
+	last = lang + data
 	fetchList(lang)
 		.then(dic => {
-			wrkr.postMessage( {dic, code, lang, max} )
+			wrkr.postMessage( {dic, data, lang, max} )
 		 } )
 		.catch( e => console.warn(e.message) )
 })
 
-regexpEl.oninput = evt => dohash(evt.currentTarget.value)
+regexpEl.oninput = evt => dohash({data: evt.target.value})
 
 </script>
 </body>

@@ -13,7 +13,7 @@
 <body>
 
 <div style="display: flex; justify-content: space-between;">
-	<h2><a data-lang="el=>el.href=`/#${el.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>
@@ -57,11 +57,12 @@ const jar = CodeJar($('#editor'), j=>{
 	resEl.textContent=''
 })
 // save / load
-jar.onUpdate(hashData(code => {
+const onhash = hashData( ({data}) => {
 	const pos = jar.save()
-	jar.updateCode(code)
+	jar.updateCode(data)
 	jar.restore(pos)
-}))
+})
+jar.onUpdate( data => onhash({data}) )
 
 $('#run1e4').onclick = runSim.bind(null,1e4)
 $('#run1e5').onclick = runSim.bind(null,1e5)
