@@ -19,6 +19,7 @@
 
 <h3 data-lang>regex filter // filtre regex // Regex Filter // filtro regexp</h3>
 <pre><textarea id=regexp rows=1 autofocus></textarea></pre>
+<aside><span data-lang>source // source // Quelle // fuente</span>: <a href="https://github.com/lorenbrichter/Words">https://github.com/lorenbrichter/Words</a></aside>
 
 <h3><span data-lang>results // résultats // Ergebnisse // resultados</span> (<span id=count>0</span>)</h3>
 <pre id=result style=column-count:auto;column-width:30ch;></pre>
@@ -33,8 +34,8 @@ const regexpEl = $('#regexp'),
 			dics = {},
 			max = 200 //TODO input
 
-async function fetchList(lang) {
-	const url = `https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/${lang}.txt`
+async function fetchList(lang) { //TODO get local versions
+	const url = `./${lang}.txt`
 	return dics[lang] || (dics[lang] = (await (await fetch(url)).text()).trim().split(/[ ;,]*[\r\n]\s*/))
 }
 
@@ -52,7 +53,6 @@ function resetWorker() {
 	}
 	wrkr.onmessage = e => {
 		const {list, data, lang} = e.data
-		// TODO location.hash instead?
 		if (lang + data === last) showList(list)
 	}
 }

@@ -1,16 +1,5 @@
-TODO add notes to html
-TODO make dic files local (faster and long-term reliable)
 
-https://github.com/lorenbrichter/Words
-https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/de.txt
-https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/en.txt
-https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/es.txt
-https://raw.githubusercontent.com/lorenbrichter/Words/master/Words/fr.txt
-de
-en
-es
-fr 336528
-txt
+https://github.com/lorenbrichter/Words : de, en, es, fr (336528 mots, format:txt)
 
 https://github.com/hbenbel/French-Dictionary/tree/master/dictionary
 https://raw.githubusercontent.com/hbenbel/French-Dictionary/master/dictionary/dictionary.txt
