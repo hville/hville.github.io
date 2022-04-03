@@ -1,30 +1,32 @@
 // node_modules/@hugov/bench/browser.js
-var Q1_PAD = 3;
-var POOLQTY = 4 * Q1_PAD + 1;
-var POOL_MS = 100;
-async function browser_default(tests) {
-  const testNames = Object.keys(tests), results = {};
+async function browser_default(tests, POOL_MS = 50, Q1_PAD = 3) {
+  const testNames = Object.keys(tests), POOLQTY = 3 * Q1_PAD + 1, testdata = {};
   for (const k of testNames) {
     const sample_ = tests[k]();
-    results[k] = Object.defineProperties([], {
-      type: { value: typeof await sample_ },
-      pool: { value: 1, writable: true },
-      means: { value: [] },
-      get_ms: { value: sample_.then ? get_ms_ : get_ms }
-    });
-    await run(tests[k], results[k]);
+    testdata[k] = {
+      test: tests[k],
+      type: typeof await sample_,
+      pool: 1,
+      means: [],
+      get_ms: sample_.then ? get_ms_ : get_ms
+    };
+    await run(testdata[k], POOL_MS);
+    testdata[k].means.length = 0;
   }
   for (let i = 0; i < POOLQTY; ++i) {
     for (const k of testNames)
-      await run(tests[k], results[k]);
+      await run(testdata[k], POOL_MS);
     testNames.push(testNames.shift());
   }
-  for (const res of Object.values(results))
-    if (!res.error) {
-      res.means.sort((a, b) => a - b);
-      res[0] = res.means[Q1_PAD];
-      res[1] = res.means[3 * Q1_PAD];
+  const results = {};
+  for (const k in testdata) {
+    if (testdata[k].error)
+      results[k] = testdata[k].error;
+    else {
+      const means = testdata[k].means.sort((a, b) => a - b);
+      results[k] = [means[Q1_PAD], means[2 * Q1_PAD], means[3 * Q1_PAD]];
     }
+  }
   return results;
 }
 function get_ms(fcn, n, type) {
@@ -41,17 +43,17 @@ async function get_ms_(fcn, n, type) {
       return Infinity;
   return performance.now() - t0;
 }
-async function run(test, result) {
-  if (!result.error) {
-    const ms = await result.get_ms(test, result.pool, result.type);
+async function run(data, POOL_MS) {
+  if (!data.error) {
+    const ms = await data.get_ms(data.test, data.pool, data.type);
     if (ms === Infinity)
-      result.error = "inconsistent return type";
-    else if (ms === 0) {
-      result.pool *= 2;
-      run(test, result);
+      data.error = "inconsistent return type";
+    else if (ms > 0) {
+      data.means.push(1e3 * data.pool / ms);
+      data.pool = Math.ceil(data.pool * POOL_MS / ms);
     } else {
-      result.means.push(1e3 * result.pool / ms);
-      result.pool = Math.ceil(result.pool * (POOL_MS / ms + 1) / 2);
+      data.pool *= 2;
+      run(data, POOL_MS);
     }
   }
 }

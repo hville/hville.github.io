@@ -65,7 +65,7 @@
 	</tr>
 	<tr>
 		<th>code</th>
-		<th style="text-align: center; vertical-align: middle; white-space: pre-wrap;">Hz ( Q25   Q75 )</th>
+		<th style="text-align: center; vertical-align: middle; white-space: pre-wrap;">quartiles (Hz)</th>
 	</tr>
 </thead>
 
@@ -97,7 +97,7 @@ const init = $('#init'),
 const makeRow = cast('template', ({row, code, time}, codeVal='') => {
 	editable(code)
 	code.textContent = codeVal
-	time.update = res => time.textContent = !res ? '' : `( ${ res.map( v => v.toPrecision(3) ).join('   ') } )`
+	time.update = res => time.textContent = !res ? '' : res.map( v => v.toPrecision(3) ).join('  ')
 	code.onchange = () => {
 		time.textContent = ''
 		if (!code.textContent) row.remove()
