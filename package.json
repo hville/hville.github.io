@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/hville/hville.github.io#readme",
   "dependencies": {
+    "@hugov/bench": "^0.9.0",
     "@hugov/correl-range": "^0.3.0",
     "@hugov/inhtml": "^0.4.1",
     "@hugov/shorter-string": "^4.0.1",
@@ -25,7 +26,6 @@
     "grosso-modo": "^4.2.0",
     "lazy-stats": "^3.1.1",
     "norm-dist": "^3.0.1",
-    "pico-parse": "^0.15.1",
     "prismjs": "^1.27.0",
     "sample-distribution": "^1.5.0"
   },

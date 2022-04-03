@@ -16,7 +16,7 @@ export default function(f, a, b, epsilon = Number.EPSILON, {
 					x12 = ( a + b ) / 2,
 					dx = xf-x12,
 					sign = Math.sign( -dx ),
-					ẟ = halfBA*halfBA*2.71215, // TODO //((1+Math.sqrt(5))/2)**2
+					ẟ = halfBA*halfBA*2.71215, // TODO ie k2=2; k1=2.71215 ((1+Math.sqrt(5))/2)**2 = 2.6180...
 					xt = ẟ > Math.abs( x12 - xf ) ? x12 : xf + sign*ẟ,
 					// projection
 					r = epsilonk - halfBA,

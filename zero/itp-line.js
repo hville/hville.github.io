@@ -1,7 +1,6 @@
 /*
 https://docs.rs/kurbo/0.8.1/kurbo/common/fn.solve_itp.html
 */
-//TODO sorted array find?
 //TODO fb>x>fa
 export default function(f) {
 	const f1 = f(1)

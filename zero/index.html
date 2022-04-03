@@ -43,12 +43,12 @@ function replacer(txt) {
 const dohash = hashData( ({lang, code}) => {
 	if (!code) code = expEl.value
 	else expEl.value = code
-	rootEl.textContent = '...' //TODO kossé?
+	rootEl.textContent = '...'
 	try {
 		const f = Function('x', `return ${code.replace(/[a-zA-Z$_][a-zA-Z$_0-9]*/, replacer)}`)
 		rootEl.textContent = typeof f(0) === 'number' ? solve(f).toPrecision(8) : '...'
 	} catch {
-		rootEl.textContent = `!` //TODO kossé?
+		rootEl.textContent = `!`
 	}
 }, null, null)
 

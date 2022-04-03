@@ -65,9 +65,7 @@
 	</tr>
 	<tr>
 		<th>code</th>
-		<th style="text-align: center; vertical-align: middle; white-space: pre-wrap;" data-lang>
-			result in nanoseconds ( Q25   Q75 ) // résultats en nanosecondes ( Q25   Q75 )
-		</th>
+		<th style="text-align: center; vertical-align: middle; white-space: pre-wrap;">Hz ( Q25   Q75 )</th>
 	</tr>
 </thead>
 
@@ -99,7 +97,7 @@ const init = $('#init'),
 const makeRow = cast('template', ({row, code, time}, codeVal='') => {
 	editable(code)
 	code.textContent = codeVal
-	time.update = res => time.textContent = !res ? '' : `( ${ res.IQR.map( v => v.toPrecision(3) ).join('   ') } )`
+	time.update = res => time.textContent = !res ? '' : `( ${ res.map( v => v.toPrecision(3) ).join('   ') } )`
 	code.onchange = () => {
 		time.textContent = ''
 		if (!code.textContent) row.remove()
@@ -113,7 +111,7 @@ const makeRow = cast('template', ({row, code, time}, codeVal='') => {
 
 // simulation button handler
 $('#run').onclick = () => {
-	const initCode = `import bench from 'https://cdn.skypack.dev/@hugov/bench@0.7.0';${ init.textContent };`
+	const initCode = `import bench from '/_npm/@hugov/bench.js';${ init.textContent };`
 	const execCode = `()=>bench([${
 		Array.from(rows).slice(0,-1).map( row => `function(){${row.$ids.code.textContent}}` ).join(',\n')
 	}])`
