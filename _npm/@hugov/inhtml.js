@@ -1,45 +1,77 @@
-// node_modules/@hugov/inhtml/browser.js
-var D = document;
-var ID = "id";
-var TW = D.createTreeWalker(D, 1);
-var $ = (sel, elm) => (elm || D).querySelector(sel);
-var $$ = (sel, elm) => (elm || D).querySelectorAll(sel);
+// node_modules/@hugov/inhtml/in-frame.js
+var ISMOD = /^[\s]*import[\s'"`*{;]/;
+function frame(code, init = "", attributes = ISMOD.test(init) ? "type=module" : "") {
+  const uid = "_" + Math.floor(Math.random() * 28e11).toString(36);
+  const iframeEl = document.createElement("iframe");
+  iframeEl.style.display = "none";
+  iframeEl.sandbox = "allow-scripts allow-same-origin";
+  iframeEl.srcdoc = `<script ${attributes}>Object.defineProperties(window,{parent:{value:window},frameElement:{value:null}});${init};window.${uid}=(${code}).bind(window)<\/script>`;
+  return new Promise((p, f) => {
+    iframeEl.onerror = (e) => {
+      f(e);
+      iframeEl.remove();
+    };
+    iframeEl.onload = () => {
+      const fcn = iframeEl.contentWindow[uid];
+      if (typeof fcn === "function") {
+        fcn.remove = iframeEl.remove.bind(iframeEl);
+        p(fcn);
+      } else
+        f(new Error("not a function"));
+    };
+    document.body.appendChild(iframeEl);
+  });
+}
+
+// node_modules/@hugov/inhtml/in-html.js
+function tag(strings) {
+  let t = strings[0];
+  for (let i = 1; i < arguments.length; ++i)
+    t += arguments[i] + strings[i];
+  return t;
+}
+function $(selector, parent = document) {
+  return parent.querySelector(Array.isArray(selector) ? tag.apply(null, arguments) : selector);
+}
+function $$(selector, parent = document) {
+  return parent.querySelectorAll(Array.isArray(selector) ? tag.apply(null, arguments) : selector);
+}
+function html(txt) {
+  const T = document.createElement("template");
+  T.innerHTML = Array.isArray(txt) ? tag.apply(null, arguments) : txt;
+  return T.content;
+}
+function getNode(selection) {
+  const node = selection.nodeName ? selection : selection[0] === "<" ? html(selection) : $(selection);
+  return node.content || node;
+}
 function $ids(el) {
-  let spot = TW.currentNode = el;
-  const next = el.nextSibling?.() || null, ids = /* @__PURE__ */ Object.create(null);
-  while ((spot = TW.nextNode()) !== next)
-    if (spot.hasAttribute(ID))
-      (ids[spot.getAttribute(ID)] = spot).removeAttribute(ID);
+  const ids = /* @__PURE__ */ Object.create(null);
+  if (el.id)
+    (ids[el.id] = el).removeAttribute("id");
+  for (const kid of el.querySelectorAll("[id]"))
+    (ids[kid.id] = kid).removeAttribute("id");
   return ids;
 }
 function cast(template, decorator) {
-  template = template.nodeName ? template : template[0] === "<" ? html(template) : $(template);
-  if (template.nodeName === "TEMPLATE")
-    template = template.content;
+  const model = getNode(template);
   return function(v, k) {
-    const el = template.cloneNode(true);
-    const res = decorator.call(this, $ids(el), v, k);
+    const el = model.cloneNode(true), res = decorator.call(this, $ids(el), v, k);
     return res?.nodeType ? res : el;
   };
 }
-function html(base, ...args) {
-  const T = D.createElement("template");
-  T.innerHTML = typeof base === "string" ? base : String.raw(base, ...args);
-  return T.content;
-}
 function list(parent, factory, { getKey, after = null, before = null } = {}) {
-  if (!parent.nodeType)
-    parent = $(parent);
-  let last = /* @__PURE__ */ Object.create(null), updater = parent.update;
-  parent.update = !updater ? updateList : function(...args) {
+  const kin = getNode(parent);
+  let last = /* @__PURE__ */ Object.create(null), updater = kin.update;
+  kin.update = !updater ? updateList : function(...args) {
     updateList.call(this, ...args);
     updater.call(this, ...args);
   };
   function updateList(arr) {
     const kids = /* @__PURE__ */ Object.create(null);
-    let spot = after ? after.nextSibling : parent.firstChild;
+    let spot = after ? after.nextSibling : kin.firstChild;
     if (!arr.length && !before && !after)
-      parent.textContent = "";
+      kin.textContent = "";
     else {
       for (let i = 0; i < arr.length; ++i) {
         const key = getKey?.(arr[i], i, arr) || i;
@@ -50,62 +82,30 @@ function list(parent, factory, { getKey, after = null, before = null } = {}) {
           kid = factory(arr[i], i, arr);
         kids[key] = kid;
         if (!spot)
-          parent.appendChild(kid);
+          kin.appendChild(kid);
         else if (kid === spot.nextSibling)
-          parent.removeChild(spot);
+          kin.removeChild(spot);
         else if (kid !== spot)
-          parent.insertBefore(kid, spot);
+          kin.insertBefore(kid, spot);
         spot = kid.nextSibling;
       }
       while (spot !== before) {
         const next = spot.nextSibling;
-        parent.removeChild(spot);
+        kin.removeChild(spot);
         spot = next;
       }
     }
     last = kids;
     return this;
   }
-  return parent;
-}
-var DELEGATES = {};
-function delegate(eventType) {
-  if (!DELEGATES[eventType]) {
-    DELEGATES[eventType] = "on" + eventType[0].toUpperCase() + eventType.slice(1);
-    D.addEventListener(eventType, listener);
-  }
-}
-function listener(event) {
-  let tgt = event.target, evt = DELEGATES[event.type];
-  do
-    if (tgt[evt])
-      return tgt[evt](e);
-  while (tgt = tgt.parentNode);
-}
-var ISMOD = /^[\s]*import[\s'"`*{;]/;
-function frame(func, init = "", attributes = ISMOD.test(init) ? "type=module" : "") {
-  const frm = D.createElement("iframe");
-  frm.hidden = true;
-  frm.sandbox = "allow-scripts allow-same-origin";
-  frm.srcdoc = `<script ${attributes}>${"" + init}; window.framedFunction=${"" + func}<\/script>`;
-  const framed = new Promise((p, f) => {
-    frm.onload = () => p(frm.contentWindow.framedFunction.bind(frm.contentWindow));
-    frm.onerror = f;
-  });
-  D.body.appendChild(frm);
-  return {
-    run: async (...args) => (await framed)(...args),
-    end: () => void frm.remove()
-  };
+  return kin;
 }
 export {
   $,
   $$,
-  $ids,
-  TW,
   cast,
-  delegate,
   frame,
   html,
-  list
+  list,
+  tag
 };

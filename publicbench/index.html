@@ -115,11 +115,12 @@ $('#run').onclick = () => {
 	const execCode = `()=>bench([${
 		Array.from(rows).slice(0,-1).map( row => `function(){${row.$ids.code.textContent}}` ).join(',\n')
 	}])`
-	const sandbox = frame( execCode, initCode )
-	sandbox.run()
-	.then( res => Array.from(rows).forEach( ({$ids}, i) => $ids.time.update( res[i] ) ) )
-	.catch( err => console.log('error in test', err) )
-	.finally( () => sandbox.end() )
+	const sandbox = frame( execCode, initCode, 'type=module' )
+	sandbox.then(async framedFcn => {
+		const res = await framedFcn()
+		framedFcn.remove()
+		Array.from(rows).forEach( ({$ids}, i) => $ids.time.update( res[i] ) )
+	}).catch( err => console.log('error in test', err) )
 }
 
 // save / load

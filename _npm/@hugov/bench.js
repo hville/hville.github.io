@@ -1,6 +1,6 @@
 // node_modules/@hugov/bench/browser.js
 async function browser_default(tests, POOL_MS = 50, Q1_PAD = 3) {
-  const testNames = Object.keys(tests), POOLQTY = 3 * Q1_PAD + 1, testdata = {};
+  const testNames = Object.keys(tests), POOLQTY = 4 * Q1_PAD + 1, testdata = {};
   for (const k of testNames) {
     const sample_ = tests[k]();
     testdata[k] = {
