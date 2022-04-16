@@ -1,5 +1,5 @@
 {
-  "liveServer.settings.root": "/web",
+  "liveServer.settings.root": "/docs",
   "liveServer.settings.mount": [
     ["/_env", "C:/Users/hugov/_env"]
   ]

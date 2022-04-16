@@ -1,4 +1,4 @@
-// node_modules/norm-dist/icdf-voutier.js
+// ../node_modules/norm-dist/icdf-voutier.js
 var pL = 0.025;
 var pH = 1 - pL;
 var a0 = 0.151015505647689;
@@ -25,7 +25,7 @@ function icdf_voutier_default(p = Math.random()) {
   return ((a1 * r + a0) / ((r + b1) * r + b0) + a2) * q;
 }
 
-// node_modules/grosso-modo/norm.js
+// ../node_modules/grosso-modo/norm.js
 function norm_default(low, high, prob = 0.5) {
   if (high <= low)
     throw Error("high <= low");
@@ -35,7 +35,7 @@ function norm_default(low, high, prob = 0.5) {
   };
 }
 
-// node_modules/grosso-modo/logn.js
+// ../node_modules/grosso-modo/logn.js
 function logn_default(low, high, prob = 0.5) {
   if (high <= low)
     throw Error("high <= low");
@@ -50,7 +50,7 @@ function logn_default(low, high, prob = 0.5) {
   };
 }
 
-// node_modules/grosso-modo/dice.js
+// ../node_modules/grosso-modo/dice.js
 function dice_default(min, max) {
   if (max <= min)
     throw Error("max <= min");
@@ -71,12 +71,12 @@ function dice_default(min, max) {
   };
 }
 
-// node_modules/norm-dist/pdf.js
+// ../node_modules/norm-dist/pdf.js
 function pdf_default(z) {
   return Math.exp(-(Math.log(2 * Math.PI) + z * z) * 0.5);
 }
 
-// node_modules/norm-dist/cdf.js
+// ../node_modules/norm-dist/cdf.js
 var b02 = 0.2316419;
 var b12 = 0.31938153;
 var b2 = -0.356563782;
@@ -92,7 +92,7 @@ function cdf_default(z) {
   return z < 0 ? pdf_default(-z) * y : 1 - pdf_default(z) * y;
 }
 
-// node_modules/grosso-modo/uniform.js
+// ../node_modules/grosso-modo/uniform.js
 function uniform_default(low, high, prob = 0.5) {
   if (high <= low)
     throw Error("high <= low");
@@ -103,7 +103,7 @@ function uniform_default(low, high, prob = 0.5) {
   };
 }
 
-// node_modules/grosso-modo/weibull.js
+// ../node_modules/grosso-modo/weibull.js
 function weibull_default(low, high, prob = 0.5) {
   if (high <= low)
     throw Error("high <= low");
@@ -119,7 +119,7 @@ function weibull_default(low, high, prob = 0.5) {
   };
 }
 
-// node_modules/@hugov/correl-range/src/_random-number.js
+// ../node_modules/@hugov/correl-range/src/_random-number.js
 var RandomNumber = class {
   constructor(fz) {
     this._fz = fz;
@@ -159,14 +159,14 @@ function riskIndex(risks, itm) {
   return idx !== -1 ? idx : risks.push(itm ?? "") - 1;
 }
 
-// node_modules/@hugov/correl-range/src/utils.js
+// ../node_modules/@hugov/correl-range/src/utils.js
 function fillZ(arr) {
   for (let i = 0; i < arr.length; ++i)
     arr[i] = icdf_voutier_default((i + 0.5) / arr.length);
   return arr;
 }
 
-// node_modules/array-order/swap.js
+// ../node_modules/array-order/swap.js
 function swap_default(a, i, j) {
   if (i !== j) {
     let t = a[i];
@@ -176,7 +176,7 @@ function swap_default(a, i, j) {
   return a;
 }
 
-// node_modules/array-order/permute.js
+// ../node_modules/array-order/permute.js
 function permute_default(a, n = a.length) {
   const c = new Uint16Array(n);
   let i = 0;
@@ -209,7 +209,7 @@ function left(a, i = 0, j = a.length - 1) {
   }
 }
 
-// node_modules/array-order/shuffle.js
+// ../node_modules/array-order/shuffle.js
 function shuffle_default(src, tgt) {
   if (tgt) {
     tgt[0] = src[0];
@@ -227,7 +227,7 @@ function shuffle_default(src, tgt) {
   return src;
 }
 
-// node_modules/@hugov/correl-range/samplers.js
+// ../node_modules/@hugov/correl-range/samplers.js
 function random(dim) {
   const zs = dim.length ? dim : new Float64Array(dim);
   return function() {
@@ -241,7 +241,7 @@ function permute(dim) {
   return permute_default(zs);
 }
 
-// node_modules/sample-distribution/index.js
+// ../node_modules/sample-distribution/index.js
 var D = class {
   constructor(size = 32) {
     const buffer = size.buffer || (size.byteLength ? size : new ArrayBuffer(size << 4)), offset = size.byteOffset || 0, byteLn = (size.byteLength || buffer.byteLength) >> 1, length = byteLn >> 3;
@@ -402,7 +402,7 @@ function topIndex(arr, v, max) {
   return max;
 }
 
-// node_modules/lazy-stats/index.js
+// ../node_modules/lazy-stats/index.js
 var LazyStats = class {
   constructor(dim = 1) {
     this.dim = dim;
@@ -455,7 +455,7 @@ var LazyStats = class {
   }
 };
 
-// node_modules/@hugov/correl-range/src/_sim.js
+// ../node_modules/@hugov/correl-range/src/_sim.js
 var Sim = class {
   constructor(rndNs, risks, model, resolution) {
     const point = model();
@@ -551,7 +551,7 @@ var Sim = class {
   }
 };
 
-// node_modules/@hugov/correl-range/sim.js
+// ../node_modules/@hugov/correl-range/sim.js
 function sim_default(factory, { confidence = 0.5, resolution = 128 } = {}) {
   const risks = [], rndNs = [], conf = confidence <= 1 ? confidence : Math.pow(2, 1 - 1 / confidence) - 1, rndFs = {};
   let init = false;

@@ -1,4 +1,4 @@
-// node_modules/@hugov/shorter-string/src/bwt.js
+// ../node_modules/@hugov/shorter-string/src/bwt.js
 function lyndon(s) {
   const ends = [];
   let k = 0;

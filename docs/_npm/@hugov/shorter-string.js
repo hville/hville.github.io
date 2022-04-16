@@ -1,4 +1,4 @@
-// node_modules/@hugov/shorter-string/src/bwt.js
+// ../node_modules/@hugov/shorter-string/src/bwt.js
 function lyndon(s) {
   const ends = [];
   let k = 0;
@@ -63,7 +63,7 @@ function decodeBWT(str) {
   return alpha.reverse().join("");
 }
 
-// node_modules/@hugov/shorter-string/src/charset.js
+// ../node_modules/@hugov/shorter-string/src/charset.js
 var LOWER = "abcdefghijklmnopqrstuvwxyz";
 var UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var DIGIT = "0123456789";
@@ -82,7 +82,7 @@ function charRange(i, j, s) {
   return s;
 }
 
-// node_modules/@hugov/shorter-string/src/mtf.js
+// ../node_modules/@hugov/shorter-string/src/mtf.js
 function decodeMTF(arr, DIC = MTF) {
   const res = [], dic = DIC.split("");
   for (let i of arr) {
@@ -114,7 +114,7 @@ function encodeMTF(txt, DIC = MTF) {
   return res;
 }
 
-// node_modules/@hugov/shorter-string/src/egc.js
+// ../node_modules/@hugov/shorter-string/src/egc.js
 function encodeEGC(arr) {
   let res = 0n, j = arr.length;
   while (j--) {
@@ -145,7 +145,7 @@ function decodeEGC(big) {
   return res;
 }
 
-// node_modules/@hugov/shorter-string/src/btt.js
+// ../node_modules/@hugov/shorter-string/src/btt.js
 function encodeBTT(big, keys = HASH) {
   const len = BigInt(keys.length);
   let res = [];
@@ -164,7 +164,7 @@ function decodeBTT(txt, keys = HASH) {
   return big;
 }
 
-// node_modules/@hugov/shorter-string/index.js
+// ../node_modules/@hugov/shorter-string/index.js
 function encode(text, keys = HASH, dic = MTF) {
   return text ? encodeBTT(encodeEGC(encodeMTF(encodeBWT(text), dic)), keys) : "";
 }

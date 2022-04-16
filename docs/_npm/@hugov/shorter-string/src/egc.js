@@ -1,4 +1,4 @@
-// node_modules/@hugov/shorter-string/src/egc.js
+// ../node_modules/@hugov/shorter-string/src/egc.js
 function encodeEGC(arr) {
   let res = 0n, j = arr.length;
   while (j--) {

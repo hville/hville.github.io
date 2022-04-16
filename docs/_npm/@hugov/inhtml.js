@@ -1,4 +1,4 @@
-// node_modules/@hugov/inhtml/in-frame.js
+// ../node_modules/@hugov/inhtml/in-frame.js
 var ISMOD = /^[\s]*import[\s'"`*{;]/;
 function frame(code, init = "", attributes = ISMOD.test(init) ? "type=module" : "") {
   const uid = "_" + Math.floor(Math.random() * 28e11).toString(36);
@@ -23,7 +23,7 @@ function frame(code, init = "", attributes = ISMOD.test(init) ? "type=module" : 
   });
 }
 
-// node_modules/@hugov/inhtml/in-html.js
+// ../node_modules/@hugov/inhtml/in-html.js
 function tag(strings) {
   let t = strings[0];
   for (let i = 1; i < arguments.length; ++i)

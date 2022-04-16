@@ -1,4 +1,4 @@
-// node_modules/@hugov/shorter-string/src/charset.js
+// ../node_modules/@hugov/shorter-string/src/charset.js
 var LOWER = "abcdefghijklmnopqrstuvwxyz";
 var UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var DIGIT = "0123456789";

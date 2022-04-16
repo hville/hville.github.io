@@ -1,4 +1,4 @@
-// node_modules/@hugov/shorter-string/src/charset.js
+// ../node_modules/@hugov/shorter-string/src/charset.js
 var LOWER = "abcdefghijklmnopqrstuvwxyz";
 var UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var DIGIT = "0123456789";
@@ -17,7 +17,7 @@ function charRange(i, j, s) {
   return s;
 }
 
-// node_modules/@hugov/shorter-string/src/mtf.js
+// ../node_modules/@hugov/shorter-string/src/mtf.js
 function decodeMTF(arr, DIC = MTF) {
   const res = [], dic = DIC.split("");
   for (let i of arr) {
