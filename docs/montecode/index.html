@@ -48,19 +48,19 @@ import hashData from '../_src/hash-data.js'
 import SIM from '/_npm/@hugov/correl-range.js'
 import editable from '../_src/editable.js'
 import parse from './parse.js'
-import {CodeJar} from 'https://medv.io/codejar/codejar.js'
+import {CodeJar} from '/_npm/codejar.js'
 import plot2D from './2d.js'
 
 const resEl = $('#result')
-
 const jar = CodeJar($('#editor'), j=>{
-	resEl.textContent=''
+	resEl.textContent = ''
 })
+console.log(jar)
 // save / load
 const onhash = hashData( ({data}) => {
-	const pos = jar.save()
+	//const pos = jar.save()
 	jar.updateCode(data)
-	jar.restore(pos)
+	//jar.restore(pos)
 })
 jar.onUpdate( data => onhash({data}) )
 
