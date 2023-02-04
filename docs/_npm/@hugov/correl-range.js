@@ -119,6 +119,17 @@ function weibull_default(low, high, prob = 0.5) {
   };
 }
 
+// ../node_modules/grosso-modo/gumbel.js
+function gumbel_default(low, high, prob = 0.5) {
+  if (high <= low)
+    throw Error("high <= low");
+  const p = (1 - prob) / 2, lnln1p = Math.log(-Math.log(p)), lnln1q = Math.log(-Math.log(1 - p)), s = (high - low) / (lnln1q - lnln1p), m = (high * lnln1p - low * lnln1q) / (lnln1p - lnln1q);
+  return function(zSeed) {
+    const p2 = zSeed === void 0 ? Math.random() : cdf_default(zSeed);
+    return m + s * Math.log(-Math.log(p2));
+  };
+}
+
 // ../node_modules/@hugov/correl-range/src/_random-number.js
 var RandomNumber = class {
   constructor(fz) {
@@ -555,7 +566,7 @@ var Sim = class {
 function sim_default(factory, { confidence = 0.5, resolution = 128 } = {}) {
   const risks = [], rndNs = [], conf = confidence <= 1 ? confidence : Math.pow(2, 1 - 1 / confidence) - 1, rndFs = {};
   let init = false;
-  for (const [key, fcn] of Object.entries({ N: norm_default, L: logn_default, D: dice_default, U: uniform_default, W: weibull_default })) {
+  for (const [key, fcn] of Object.entries({ N: norm_default, L: logn_default, D: dice_default, U: uniform_default, W: weibull_default, G: gumbel_default })) {
     rndFs[key] = (low, top, ...args) => {
       if (init)
         throw Error("distribution definition must be at initiation");

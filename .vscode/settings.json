@@ -1,6 +1,7 @@
 {
   "liveServer.settings.root": "/docs",
   "liveServer.settings.mount": [
-    ["/_env", "C:/Users/hugov/_env"]
+    ["/_env", "C:/Users/hugov/_env"],
+    //["/_env/api_key_googlemaps.js", "C:/Users/hugov/_env/api_key_googlemaps.js"]
   ]
 }

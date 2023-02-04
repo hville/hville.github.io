@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>regexp</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="word filter">
+	<link rel="stylesheet" href="../_src/main.css">
+	<style>
+		@import "../_lib/ol.css";
+		html, body, #mapdiv {
+        margin: 0;
+        height: 80%;
+        width: 100%;
+        font-family: sans-serif;
+      }
+	</style>
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i style="content: url('/icon.svg#dice');"></i></a> schem.ist</h2>
+	<h2><a data-lang="this.href=`/#${this.lang}`" style='content: url("/icon.svg#dice") "schem.ist";'></a></h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<h3 data-lang>root of a function // zéro d'une fonction</h3>
+<pre><textarea id=exp rows=1 autofocus>cos(x)</textarea></pre>
+
+<pre>x = <span id=root>0</span></pre>
+<div id=mapdiv></div>
+<script type=module>
+import hashData from '../_src/hash-data.js'
+import {$} from '/_npm/@hugov/inhtml.js' //$ = ids => document.getElementById(ids[0])
+//import './urbi.js'
+//import Map from '/_npm/ol/Map.js';
+import TileLayer from '/_npm/ol/layer/Tile.js';
+import ImageLayer from '/_npm/ol/layer/Image.js';
+import OSM from '/_npm/ol/source/OSM.js';
+//import View from '/_npm/ol/View.js';
+import Stamen from '/_npm/ol/source/Stamen.js'
+import {Map, View} from '/_npm/ol.js';
+import {fromLonLat} from '/_npm/ol/proj.js';
+import {getRenderPixel} from '/_npm/ol/render.js'
+//import Tile from '/_npm/ol/Tile.js';
+//import Vector from '.../ol/Vector.js';
+//import TileWMS from '/_npm/ol/source/TileWMS.js';
+
+const mapE = $`#mapdiv`,
+			layer1 = new TileLayer({ source: new Stamen({ layer: 'watercolor' }) }),
+			// terrain, terrain-background, terrain-labels
+			// watercolor,
+			// toner, toner-labels, toner-light
+			layer2 = new TileLayer({ source: new OSM() }),
+			lonlat = [-73.612, 45.535],
+			coord = fromLonLat(lonlat)
+console.log('layer1', layer1)
+console.log('layer2', layer2)
+
+const map = new Map({
+  target: 'mapdiv',
+  layers: [
+		layer1,
+		layer2
+		//new ImageLayer({opacity:0.7})
+  ],
+  view: new View({
+    center: fromLonLat(lonlat),
+    zoom: 15,
+  }),
+})
+console.log('map', map)
+////////////https://openlayers.org/en/latest/examples/layer-spy.html
+let radius = 175
+
+layer1.on('prerender', function (event) {
+	//console.log('prerender1')
+})
+layer1.on('postrender', function (event) {
+	//console.log('postrender1')
+})
+
+// before rendering the layer, do some clipping
+layer2.on('prerender', function (event) {
+	//console.log('prerender2')
+  const ctx = event.context,
+				pixel = map.getPixelFromCoordinate(coord)
+  ctx.save()
+	//ctx.globalAlpha = 0.5
+	ctx.globalCompositeOperation = 'difference'
+	//oui source-over destination-over lighter xor multiply screen overlay darken lighten color-dodge color-burn hard-light soft-light difference
+	//non source-in source-out source-atop destination-in destination-out destination-atop copy
+	//ctx.globalAlpha=0.5
+	//ctx.fillRect(pixel[0]-90, pixel[1]-90, pixel[0]+90, pixel[1]+90);
+
+  ctx.beginPath()
+	ctx.arc(pixel[0], pixel[1], radius, 0, 2 * Math.PI);
+	ctx.lineWidth = 5
+	ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+	ctx.stroke();
+  //ctx.clip();
+});
+
+// after rendering the layer, restore the canvas context
+layer2.on('postrender', function (event) {
+	console.log('postrender2')
+  const ctx = event.context;
+  ctx.restore();
+})
+
+//map.render()
+function filter1(ctx, rad, points) {
+	ctx.save()
+	cts.filter = `blur(${rad}px)`
+	//draw points
+	//blur the points
+	ctx.restore()
+}
+function filter2(ctx, rad, points) {
+	ctx.save()
+	ctx.fillStyle = gradient
+	for (const point of points) {
+		const gradient = ctx.createRadialGradient(point[0], point[1], 20, point[0], point[1], 200)
+		gradient.addColorStop(0, '#ffff'); //transparent === rgba(0,0,0,0) === #0000 === rgba(0 0 0 /0)
+		gradient.addColorStop(1, '#0000');
+		//draw a circle
+	}
+	ctx.restore()
+}
+
+</script>
+
+</body>

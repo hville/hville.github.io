@@ -51,16 +51,15 @@ import parse from './parse.js'
 import {CodeJar} from '/_npm/codejar.js'
 import plot2D from './2d.js'
 
-const resEl = $('#result')
-const jar = CodeJar($('#editor'), j=>{
-	resEl.textContent = ''
-})
-console.log(jar)
+const resEl = $('#result'),
+			txtEl = $('#editor')
+const jar = CodeJar(txtEl, () => resEl.textContent = '') //clear results
+txtEl.focus()
 // save / load
 const onhash = hashData( ({data}) => {
-	//const pos = jar.save()
+	const pos = jar.save()
 	jar.updateCode(data)
-	//jar.restore(pos)
+	jar.restore(pos)
 })
 jar.onUpdate( data => onhash({data}) )
 
