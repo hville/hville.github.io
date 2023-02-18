@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	https://validator.w3.org/feed/check.cgi
+	https://www.rfc-editor.org/rfc/rfc4287
+	https://validator.w3.org/feed/docs/atom.html
+	https://kevincox.ca/2022/05/06/rss-feed-best-practices/
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+	<title>sheme.ist</title>
+	<id>https://sheme.ist/</id>
+	<link rel="alternate" href="https://sheme.ist"/>
+	<link rel="self" href="https://sheme.ist/feed.atom"/>
+	<updated>2023-02-18T09:20:00-05:00</updated><!-- RFC3339 format -->
+	<author><name>Hugo Villeneuve</name></author>
+	<entry>
+		<title>sheme.ist</title>
+		<link rel="alternate" type="text/html" href="https://sheme.ist/index.html"/>
+		<id>https://sheme.ist/index.html</id>
+		<updated>2023-02-18T09:20:00-05:00</updated>
+		<summary>feed.atom</summary>
+	</entry>
+</feed>
