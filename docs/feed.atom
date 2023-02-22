@@ -13,7 +13,7 @@
 	<link rel="self" href="https://schem.ist/feed.atom"/>
 	<link rel="alternate" href="https://schme.ist"/><!-- alternate(permalink) of site / one alternate per lang link.hreflang="fr" or tag.xml:lang="fr"-->
 	<icon>/favicon.svg</icon><!-- use icon from 1:1, logo for 2:1 -->
-	<content src="https://schem.ist/index.html"></content>
+	<content src="/index.html" type="text/html"></content>
 </feed>
 
 
