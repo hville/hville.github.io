@@ -6,17 +6,30 @@
 	https://kevincox.ca/2022/05/06/rss-feed-best-practices/
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">
-	<title>schem.ist</title>
 	<id>https://schem.ist/</id>
-	<link rel="alternate" href="https://schme.ist"/>
-	<link rel="self" href="https://schem.ist/feed.atom"/>
-	<updated>2023-02-18T09:20:00-05:00</updated><!-- RFC3339 format -->
+	<title>* schem.ist *</title>
+	<updated>2023-02-21T09:20:30-05:00</updated><!-- RFC3339 format -->
 	<author><name>Hugo Villeneuve</name></author>
-	<entry>
-		<title>schem.ist</title>
-		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/>
-		<id>https://schem.ist/index.html</id>
-		<updated>2023-02-18T09:20:00-05:00</updated>
-		<summary>feed.atom</summary>
-	</entry>
+	<link rel="self" href="https://schem.ist/feed.atom"/>
+	<link rel="alternate" href="https://schme.ist"/><!-- alternate(permalink) of site / one alternate per lang link.hreflang="fr" or tag.xml:lang="fr"-->
+	<icon>/favicon.svg</icon><!-- use icon from 1:1, logo for 2:1 -->
+	<content src="https://schem.ist/index.html"></content>
 </feed>
+
+
+<!-- 	<entry><!-- lang attribute? (one per item? + main lang on feed?) -->
+	<content xml:lang="fr" src="https://schem.ist/index.html#fr"></content>
+
+		<id>https://schem.ist/index.html</id>
+		<title>schem.ist</title>
+		<updated>2023-02-21T09:20:30-05:00</updated><!-- RFC3339 format -->
+
+		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/><!-- alternate(permalink) of entry -->
+		<summary>schem.ist index</summary>
+	</entry> -->
+</feed>
+<!-- In reader...
+	entry.title
+	entry.summary
+	logo + index.link.title
+-->
