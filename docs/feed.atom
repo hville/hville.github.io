@@ -8,26 +8,26 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 	<id>https://schem.ist/</id>
 	<title>* schem.ist *</title>
-	<updated>2023-02-21T09:20:30-05:00</updated><!-- RFC3339 format -->
+	<updated>2023-02-21T09:21:00-05:00</updated><!-- RFC3339 format -->
 	<author><name>Hugo Villeneuve</name></author>
 	<link rel="self" href="https://schem.ist/feed.atom"/>
 	<link rel="alternate" href="https://schme.ist"/><!-- alternate(permalink) of site / one alternate per lang link.hreflang="fr" or tag.xml:lang="fr"-->
 	<icon>/favicon.svg</icon><!-- use icon from 1:1, logo for 2:1 -->
-	<content src="/index.html" type="text/html"></content>
+	<entry>
+		<id>https://schem.ist/index.html</id>
+		<title>schem.ist</title>
+		<updated>2023-02-21T09:21:30-05:00</updated>
+		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/>
+		<content src="/index.html" type="text/html"></content>
+		<summary>xml #$@*!</summary>
+	</entry>
 </feed>
 
 
-<!-- 	<entry>
+<!--
+			<summary>schem.ist index</summary>
 	<content xml:lang="fr" src="https://schem.ist/index.html#fr"></content>
 
-		<id>https://schem.ist/index.html</id>
-		<title>schem.ist</title>
-		<updated>2023-02-21T09:20:30-05:00</updated>
-
-		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/>
-
-		<summary>schem.ist index</summary>
-	</entry>
 -->
 
 <!-- In reader...
