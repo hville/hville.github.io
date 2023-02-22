@@ -93,13 +93,16 @@ async function runSim(N) {
 		return resEl.innerHTML = e.message
 	}
 	let htm = `${ (performance.now()-ms0).toFixed(0) } ms\n\n`
+	const xMin = Math.min( ...Object.keys(res).map( k => res[k].Q(.05) ) ),
+				xMax = Math.max( ...Object.keys(res).map( k => res[k].Q(.95) ) )
 
 	Object.keys(res).forEach( k => {
+		console.log(res[k].Q(.09))
 		htm += `${k}  ( ${res[k].Q(.25).toPrecision(3)}  ${res[k].Q(.75).toPrecision(3)} )\n`
 		ctx.globalCompositeOperation = 'copy'
 		ctx.drawImage(ctx.canvas, 0, -15)
 		ctx.globalCompositeOperation = 'source-over'
-		plot2D(ctx, res[k], 0.99998, 0)
+		plot2D(ctx, res[k], xMin, xMax)
 	})
 
 	resEl.innerHTML = htm

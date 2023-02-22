@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title data-lang>text replacer//remplacement de texte</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="text replacer">
+	<link rel="stylesheet" href="../_src/main.css">
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<table>
+<!-- TODO table caption ? -->
+<colgroup>
+	<col style="width:75%;">
+	<col>
+</colgroup>
+<thead>
+	<tr>
+		<th data-lang>replacement // remplacement</th>
+	</tr>
+	<tr>
+		<td>
+			<pre><code id=init contenteditable=true></code></pre>
+		</td>
+		<td style="text-align: center; vertical-align: middle;">
+			<button id=run data-lang>
+				<span lang=en>run tests!<br>(takes a few seconds)</span>
+				<span lang=fr>exécution!<br>(quelques secondes)</span>
+			</button>
+		</td>
+	</tr>
+	<tr>
+		<th>code</th>
+		<th style="text-align: center; vertical-align: middle; white-space: pre-wrap;">quartiles (Hz)</th>
+	</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+<template>
+	<tr id=row>
+		<td>
+			<pre><code id=code contenteditable=true></code></pre>
+		</td>
+		<td style="text-align: center; vertical-align: middle;">
+			<out id=time style="white-space: pre-wrap;"></out>
+		</td>
+	</tr>
+</template>
+
+<script type=module>
+import {cast, frame, $, $$} from '/_npm/@hugov/inhtml.js'
+import hashData from '../_src/hash-data.js'
+import editable from '../_src/editable.js'
+
+const init = $('#init'),
+			tbody = $('tbody'),
+			rows = tbody.children
+
+// row factory
+const makeRow = cast('template', ({row, code, time}, codeVal='') => {
+	editable(code)
+	code.textContent = codeVal
+	time.update = res => time.textContent = !res ? '' : res.map( v => v.toPrecision(3) ).join('  ')
+	code.onchange = () => {
+		time.textContent = ''
+		if (!code.textContent) row.remove()
+		else if (!row.nextSibling) row.after(makeRow())
+		save()
+	}
+	row.$ids = {code, time}
+	return row
+})
+
+
+// simulation button handler
+$('#run').onclick = () => {
+	const initCode = `import bench from '/_npm/@hugov/bench.js';${ init.textContent };`
+	const execCode = `()=>bench([${
+		Array.from(rows).slice(0,-1).map( row => `function(){${row.$ids.code.textContent}}` ).join(',\n')
+	}])`
+	const sandbox = frame( execCode, initCode, 'type=module' )
+	sandbox.then(async framedFcn => {
+		const res = await framedFcn()
+		framedFcn.remove()
+		Array.from(rows).forEach( ({$ids}, i) => $ids.time.update( res[i] ) )
+	}).catch( err => console.log('error in test', err) )
+}
+
+// save / load
+const saveData = hashData( ({data, lang}) => {
+	if (rows.length) tbody.textContent = '' //reset rows
+	if (data) {
+		const itms = data.split('\v') //vertial tab as seperator
+		init.textContent = itms.shift()
+		itms.forEach( code => { if (code) tbody.append(makeRow(code)) } )
+	}
+	// one last empty line to allow adding new lines
+	tbody.appendChild( makeRow() )
+})
+
+function save() {
+	//TODO might be easier to to all rows and replace last with init
+	const values = [init.textContent]
+	//get all rows but the last
+	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
+	saveData( {data: values.join('\v')} )
+}
+editable(init)
+init.onchange = save
+</script>
+</body>
