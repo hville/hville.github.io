@@ -17,17 +17,19 @@
 </feed>
 
 
-<!-- 	<entry><!-- lang attribute? (one per item? + main lang on feed?) -->
+<!-- 	<entry>
 	<content xml:lang="fr" src="https://schem.ist/index.html#fr"></content>
 
 		<id>https://schem.ist/index.html</id>
 		<title>schem.ist</title>
-		<updated>2023-02-21T09:20:30-05:00</updated><!-- RFC3339 format -->
+		<updated>2023-02-21T09:20:30-05:00</updated>
 
-		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/><!-- alternate(permalink) of entry -->
+		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/>
+
 		<summary>schem.ist index</summary>
-	</entry> -->
-</feed>
+	</entry>
+-->
+
 <!-- In reader...
 	entry.title
 	entry.summary
