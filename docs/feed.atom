@@ -6,18 +6,18 @@
 	https://kevincox.ca/2022/05/06/rss-feed-best-practices/
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">
+	<title>-schem.ist-</title>
 	<id>https://schem.ist/</id>
-	<title>* schem.ist *</title>
-	<updated>2023-02-23T09:21:30-05:00</updated><!-- RFC3339 format -->
-	<author><name>Hugo Villeneuve</name></author>
-	<link rel="self" href="https://schem.ist/feed.atom"/>
 	<link rel="alternate" href="https://schme.ist"/><!-- alternate(permalink) of site / one alternate per lang link.hreflang="fr" or tag.xml:lang="fr"-->
+	<link rel="self" href="https://schem.ist/feed.atom"/>
+	<updated>2023-02-23T22:32:00-05:00</updated><!-- RFC3339 format -->
+	<author><name>Hugo Villeneuve</name></author>
 	<!--<icon>/favicon.svg</icon> use icon from 1:1, logo for 2:1 -->
 	<entry>
-		<id>https://schem.ist/index.html</id>
-		<title>schem.ist</title>
-		<updated>2023-02-23T09:21:30-05:00</updated>
+		<title>?schem.ist?</title>
 		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/>
+		<id>https://schem.ist/index.html</id>
+		<updated>2023-02-23T22:32:00-05:00</updated>
 		<summary>xml grrrrr</summary>
 	</entry>
 </feed>
