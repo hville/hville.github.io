@@ -1,45 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-	https://validator.w3.org/feed/check.cgi
-	https://www.rfc-editor.org/rfc/rfc4287
-	https://validator.w3.org/feed/docs/atom.html
-	https://kevincox.ca/2022/05/06/rss-feed-best-practices/
--->
 <feed xmlns="http://www.w3.org/2005/Atom">
-	<title>-schem.ist feed.title-</title>
+	<title>schem.ist</title>
 	<id>https://schem.ist/</id>
-	<link rel="alternate" href="https://schme.ist"/><!-- alternate(permalink) of site / one alternate per lang link.hreflang="fr" or tag.xml:lang="fr"-->
+	<link rel="alternate" href="https://schme.ist/"/>
 	<link rel="self" href="https://schem.ist/feed.atom"/>
-	<updated>2023-02-24T15:32:00-05:00</updated><!-- RFC3339 format -->
+	<updated>2023-02-26T09:32:00-05:00</updated>
 	<author><name>Hugo Villeneuve</name></author>
-	<!--<icon>/favicon.svg</icon> use icon from 1:1, logo for 2:1 -->
+	<icon>/favicon.svg</icon>
 	<entry>
-		<title>?schem.ist?</title>
+		<title>schem.ist</title><!-- Reader Header -->
 		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/>
 		<id>https://schem.ist/index.html</id>
-		<updated>2023-02-23T22:32:00-05:00</updated>
-		<summary>xml grrrrr</summary>
-	</entry>
-	<entry>
-		<title>entry2.title</title>
-		<link rel="alternate" type="text/html" href="https://schem.ist/index.html"/>
-		<id>uuid:bcecded5-97c8-4d24-96f1-6d9e16652434;id=1</id>
-		<updated>2023-02-24T15:32:00-05:00</updated>
-		<summary>entry2.summary</summary>
+		<updated>2023-02-26T09:32:00-05:00</updated>
+		<summary>misc. risk &amp; stats aps</summary><!-- Reader Sub-Header -->
 		<content src="/index.html" type="text/html"></content>
 	</entry>
 </feed>
-
-
-<!--
-			<summary>schem.ist index</summary>
-	<content xml:lang="fr" src="https://schem.ist/index.html#fr"></content>
-		<content src="/index.html" type="text/html"></content>
-
--->
-
-<!-- In reader...
-	entry.title
-	entry.summary
-	logo + index.link.title
--->
