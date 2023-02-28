@@ -13,6 +13,7 @@
 
 <div style="display: flex; justify-content: space-between;">
 	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2 data-lang>Burrows–Wheeler Transform (BWT) // Transformée de Burrows-Wheeler (BWT)</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>
@@ -30,7 +31,7 @@
 		Transformée de Burrows-Wheeler (BWT)</a>
 	</span>
 </h3>
-<pre id=bwt></pre>
+<pre id=bwt style="white-space: pre-wrap;"></pre>
 
 <h3 data-lang>
 	<span lang=en>
@@ -45,7 +46,7 @@
 	</span>
 </h3>
 
-<pre id=mtf></pre>
+<pre id=mtf style="white-space: pre-wrap;"></pre>
 
 <h3 data-lang>
 	<span lang=en>
@@ -59,7 +60,7 @@
 		</a>
 	</span>
 </h3>
-<pre id=egc></pre>
+<pre id=egc style="white-space: pre-wrap;"></pre>
 
 <h3 data-lang>
 	<span lang=en>
@@ -74,10 +75,10 @@
 	</a>
 	</span>
 </h3>
-<pre id=enc></pre>
+<pre id=enc style="white-space: pre-wrap;"></pre>
 
 <h3 data-lang>Decode Test // Test de décodage</h3>
-<pre id=dec></pre>
+<pre id=dec style="white-space: pre-wrap;"></pre>
 
 <script type=module>
 import hashData from '../_src/hash-data.js'
@@ -103,7 +104,7 @@ const dohash = hashData( ({data, lang}) => {
 				c = encodeBTT(g)
 	$src.textContent = data
 	$bwt.textContent = b
-	$mtf.textContent = m
+	$mtf.textContent = m.map( n=> n ? n.toString() : '').join(' ')
 	$egc.textContent = g
 	$enc.textContent = c
 	$dec.textContent = decode(c)
