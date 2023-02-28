@@ -13,110 +13,83 @@
 
 <div style="display: flex; justify-content: space-between;">
 	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2 data-lang>text replacer//remplacement de texte</h2>
 	<data-lang>en fr</data-lang>
 </div>
 <hr>
+<div data-lang>
+	<span lang=en>
+		String <i>replacement</i> of some, or all matches of a <i>pattern</i>.<br>
+		The <i>pattern</i> can be a string or a RegExp, and the <i>replacement</i> is a string pattern
+		(<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace">reference</a>)
+	</span>
+	<span lang=fr>
+		<i>Remplacement</i> de partie(s) d'un texte où il y a correspondance à un <i>modèle</i>.<br>
+		Le <i>modèle</i> utilisé peut être une RegExp et le <i>remplacement</i> est une chaîne avec les instructions pour le remplacement
+		(<a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/String/replace">référence</a>).
+	</span>
+</div>
 
-<table>
-<!-- TODO table caption ? -->
-<colgroup>
-	<col style="width:75%;">
-	<col>
-</colgroup>
-<thead>
-	<tr>
-		<th data-lang>replacement // remplacement</th>
-	</tr>
-	<tr>
-		<td>
-			<pre><code id=init contenteditable=true></code></pre>
-		</td>
-		<td style="text-align: center; vertical-align: middle;">
-			<button id=run data-lang>
-				<span lang=en>run tests!<br>(takes a few seconds)</span>
-				<span lang=fr>exécution!<br>(quelques secondes)</span>
-			</button>
-		</td>
-	</tr>
-	<tr>
-		<th>code</th>
-		<th style="text-align: center; vertical-align: middle; white-space: pre-wrap;">quartiles (Hz)</th>
-	</tr>
-</thead>
+<h3 data-lang>pattern // modèle</h3>
+<pre><code id=regexp contenteditable=true>/(c)(e)(?&lt;Lx2&gt;ll)/g</code></pre>
 
-<tbody></tbody>
+<h3 data-lang>replacement // remplacement</h3>
+<pre><code id=action contenteditable=true>($`-$&-$')($`-$1-$2-$&lt;Lx2&gt;-$')</code></pre>
 
-</table>
-<template>
-	<tr id=row>
-		<td>
-			<pre><code id=code contenteditable=true></code></pre>
-		</td>
-		<td style="text-align: center; vertical-align: middle;">
-			<out id=time style="white-space: pre-wrap;"></out>
-		</td>
-	</tr>
-</template>
+<h3>source</h3>
+<pre><code id=string contenteditable=true data-lang>excellent</code></pre>
+
+<h3 data-lang>result // résultat</h3>
+<pre id=result></pre>
 
 <script type=module>
-import {cast, frame, $, $$} from '/_npm/@hugov/inhtml.js'
+import {$, $$} from '/_npm/@hugov/inhtml.js'
 import hashData from '../_src/hash-data.js'
-import editable from '../_src/editable.js'
 
-const init = $('#init'),
-			tbody = $('tbody'),
-			rows = tbody.children
+const regexpEl = $('#regexp'),
+			actionEl = $('#action'),
+			stringEl = $('#string'),
+			resultEl = $('#result')
 
-// row factory
-const makeRow = cast('template', ({row, code, time}, codeVal='') => {
-	editable(code)
-	code.textContent = codeVal
-	time.update = res => time.textContent = !res ? '' : res.map( v => v.toPrecision(3) ).join('  ')
-	code.onchange = () => {
-		time.textContent = ''
-		if (!code.textContent) row.remove()
-		else if (!row.nextSibling) row.after(makeRow())
-		save()
+let last = '',
+		wrkr
+
+resetWorker()
+
+function resetWorker() {
+	if (wrkr) wrkr.terminate()
+	wrkr = new Worker('./worker.js')
+	wrkr.onerror = e => {
+		resultEl.textContent = ' ! ' + e.message
+		resetWorker()
 	}
-	row.$ids = {code, time}
-	return row
-})
-
-
-// simulation button handler
-$('#run').onclick = () => {
-	const initCode = `import bench from '/_npm/@hugov/bench.js';${ init.textContent };`
-	const execCode = `()=>bench([${
-		Array.from(rows).slice(0,-1).map( row => `function(){${row.$ids.code.textContent}}` ).join(',\n')
-	}])`
-	const sandbox = frame( execCode, initCode, 'type=module' )
-	sandbox.then(async framedFcn => {
-		const res = await framedFcn()
-		framedFcn.remove()
-		Array.from(rows).forEach( ({$ids}, i) => $ids.time.update( res[i] ) )
-	}).catch( err => console.log('error in test', err) )
+	wrkr.onmessage = e => {
+		const {regexp, action, string, result} = e.data
+		if (regexp + action + string === last) resultEl.textContent = result
+	}
 }
 
-// save / load
-const saveData = hashData( ({data, lang}) => {
-	if (rows.length) tbody.textContent = '' //reset rows
+const dohash = hashData( ({lang, data}) => {
+	let regexp, action, string
+	resultEl.textContent = '...'
 	if (data) {
-		const itms = data.split('\v') //vertial tab as seperator
-		init.textContent = itms.shift()
-		itms.forEach( code => { if (code) tbody.append(makeRow(code)) } )
+		[regexp, action, string] = data.split('\0')
+		regexpEl.textContent = regexp
+		actionEl.textContent = action
+		stringEl.textContent = string
+	} else {
+		regexp = regexpEl.textContent
+		action = actionEl.textContent
+		string = stringEl.textContent
 	}
-	// one last empty line to allow adding new lines
-	tbody.appendChild( makeRow() )
+	last = regexp + action + string
+	wrkr.postMessage({ regexp, action, string })
 })
 
-function save() {
-	//TODO might be easier to to all rows and replace last with init
-	const values = [init.textContent]
-	//get all rows but the last
-	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
-	saveData( {data: values.join('\v')} )
+regexpEl.oninput = actionEl.oninput = stringEl.oninput = () => {
+	console.log('oninput', regexp, action, string)
+	dohash({data: [regexpEl.textContent, actionEl.textContent, stringEl.textContent].join('\0')})
 }
-editable(init)
-init.onchange = save
+
 </script>
 </body>
