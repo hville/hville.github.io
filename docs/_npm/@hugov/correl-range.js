@@ -312,24 +312,28 @@ var D = class {
     const j = topIndex(vs, x, M);
     return j === 0 || j === M ? 0 : (rs[j] - rs[j - 1]) / (vs[j] - vs[j - 1]) / N;
   }
-  plotF(ctx, xMin = this.vs[0], xMax = this.vs[this.rs.length - 1]) {
-    const rs = this.rs, vs = this.vs, xScale = ctx.canvas.width / (xMax - xMin), yScale = ctx.canvas.height / rs[rs.length - 1], H = ctx.canvas.height;
+  plotF(ctx, vMin = this.vs[0], vMax = this.vs[this.rs.length - 1]) {
+    const rs = this.rs, vs = this.vs, xScale = (ctx.canvas.width - 1) / (vMax - vMin), yScale = (ctx.canvas.height - 1) / rs[rs.length - 1], H = ctx.canvas.height, getX = (v) => 0.5 + Math.round((v - vMin) * xScale), getY = (r) => H - 0.5 - Math.round(r * yScale);
     ctx.beginPath();
-    ctx.moveTo((vs[0] - xMin) * xScale, H);
+    ctx.moveTo(getX(Math.min(vs[0], vMin)), H - 0.5);
+    ctx.lineTo(getX(vs[0]), H - 0.5);
     for (let i = 0; i < rs.length; ++i)
-      ctx.lineTo((vs[i] - xMin) * xScale, H - (rs[i] - 0.5) * yScale);
-    ctx.lineTo((vs[rs.length - 1] - xMin) * xScale, 0);
+      ctx.lineTo(getX(vs[i]), getY(rs[i]));
+    ctx.lineTo(getX(vs[rs.length - 1]), 0.5);
+    ctx.lineTo(getX(Math.max(vs[rs.length - 1], vMax)), 0.5);
   }
-  plotf(ctx, xMin = this.vs[0], xMax = this.vs[this.rs.length - 1], yMax = 2 / (this.Q(0.75) - this.Q(0.25))) {
-    const rs = this.rs, vs = this.vs, xScale = ctx.canvas.width / (xMax - xMin), yScale = ctx.canvas.height / yMax / rs[rs.length - 1], H = ctx.canvas.height;
-    let x = Math.round((vs[0] - xMin) * xScale) + 0.5;
+  plotf(ctx, vMin = this.vs[0], vMax = this.vs[this.rs.length - 1], yMax = 1 / (this.Q(0.75) - this.Q(0.25))) {
+    const rs = this.rs, vs = this.vs, xScale = (ctx.canvas.width - 1) / (vMax - vMin), yScale = (ctx.canvas.height - 1) / yMax / rs[rs.length - 1], H = ctx.canvas.height, getX = (v) => 0.5 + Math.round((v - vMin) * xScale), getY = (drdv) => H - 0.5 - Math.round(drdv * yScale);
+    let x = getX(Math.min(vs[0], vMin)), y = H;
     ctx.beginPath();
-    ctx.moveTo(x, H);
-    for (let i = 0, j = 1, y = 0; j < rs.length; i = j++) {
-      ctx.lineTo(x, y = Math.round(H - (rs[j] - rs[i]) / (vs[j] - vs[i]) * yScale) + 0.5);
-      ctx.lineTo(x = Math.round((vs[j] - xMin) * xScale) + 0.5, y);
+    ctx.moveTo(getX(Math.min(vs[0], vMin)), H - 0.5);
+    ctx.lineTo(x = getX(vs[0]), H - 0.5);
+    for (let i = 0, j = 1; j < rs.length; i = j++) {
+      ctx.lineTo(x, y = getY((rs[j] - rs[i]) / (vs[j] - vs[i])));
+      ctx.lineTo(x = getX(vs[j]), y);
     }
-    ctx.lineTo(x, H);
+    ctx.lineTo(x, H - 0.5);
+    ctx.lineTo(getX(Math.max(vs[rs.length - 1], vMax)), H - 0.5);
   }
   push(x) {
     const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]);
@@ -569,7 +573,7 @@ function sim_default(factory, { confidence = 0.5, resolution = 128 } = {}) {
   for (const [key, fcn] of Object.entries({ N: norm_default, L: logn_default, D: dice_default, U: uniform_default, W: weibull_default, G: gumbel_default })) {
     rndFs[key] = (low, top, ...args) => {
       if (init)
-        throw Error("distribution definition must be at initiation");
+        throw Error(`distribution ${key} definition must be at initiation`);
       return rndNs[rndNs.length] = new RandomNumber(fcn(low, top, conf))._link(risks, args);
     };
   }

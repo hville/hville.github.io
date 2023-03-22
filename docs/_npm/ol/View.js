@@ -1,19 +1,18 @@
 // ../node_modules/ol/events/Event.js
-var BaseEvent = function() {
-  function BaseEvent2(type) {
+var BaseEvent = class {
+  constructor(type) {
     this.propagationStopped;
     this.defaultPrevented;
     this.type = type;
     this.target = null;
   }
-  BaseEvent2.prototype.preventDefault = function() {
+  preventDefault() {
     this.defaultPrevented = true;
-  };
-  BaseEvent2.prototype.stopPropagation = function() {
+  }
+  stopPropagation() {
     this.propagationStopped = true;
-  };
-  return BaseEvent2;
-}();
+  }
+};
 var Event_default = BaseEvent;
 
 // ../node_modules/ol/ObjectEventType.js
@@ -22,81 +21,77 @@ var ObjectEventType_default = {
 };
 
 // ../node_modules/ol/Disposable.js
-var Disposable = function() {
-  function Disposable2() {
+var Disposable = class {
+  constructor() {
     this.disposed = false;
   }
-  Disposable2.prototype.dispose = function() {
+  dispose() {
     if (!this.disposed) {
       this.disposed = true;
       this.disposeInternal();
     }
-  };
-  Disposable2.prototype.disposeInternal = function() {
-  };
-  return Disposable2;
-}();
+  }
+  disposeInternal() {
+  }
+};
 var Disposable_default = Disposable;
 
 // ../node_modules/ol/array.js
-function numberSafeCompareFunction(a, b) {
+function ascending(a, b) {
   return a > b ? 1 : a < b ? -1 : 0;
 }
 function linearFindNearest(arr, target, direction) {
-  var n = arr.length;
+  const n = arr.length;
   if (arr[0] <= target) {
     return 0;
   } else if (target <= arr[n - 1]) {
     return n - 1;
-  } else {
-    var i = void 0;
-    if (direction > 0) {
-      for (i = 1; i < n; ++i) {
-        if (arr[i] < target) {
-          return i - 1;
-        }
-      }
-    } else if (direction < 0) {
-      for (i = 1; i < n; ++i) {
-        if (arr[i] <= target) {
-          return i;
-        }
-      }
-    } else {
-      for (i = 1; i < n; ++i) {
-        if (arr[i] == target) {
-          return i;
-        } else if (arr[i] < target) {
-          if (typeof direction === "function") {
-            if (direction(target, arr[i - 1], arr[i]) > 0) {
-              return i - 1;
-            } else {
-              return i;
-            }
-          } else if (arr[i - 1] - target < target - arr[i]) {
-            return i - 1;
-          } else {
-            return i;
-          }
-        }
+  }
+  let i;
+  if (direction > 0) {
+    for (i = 1; i < n; ++i) {
+      if (arr[i] < target) {
+        return i - 1;
       }
     }
-    return n - 1;
+  } else if (direction < 0) {
+    for (i = 1; i < n; ++i) {
+      if (arr[i] <= target) {
+        return i;
+      }
+    }
+  } else {
+    for (i = 1; i < n; ++i) {
+      if (arr[i] == target) {
+        return i;
+      } else if (arr[i] < target) {
+        if (typeof direction === "function") {
+          if (direction(target, arr[i - 1], arr[i]) > 0) {
+            return i - 1;
+          }
+          return i;
+        } else if (arr[i - 1] - target < target - arr[i]) {
+          return i - 1;
+        }
+        return i;
+      }
+    }
   }
+  return n - 1;
 }
 function extend(arr, data) {
-  var extension = Array.isArray(data) ? data : [data];
-  var length = extension.length;
-  for (var i = 0; i < length; i++) {
+  const extension = Array.isArray(data) ? data : [data];
+  const length = extension.length;
+  for (let i = 0; i < length; i++) {
     arr[arr.length] = extension[i];
   }
 }
 function equals(arr1, arr2) {
-  var len1 = arr1.length;
+  const len1 = arr1.length;
   if (len1 !== arr2.length) {
     return false;
   }
-  for (var i = 0; i < len1; i++) {
+  for (let i = 0; i < len1; i++) {
     if (arr1[i] !== arr2[i]) {
       return false;
     }
@@ -108,12 +103,12 @@ function equals(arr1, arr2) {
 function VOID() {
 }
 function memoizeOne(fn) {
-  var called = false;
-  var lastResult;
-  var lastArgs;
-  var lastThis;
+  let called = false;
+  let lastResult;
+  let lastArgs;
+  let lastThis;
   return function() {
-    var nextArgs = Array.prototype.slice.call(arguments);
+    const nextArgs = Array.prototype.slice.call(arguments);
     if (!called || this !== lastThis || !equals(nextArgs, lastArgs)) {
       called = true;
       lastThis = this;
@@ -125,30 +120,13 @@ function memoizeOne(fn) {
 }
 
 // ../node_modules/ol/obj.js
-var assign = typeof Object.assign === "function" ? Object.assign : function(target, var_sources) {
-  if (target === void 0 || target === null) {
-    throw new TypeError("Cannot convert undefined or null to object");
-  }
-  var output = Object(target);
-  for (var i = 1, ii = arguments.length; i < ii; ++i) {
-    var source = arguments[i];
-    if (source !== void 0 && source !== null) {
-      for (var key in source) {
-        if (source.hasOwnProperty(key)) {
-          output[key] = source[key];
-        }
-      }
-    }
-  }
-  return output;
-};
 function clear(object) {
-  for (var property in object) {
+  for (const property in object) {
     delete object[property];
   }
 }
 function isEmpty(object) {
-  var property;
+  let property;
   for (property in object) {
     return false;
   }
@@ -156,67 +134,44 @@ function isEmpty(object) {
 }
 
 // ../node_modules/ol/events/Target.js
-var __extends = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var Target = function(_super) {
-  __extends(Target2, _super);
-  function Target2(opt_target) {
-    var _this = _super.call(this) || this;
-    _this.eventTarget_ = opt_target;
-    _this.pendingRemovals_ = null;
-    _this.dispatching_ = null;
-    _this.listeners_ = null;
-    return _this;
+var Target = class extends Disposable_default {
+  constructor(target) {
+    super();
+    this.eventTarget_ = target;
+    this.pendingRemovals_ = null;
+    this.dispatching_ = null;
+    this.listeners_ = null;
   }
-  Target2.prototype.addEventListener = function(type, listener) {
+  addEventListener(type, listener) {
     if (!type || !listener) {
       return;
     }
-    var listeners = this.listeners_ || (this.listeners_ = {});
-    var listenersForType = listeners[type] || (listeners[type] = []);
-    if (listenersForType.indexOf(listener) === -1) {
+    const listeners = this.listeners_ || (this.listeners_ = {});
+    const listenersForType = listeners[type] || (listeners[type] = []);
+    if (!listenersForType.includes(listener)) {
       listenersForType.push(listener);
     }
-  };
-  Target2.prototype.dispatchEvent = function(event) {
-    var isString = typeof event === "string";
-    var type = isString ? event : event.type;
-    var listeners = this.listeners_ && this.listeners_[type];
+  }
+  dispatchEvent(event) {
+    const isString = typeof event === "string";
+    const type = isString ? event : event.type;
+    const listeners = this.listeners_ && this.listeners_[type];
     if (!listeners) {
       return;
     }
-    var evt = isString ? new Event_default(event) : event;
+    const evt = isString ? new Event_default(event) : event;
     if (!evt.target) {
       evt.target = this.eventTarget_ || this;
     }
-    var dispatching = this.dispatching_ || (this.dispatching_ = {});
-    var pendingRemovals = this.pendingRemovals_ || (this.pendingRemovals_ = {});
+    const dispatching = this.dispatching_ || (this.dispatching_ = {});
+    const pendingRemovals = this.pendingRemovals_ || (this.pendingRemovals_ = {});
     if (!(type in dispatching)) {
       dispatching[type] = 0;
       pendingRemovals[type] = 0;
     }
     ++dispatching[type];
-    var propagate;
-    for (var i = 0, ii = listeners.length; i < ii; ++i) {
+    let propagate;
+    for (let i = 0, ii = listeners.length; i < ii; ++i) {
       if ("handleEvent" in listeners[i]) {
         propagate = listeners[i].handleEvent(evt);
       } else {
@@ -228,7 +183,7 @@ var Target = function(_super) {
       }
     }
     if (--dispatching[type] === 0) {
-      var pr = pendingRemovals[type];
+      let pr = pendingRemovals[type];
       delete pendingRemovals[type];
       while (pr--) {
         this.removeEventListener(type, VOID);
@@ -236,23 +191,23 @@ var Target = function(_super) {
       delete dispatching[type];
     }
     return propagate;
-  };
-  Target2.prototype.disposeInternal = function() {
+  }
+  disposeInternal() {
     this.listeners_ && clear(this.listeners_);
-  };
-  Target2.prototype.getListeners = function(type) {
+  }
+  getListeners(type) {
     return this.listeners_ && this.listeners_[type] || void 0;
-  };
-  Target2.prototype.hasListener = function(opt_type) {
+  }
+  hasListener(type) {
     if (!this.listeners_) {
       return false;
     }
-    return opt_type ? opt_type in this.listeners_ : Object.keys(this.listeners_).length > 0;
-  };
-  Target2.prototype.removeEventListener = function(type, listener) {
-    var listeners = this.listeners_ && this.listeners_[type];
+    return type ? type in this.listeners_ : Object.keys(this.listeners_).length > 0;
+  }
+  removeEventListener(type, listener) {
+    const listeners = this.listeners_ && this.listeners_[type];
     if (listeners) {
-      var index = listeners.indexOf(listener);
+      const index = listeners.indexOf(listener);
       if (index !== -1) {
         if (this.pendingRemovals_ && type in this.pendingRemovals_) {
           listeners[index] = VOID;
@@ -265,9 +220,8 @@ var Target = function(_super) {
         }
       }
     }
-  };
-  return Target2;
-}(Disposable_default);
+  }
+};
 var Target_default = Target;
 
 // ../node_modules/ol/events/EventType.js
@@ -292,18 +246,18 @@ var EventType_default = {
 };
 
 // ../node_modules/ol/events.js
-function listen(target, type, listener, opt_this, opt_once) {
-  if (opt_this && opt_this !== target) {
-    listener = listener.bind(opt_this);
+function listen(target, type, listener, thisArg, once) {
+  if (thisArg && thisArg !== target) {
+    listener = listener.bind(thisArg);
   }
-  if (opt_once) {
-    var originalListener_1 = listener;
+  if (once) {
+    const originalListener = listener;
     listener = function() {
       target.removeEventListener(type, listener);
-      originalListener_1.apply(this, arguments);
+      originalListener.apply(this, arguments);
     };
   }
-  var eventsKey = {
+  const eventsKey = {
     target,
     type,
     listener
@@ -311,8 +265,8 @@ function listen(target, type, listener, opt_this, opt_once) {
   target.addEventListener(type, listener);
   return eventsKey;
 }
-function listenOnce(target, type, listener, opt_this) {
-  return listen(target, type, listener, opt_this, true);
+function listenOnce(target, type, listener, thisArg) {
+  return listen(target, type, listener, thisArg, true);
 }
 function unlistenByKey(key) {
   if (key && key.target) {
@@ -322,62 +276,38 @@ function unlistenByKey(key) {
 }
 
 // ../node_modules/ol/Observable.js
-var __extends2 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var Observable = function(_super) {
-  __extends2(Observable2, _super);
-  function Observable2() {
-    var _this = _super.call(this) || this;
-    _this.on = _this.onInternal;
-    _this.once = _this.onceInternal;
-    _this.un = _this.unInternal;
-    _this.revision_ = 0;
-    return _this;
+var Observable = class extends Target_default {
+  constructor() {
+    super();
+    this.on = this.onInternal;
+    this.once = this.onceInternal;
+    this.un = this.unInternal;
+    this.revision_ = 0;
   }
-  Observable2.prototype.changed = function() {
+  changed() {
     ++this.revision_;
     this.dispatchEvent(EventType_default.CHANGE);
-  };
-  Observable2.prototype.getRevision = function() {
+  }
+  getRevision() {
     return this.revision_;
-  };
-  Observable2.prototype.onInternal = function(type, listener) {
+  }
+  onInternal(type, listener) {
     if (Array.isArray(type)) {
-      var len = type.length;
-      var keys = new Array(len);
-      for (var i = 0; i < len; ++i) {
+      const len = type.length;
+      const keys = new Array(len);
+      for (let i = 0; i < len; ++i) {
         keys[i] = listen(this, type[i], listener);
       }
       return keys;
-    } else {
-      return listen(this, type, listener);
     }
-  };
-  Observable2.prototype.onceInternal = function(type, listener) {
-    var key;
+    return listen(this, type, listener);
+  }
+  onceInternal(type, listener) {
+    let key;
     if (Array.isArray(type)) {
-      var len = type.length;
+      const len = type.length;
       key = new Array(len);
-      for (var i = 0; i < len; ++i) {
+      for (let i = 0; i < len; ++i) {
         key[i] = listenOnce(this, type[i], listener);
       }
     } else {
@@ -385,27 +315,26 @@ var Observable = function(_super) {
     }
     listener.ol_key = key;
     return key;
-  };
-  Observable2.prototype.unInternal = function(type, listener) {
-    var key = listener.ol_key;
+  }
+  unInternal(type, listener) {
+    const key = listener.ol_key;
     if (key) {
       unByKey(key);
     } else if (Array.isArray(type)) {
-      for (var i = 0, ii = type.length; i < ii; ++i) {
+      for (let i = 0, ii = type.length; i < ii; ++i) {
         this.removeEventListener(type[i], listener);
       }
     } else {
       this.removeEventListener(type, listener);
     }
-  };
-  return Observable2;
-}(Target_default);
+  }
+};
 Observable.prototype.on;
 Observable.prototype.once;
 Observable.prototype.un;
 function unByKey(key) {
   if (Array.isArray(key)) {
-    for (var i = 0, ii = key.length; i < ii; ++i) {
+    for (let i = 0, ii = key.length; i < ii; ++i) {
       unlistenByKey(key[i]);
     }
   } else {
@@ -416,81 +345,52 @@ var Observable_default = Observable;
 
 // ../node_modules/ol/util.js
 function abstract() {
-  return function() {
-    throw new Error("Unimplemented abstract method.");
-  }();
+  throw new Error("Unimplemented abstract method.");
 }
 var uidCounter_ = 0;
 function getUid(obj) {
   return obj.ol_uid || (obj.ol_uid = String(++uidCounter_));
 }
-var VERSION = "6.14.1";
 
 // ../node_modules/ol/Object.js
-var __extends3 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var ObjectEvent = function(_super) {
-  __extends3(ObjectEvent2, _super);
-  function ObjectEvent2(type, key, oldValue) {
-    var _this = _super.call(this, type) || this;
-    _this.key = key;
-    _this.oldValue = oldValue;
-    return _this;
+var ObjectEvent = class extends Event_default {
+  constructor(type, key, oldValue) {
+    super(type);
+    this.key = key;
+    this.oldValue = oldValue;
   }
-  return ObjectEvent2;
-}(Event_default);
-var BaseObject = function(_super) {
-  __extends3(BaseObject2, _super);
-  function BaseObject2(opt_values) {
-    var _this = _super.call(this) || this;
-    _this.on;
-    _this.once;
-    _this.un;
-    getUid(_this);
-    _this.values_ = null;
-    if (opt_values !== void 0) {
-      _this.setProperties(opt_values);
+};
+var BaseObject = class extends Observable_default {
+  constructor(values) {
+    super();
+    this.on;
+    this.once;
+    this.un;
+    getUid(this);
+    this.values_ = null;
+    if (values !== void 0) {
+      this.setProperties(values);
     }
-    return _this;
   }
-  BaseObject2.prototype.get = function(key) {
-    var value;
+  get(key) {
+    let value;
     if (this.values_ && this.values_.hasOwnProperty(key)) {
       value = this.values_[key];
     }
     return value;
-  };
-  BaseObject2.prototype.getKeys = function() {
+  }
+  getKeys() {
     return this.values_ && Object.keys(this.values_) || [];
-  };
-  BaseObject2.prototype.getProperties = function() {
-    return this.values_ && assign({}, this.values_) || {};
-  };
-  BaseObject2.prototype.hasProperties = function() {
+  }
+  getProperties() {
+    return this.values_ && Object.assign({}, this.values_) || {};
+  }
+  hasProperties() {
     return !!this.values_;
-  };
-  BaseObject2.prototype.notify = function(key, oldValue) {
-    var eventType;
-    eventType = "change:".concat(key);
+  }
+  notify(key, oldValue) {
+    let eventType;
+    eventType = `change:${key}`;
     if (this.hasListener(eventType)) {
       this.dispatchEvent(new ObjectEvent(eventType, key, oldValue));
     }
@@ -498,89 +398,50 @@ var BaseObject = function(_super) {
     if (this.hasListener(eventType)) {
       this.dispatchEvent(new ObjectEvent(eventType, key, oldValue));
     }
-  };
-  BaseObject2.prototype.addChangeListener = function(key, listener) {
-    this.addEventListener("change:".concat(key), listener);
-  };
-  BaseObject2.prototype.removeChangeListener = function(key, listener) {
-    this.removeEventListener("change:".concat(key), listener);
-  };
-  BaseObject2.prototype.set = function(key, value, opt_silent) {
-    var values = this.values_ || (this.values_ = {});
-    if (opt_silent) {
+  }
+  addChangeListener(key, listener) {
+    this.addEventListener(`change:${key}`, listener);
+  }
+  removeChangeListener(key, listener) {
+    this.removeEventListener(`change:${key}`, listener);
+  }
+  set(key, value, silent) {
+    const values = this.values_ || (this.values_ = {});
+    if (silent) {
       values[key] = value;
     } else {
-      var oldValue = values[key];
+      const oldValue = values[key];
       values[key] = value;
       if (oldValue !== value) {
         this.notify(key, oldValue);
       }
     }
-  };
-  BaseObject2.prototype.setProperties = function(values, opt_silent) {
-    for (var key in values) {
-      this.set(key, values[key], opt_silent);
+  }
+  setProperties(values, silent) {
+    for (const key in values) {
+      this.set(key, values[key], silent);
     }
-  };
-  BaseObject2.prototype.applyProperties = function(source) {
+  }
+  applyProperties(source) {
     if (!source.values_) {
       return;
     }
-    assign(this.values_ || (this.values_ = {}), source.values_);
-  };
-  BaseObject2.prototype.unset = function(key, opt_silent) {
+    Object.assign(this.values_ || (this.values_ = {}), source.values_);
+  }
+  unset(key, silent) {
     if (this.values_ && key in this.values_) {
-      var oldValue = this.values_[key];
+      const oldValue = this.values_[key];
       delete this.values_[key];
       if (isEmpty(this.values_)) {
         this.values_ = null;
       }
-      if (!opt_silent) {
+      if (!silent) {
         this.notify(key, oldValue);
       }
     }
-  };
-  return BaseObject2;
-}(Observable_default);
+  }
+};
 var Object_default = BaseObject;
-
-// ../node_modules/ol/geom/GeometryType.js
-var GeometryType_default = {
-  POINT: "Point",
-  LINE_STRING: "LineString",
-  LINEAR_RING: "LinearRing",
-  POLYGON: "Polygon",
-  MULTI_POINT: "MultiPoint",
-  MULTI_LINE_STRING: "MultiLineString",
-  MULTI_POLYGON: "MultiPolygon",
-  GEOMETRY_COLLECTION: "GeometryCollection",
-  CIRCLE: "Circle"
-};
-
-// ../node_modules/ol/proj/Units.js
-var Units = {
-  RADIANS: "radians",
-  DEGREES: "degrees",
-  FEET: "ft",
-  METERS: "m",
-  PIXELS: "pixels",
-  TILE_PIXELS: "tile-pixels",
-  USFEET: "us-ft"
-};
-var unitByCode = {
-  "9001": Units.METERS,
-  "9002": Units.FEET,
-  "9003": Units.USFEET,
-  "9101": Units.RADIANS,
-  "9102": Units.DEGREES
-};
-var METERS_PER_UNIT = {};
-METERS_PER_UNIT[Units.RADIANS] = 6370997 / (2 * Math.PI);
-METERS_PER_UNIT[Units.DEGREES] = 2 * Math.PI * 6370997 / 360;
-METERS_PER_UNIT[Units.FEET] = 0.3048;
-METERS_PER_UNIT[Units.METERS] = 1;
-METERS_PER_UNIT[Units.USFEET] = 1200 / 3937;
-var Units_default = Units;
 
 // ../node_modules/ol/ViewHint.js
 var ViewHint_default = {
@@ -598,9 +459,18 @@ var ViewProperty_default = {
 // ../node_modules/ol/tilegrid/common.js
 var DEFAULT_TILE_SIZE = 256;
 
+// ../node_modules/ol/proj/Units.js
+var METERS_PER_UNIT = {
+  "radians": 6370997 / (2 * Math.PI),
+  "degrees": 2 * Math.PI * 6370997 / 360,
+  "ft": 0.3048,
+  "m": 1,
+  "us-ft": 1200 / 3937
+};
+
 // ../node_modules/ol/proj/Projection.js
-var Projection = function() {
-  function Projection2(options) {
+var Projection = class {
+  constructor(options) {
     this.code_ = options.code;
     this.units_ = options.units;
     this.extent_ = options.extent !== void 0 ? options.extent : null;
@@ -612,158 +482,76 @@ var Projection = function() {
     this.defaultTileGrid_ = null;
     this.metersPerUnit_ = options.metersPerUnit;
   }
-  Projection2.prototype.canWrapX = function() {
+  canWrapX() {
     return this.canWrapX_;
-  };
-  Projection2.prototype.getCode = function() {
+  }
+  getCode() {
     return this.code_;
-  };
-  Projection2.prototype.getExtent = function() {
+  }
+  getExtent() {
     return this.extent_;
-  };
-  Projection2.prototype.getUnits = function() {
+  }
+  getUnits() {
     return this.units_;
-  };
-  Projection2.prototype.getMetersPerUnit = function() {
+  }
+  getMetersPerUnit() {
     return this.metersPerUnit_ || METERS_PER_UNIT[this.units_];
-  };
-  Projection2.prototype.getWorldExtent = function() {
+  }
+  getWorldExtent() {
     return this.worldExtent_;
-  };
-  Projection2.prototype.getAxisOrientation = function() {
+  }
+  getAxisOrientation() {
     return this.axisOrientation_;
-  };
-  Projection2.prototype.isGlobal = function() {
+  }
+  isGlobal() {
     return this.global_;
-  };
-  Projection2.prototype.setGlobal = function(global) {
+  }
+  setGlobal(global) {
     this.global_ = global;
     this.canWrapX_ = !!(global && this.extent_);
-  };
-  Projection2.prototype.getDefaultTileGrid = function() {
+  }
+  getDefaultTileGrid() {
     return this.defaultTileGrid_;
-  };
-  Projection2.prototype.setDefaultTileGrid = function(tileGrid) {
+  }
+  setDefaultTileGrid(tileGrid) {
     this.defaultTileGrid_ = tileGrid;
-  };
-  Projection2.prototype.setExtent = function(extent) {
+  }
+  setExtent(extent) {
     this.extent_ = extent;
     this.canWrapX_ = !!(this.global_ && extent);
-  };
-  Projection2.prototype.setWorldExtent = function(worldExtent) {
+  }
+  setWorldExtent(worldExtent) {
     this.worldExtent_ = worldExtent;
-  };
-  Projection2.prototype.setGetPointResolution = function(func) {
+  }
+  setGetPointResolution(func) {
     this.getPointResolutionFunc_ = func;
-  };
-  Projection2.prototype.getPointResolutionFunc = function() {
+  }
+  getPointResolutionFunc() {
     return this.getPointResolutionFunc_;
-  };
-  return Projection2;
-}();
+  }
+};
 var Projection_default = Projection;
 
-// ../node_modules/ol/math.js
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-var cosh = function() {
-  var cosh2;
-  if ("cosh" in Math) {
-    cosh2 = Math.cosh;
-  } else {
-    cosh2 = function(x) {
-      var y = Math.exp(x);
-      return (y + 1 / y) / 2;
-    };
-  }
-  return cosh2;
-}();
-var log2 = function() {
-  var log22;
-  if ("log2" in Math) {
-    log22 = Math.log2;
-  } else {
-    log22 = function(x) {
-      return Math.log(x) * Math.LOG2E;
-    };
-  }
-  return log22;
-}();
-function squaredSegmentDistance(x, y, x1, y1, x2, y2) {
-  var dx = x2 - x1;
-  var dy = y2 - y1;
-  if (dx !== 0 || dy !== 0) {
-    var t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
-    if (t > 1) {
-      x1 = x2;
-      y1 = y2;
-    } else if (t > 0) {
-      x1 += dx * t;
-      y1 += dy * t;
-    }
-  }
-  return squaredDistance(x, y, x1, y1);
-}
-function squaredDistance(x1, y1, x2, y2) {
-  var dx = x2 - x1;
-  var dy = y2 - y1;
-  return dx * dx + dy * dy;
-}
-function toRadians(angleInDegrees) {
-  return angleInDegrees * Math.PI / 180;
-}
-function modulo(a, b) {
-  var r = a % b;
-  return r * b < 0 ? r + b : r;
-}
-function lerp(a, b, x) {
-  return a + x * (b - a);
-}
-
 // ../node_modules/ol/proj/epsg3857.js
-var __extends4 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
 var RADIUS = 6378137;
 var HALF_SIZE = Math.PI * RADIUS;
 var EXTENT = [-HALF_SIZE, -HALF_SIZE, HALF_SIZE, HALF_SIZE];
 var WORLD_EXTENT = [-180, -85, 180, 85];
 var MAX_SAFE_Y = RADIUS * Math.log(Math.tan(Math.PI / 2));
-var EPSG3857Projection = function(_super) {
-  __extends4(EPSG3857Projection2, _super);
-  function EPSG3857Projection2(code) {
-    return _super.call(this, {
+var EPSG3857Projection = class extends Projection_default {
+  constructor(code) {
+    super({
       code,
-      units: Units_default.METERS,
+      units: "m",
       extent: EXTENT,
       global: true,
       worldExtent: WORLD_EXTENT,
       getPointResolution: function(resolution, point) {
-        return resolution / cosh(point[1] / RADIUS);
+        return resolution / Math.cosh(point[1] / RADIUS);
       }
-    }) || this;
+    });
   }
-  return EPSG3857Projection2;
-}(Projection_default);
+};
 var PROJECTIONS = [
   new EPSG3857Projection("EPSG:3857"),
   new EPSG3857Projection("EPSG:102100"),
@@ -772,10 +560,9 @@ var PROJECTIONS = [
   new EPSG3857Projection("http://www.opengis.net/def/crs/EPSG/0/3857"),
   new EPSG3857Projection("http://www.opengis.net/gml/srs/epsg.xml#3857")
 ];
-function fromEPSG4326(input, opt_output, opt_dimension) {
-  var length = input.length;
-  var dimension = opt_dimension > 1 ? opt_dimension : 2;
-  var output = opt_output;
+function fromEPSG4326(input, output, dimension) {
+  const length = input.length;
+  dimension = dimension > 1 ? dimension : 2;
   if (output === void 0) {
     if (dimension > 2) {
       output = input.slice();
@@ -783,9 +570,9 @@ function fromEPSG4326(input, opt_output, opt_dimension) {
       output = new Array(length);
     }
   }
-  for (var i = 0; i < length; i += dimension) {
+  for (let i = 0; i < length; i += dimension) {
     output[i] = HALF_SIZE * input[i] / 180;
-    var y = RADIUS * Math.log(Math.tan(Math.PI * (+input[i + 1] + 90) / 360));
+    let y = RADIUS * Math.log(Math.tan(Math.PI * (+input[i + 1] + 90) / 360));
     if (y > MAX_SAFE_Y) {
       y = MAX_SAFE_Y;
     } else if (y < -MAX_SAFE_Y) {
@@ -795,10 +582,9 @@ function fromEPSG4326(input, opt_output, opt_dimension) {
   }
   return output;
 }
-function toEPSG4326(input, opt_output, opt_dimension) {
-  var length = input.length;
-  var dimension = opt_dimension > 1 ? opt_dimension : 2;
-  var output = opt_output;
+function toEPSG4326(input, output, dimension) {
+  const length = input.length;
+  dimension = dimension > 1 ? dimension : 2;
   if (output === void 0) {
     if (dimension > 2) {
       output = input.slice();
@@ -806,7 +592,7 @@ function toEPSG4326(input, opt_output, opt_dimension) {
       output = new Array(length);
     }
   }
-  for (var i = 0; i < length; i += dimension) {
+  for (let i = 0; i < length; i += dimension) {
     output[i] = 180 * input[i] / HALF_SIZE;
     output[i + 1] = 360 * Math.atan(Math.exp(input[i + 1] / RADIUS)) / Math.PI - 90;
   }
@@ -814,45 +600,22 @@ function toEPSG4326(input, opt_output, opt_dimension) {
 }
 
 // ../node_modules/ol/proj/epsg4326.js
-var __extends5 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
 var RADIUS2 = 6378137;
 var EXTENT2 = [-180, -90, 180, 90];
 var METERS_PER_UNIT2 = Math.PI * RADIUS2 / 180;
-var EPSG4326Projection = function(_super) {
-  __extends5(EPSG4326Projection2, _super);
-  function EPSG4326Projection2(code, opt_axisOrientation) {
-    return _super.call(this, {
+var EPSG4326Projection = class extends Projection_default {
+  constructor(code, axisOrientation) {
+    super({
       code,
-      units: Units_default.DEGREES,
+      units: "degrees",
       extent: EXTENT2,
-      axisOrientation: opt_axisOrientation,
+      axisOrientation,
       global: true,
       metersPerUnit: METERS_PER_UNIT2,
       worldExtent: EXTENT2
-    }) || this;
+    });
   }
-  return EPSG4326Projection2;
-}(Projection_default);
+};
 var PROJECTIONS2 = [
   new EPSG4326Projection("CRS:84"),
   new EPSG4326Projection("EPSG:4326", "neu"),
@@ -875,15 +638,15 @@ function add(code, projection) {
 // ../node_modules/ol/proj/transforms.js
 var transforms = {};
 function add2(source, destination, transformFn) {
-  var sourceCode = source.getCode();
-  var destinationCode = destination.getCode();
+  const sourceCode = source.getCode();
+  const destinationCode = destination.getCode();
   if (!(sourceCode in transforms)) {
     transforms[sourceCode] = {};
   }
   transforms[sourceCode][destinationCode] = transformFn;
 }
 function get2(sourceCode, destinationCode) {
-  var transform2;
+  let transform2;
   if (sourceCode in transforms && destinationCode in transforms[sourceCode]) {
     transform2 = transforms[sourceCode][destinationCode];
   }
@@ -901,41 +664,74 @@ var Relationship_default = {
 };
 
 // ../node_modules/ol/AssertionError.js
-var __extends6 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var AssertionError = function(_super) {
-  __extends6(AssertionError2, _super);
-  function AssertionError2(code) {
-    var _this = this;
-    var path = VERSION === "latest" ? VERSION : "v" + VERSION.split("-")[0];
-    var message = "Assertion failed. See https://openlayers.org/en/" + path + "/doc/errors/#" + code + " for details.";
-    _this = _super.call(this, message) || this;
-    _this.code = code;
-    _this.name = "AssertionError";
-    _this.message = message;
-    return _this;
+var messages = {
+  1: "The view center is not defined",
+  2: "The view resolution is not defined",
+  3: "The view rotation is not defined",
+  4: "`image` and `src` cannot be provided at the same time",
+  5: "`imgSize` must be set when `image` is provided",
+  7: "`format` must be set when `url` is set",
+  8: "Unknown `serverType` configured",
+  9: "`url` must be configured or set using `#setUrl()`",
+  10: "The default `geometryFunction` can only handle `Point` geometries",
+  11: "`options.featureTypes` must be an Array",
+  12: "`options.geometryName` must also be provided when `options.bbox` is set",
+  13: "Invalid corner",
+  14: "Invalid color",
+  15: "Tried to get a value for a key that does not exist in the cache",
+  16: "Tried to set a value for a key that is used already",
+  17: "`resolutions` must be sorted in descending order",
+  18: "Either `origin` or `origins` must be configured, never both",
+  19: "Number of `tileSizes` and `resolutions` must be equal",
+  20: "Number of `origins` and `resolutions` must be equal",
+  22: "Either `tileSize` or `tileSizes` must be configured, never both",
+  24: "Invalid extent or geometry provided as `geometry`",
+  25: "Cannot fit empty extent provided as `geometry`",
+  26: "Features must have an id set",
+  27: "Features must have an id set",
+  28: '`renderMode` must be `"hybrid"` or `"vector"`',
+  30: "The passed `feature` was already added to the source",
+  31: "Tried to enqueue an `element` that was already added to the queue",
+  32: "Transformation matrix cannot be inverted",
+  33: "Invalid units",
+  34: "Invalid geometry layout",
+  36: "Unknown SRS type",
+  37: "Unknown geometry type found",
+  38: "`styleMapValue` has an unknown type",
+  39: "Unknown geometry type",
+  40: "Expected `feature` to have a geometry",
+  41: "Expected an `ol/style/Style` or an array of `ol/style/Style.js`",
+  42: "Question unknown, the answer is 42",
+  43: "Expected `layers` to be an array or a `Collection`",
+  47: "Expected `controls` to be an array or an `ol/Collection`",
+  48: "Expected `interactions` to be an array or an `ol/Collection`",
+  49: "Expected `overlays` to be an array or an `ol/Collection`",
+  50: "`options.featureTypes` should be an Array",
+  51: "Either `url` or `tileJSON` options must be provided",
+  52: "Unknown `serverType` configured",
+  53: "Unknown `tierSizeCalculation` configured",
+  55: "The {-y} placeholder requires a tile grid with extent",
+  56: "mapBrowserEvent must originate from a pointer event",
+  57: "At least 2 conditions are required",
+  59: "Invalid command found in the PBF",
+  60: "Missing or invalid `size`",
+  61: "Cannot determine IIIF Image API version from provided image information JSON",
+  62: "A `WebGLArrayBuffer` must either be of type `ELEMENT_ARRAY_BUFFER` or `ARRAY_BUFFER`",
+  64: "Layer opacity must be a number",
+  66: "`forEachFeatureAtCoordinate` cannot be used on a WebGL layer if the hit detection logic has not been enabled. This is done by providing adequate shaders using the `hitVertexShader` and `hitFragmentShader` properties of `WebGLPointsLayerRenderer`",
+  67: "A layer can only be added to the map once. Use either `layer.setMap()` or `map.addLayer()`, not both",
+  68: "A VectorTile source can only be rendered if it has a projection compatible with the view projection",
+  69: "`width` or `height` cannot be provided together with `scale`"
+};
+var AssertionError = class extends Error {
+  constructor(code) {
+    const message = messages[code];
+    super(message);
+    this.code = code;
+    this.name = "AssertionError";
+    this.message = message;
   }
-  return AssertionError2;
-}(Error);
+};
 var AssertionError_default = AssertionError;
 
 // ../node_modules/ol/asserts.js
@@ -946,15 +742,15 @@ function assert(assertion, errorCode) {
 }
 
 // ../node_modules/ol/extent.js
-function _boundingExtentXYs(xs, ys, opt_extent) {
-  var minX = Math.min.apply(null, xs);
-  var minY = Math.min.apply(null, ys);
-  var maxX = Math.max.apply(null, xs);
-  var maxY = Math.max.apply(null, ys);
-  return createOrUpdate(minX, minY, maxX, maxY, opt_extent);
+function _boundingExtentXYs(xs, ys, dest) {
+  const minX = Math.min.apply(null, xs);
+  const minY = Math.min.apply(null, ys);
+  const maxX = Math.max.apply(null, xs);
+  const maxY = Math.max.apply(null, ys);
+  return createOrUpdate(minX, minY, maxX, maxY, dest);
 }
 function closestSquaredDistanceXY(extent, x, y) {
-  var dx, dy;
+  let dx, dy;
   if (x < extent[0]) {
     dx = extent[0] - x;
   } else if (extent[2] < x) {
@@ -978,13 +774,13 @@ function containsXY(extent, x, y) {
   return extent[0] <= x && x <= extent[2] && extent[1] <= y && y <= extent[3];
 }
 function coordinateRelationship(extent, coordinate) {
-  var minX = extent[0];
-  var minY = extent[1];
-  var maxX = extent[2];
-  var maxY = extent[3];
-  var x = coordinate[0];
-  var y = coordinate[1];
-  var relationship = Relationship_default.UNKNOWN;
+  const minX = extent[0];
+  const minY = extent[1];
+  const maxX = extent[2];
+  const maxY = extent[3];
+  const x = coordinate[0];
+  const y = coordinate[1];
+  let relationship = Relationship_default.UNKNOWN;
   if (x < minX) {
     relationship = relationship | Relationship_default.LEFT;
   } else if (x > maxX) {
@@ -1003,27 +799,26 @@ function coordinateRelationship(extent, coordinate) {
 function createEmpty() {
   return [Infinity, Infinity, -Infinity, -Infinity];
 }
-function createOrUpdate(minX, minY, maxX, maxY, opt_extent) {
-  if (opt_extent) {
-    opt_extent[0] = minX;
-    opt_extent[1] = minY;
-    opt_extent[2] = maxX;
-    opt_extent[3] = maxY;
-    return opt_extent;
-  } else {
-    return [minX, minY, maxX, maxY];
+function createOrUpdate(minX, minY, maxX, maxY, dest) {
+  if (dest) {
+    dest[0] = minX;
+    dest[1] = minY;
+    dest[2] = maxX;
+    dest[3] = maxY;
+    return dest;
   }
+  return [minX, minY, maxX, maxY];
 }
-function createOrUpdateEmpty(opt_extent) {
-  return createOrUpdate(Infinity, Infinity, -Infinity, -Infinity, opt_extent);
+function createOrUpdateEmpty(dest) {
+  return createOrUpdate(Infinity, Infinity, -Infinity, -Infinity, dest);
 }
-function createOrUpdateFromCoordinate(coordinate, opt_extent) {
-  var x = coordinate[0];
-  var y = coordinate[1];
-  return createOrUpdate(x, y, x, y, opt_extent);
+function createOrUpdateFromCoordinate(coordinate, dest) {
+  const x = coordinate[0];
+  const y = coordinate[1];
+  return createOrUpdate(x, y, x, y, dest);
 }
-function createOrUpdateFromFlatCoordinates(flatCoordinates, offset, end, stride, opt_extent) {
-  var extent = createOrUpdateEmpty(opt_extent);
+function createOrUpdateFromFlatCoordinates(flatCoordinates, offset, end, stride, dest) {
+  const extent = createOrUpdateEmpty(dest);
   return extendFlatCoordinates(extent, flatCoordinates, offset, end, stride);
 }
 function extendFlatCoordinates(extent, flatCoordinates, offset, end, stride) {
@@ -1039,7 +834,7 @@ function extendXY(extent, x, y) {
   extent[3] = Math.max(extent[3], y);
 }
 function forEachCorner(extent, callback) {
-  var val;
+  let val;
   val = callback(getBottomLeft(extent));
   if (val) {
     return val;
@@ -1067,26 +862,33 @@ function getBottomRight(extent) {
 function getCenter(extent) {
   return [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2];
 }
-function getForViewAndSize(center, resolution, rotation, size, opt_extent) {
-  var dx = resolution * size[0] / 2;
-  var dy = resolution * size[1] / 2;
-  var cosRotation = Math.cos(rotation);
-  var sinRotation = Math.sin(rotation);
-  var xCos = dx * cosRotation;
-  var xSin = dx * sinRotation;
-  var yCos = dy * cosRotation;
-  var ySin = dy * sinRotation;
-  var x = center[0];
-  var y = center[1];
-  var x0 = x - xCos + ySin;
-  var x1 = x - xCos - ySin;
-  var x2 = x + xCos - ySin;
-  var x3 = x + xCos + ySin;
-  var y0 = y - xSin - yCos;
-  var y1 = y - xSin + yCos;
-  var y2 = y + xSin + yCos;
-  var y3 = y + xSin - yCos;
-  return createOrUpdate(Math.min(x0, x1, x2, x3), Math.min(y0, y1, y2, y3), Math.max(x0, x1, x2, x3), Math.max(y0, y1, y2, y3), opt_extent);
+function getForViewAndSize(center, resolution, rotation, size, dest) {
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = getRotatedViewport(center, resolution, rotation, size);
+  return createOrUpdate(Math.min(x0, x1, x2, x3), Math.min(y0, y1, y2, y3), Math.max(x0, x1, x2, x3), Math.max(y0, y1, y2, y3), dest);
+}
+function getRotatedViewport(center, resolution, rotation, size) {
+  const dx = resolution * size[0] / 2;
+  const dy = resolution * size[1] / 2;
+  const cosRotation = Math.cos(rotation);
+  const sinRotation = Math.sin(rotation);
+  const xCos = dx * cosRotation;
+  const xSin = dx * sinRotation;
+  const yCos = dy * cosRotation;
+  const ySin = dy * sinRotation;
+  const x = center[0];
+  const y = center[1];
+  return [
+    x - xCos + ySin,
+    y - xSin - yCos,
+    x - xCos - ySin,
+    y - xSin + yCos,
+    x + xCos - ySin,
+    y + xSin + yCos,
+    x + xCos + ySin,
+    y + xSin - yCos,
+    x - xCos + ySin,
+    y - xSin - yCos
+  ];
 }
 function getHeight(extent) {
   return extent[3] - extent[1];
@@ -1106,34 +908,33 @@ function intersects(extent1, extent2) {
 function isEmpty2(extent) {
   return extent[2] < extent[0] || extent[3] < extent[1];
 }
-function returnOrUpdate(extent, opt_extent) {
-  if (opt_extent) {
-    opt_extent[0] = extent[0];
-    opt_extent[1] = extent[1];
-    opt_extent[2] = extent[2];
-    opt_extent[3] = extent[3];
-    return opt_extent;
-  } else {
-    return extent;
+function returnOrUpdate(extent, dest) {
+  if (dest) {
+    dest[0] = extent[0];
+    dest[1] = extent[1];
+    dest[2] = extent[2];
+    dest[3] = extent[3];
+    return dest;
   }
+  return extent;
 }
 function intersectsSegment(extent, start, end) {
-  var intersects2 = false;
-  var startRel = coordinateRelationship(extent, start);
-  var endRel = coordinateRelationship(extent, end);
+  let intersects2 = false;
+  const startRel = coordinateRelationship(extent, start);
+  const endRel = coordinateRelationship(extent, end);
   if (startRel === Relationship_default.INTERSECTING || endRel === Relationship_default.INTERSECTING) {
     intersects2 = true;
   } else {
-    var minX = extent[0];
-    var minY = extent[1];
-    var maxX = extent[2];
-    var maxY = extent[3];
-    var startX = start[0];
-    var startY = start[1];
-    var endX = end[0];
-    var endY = end[1];
-    var slope = (endY - startY) / (endX - startX);
-    var x = void 0, y = void 0;
+    const minX = extent[0];
+    const minY = extent[1];
+    const maxX = extent[2];
+    const maxY = extent[3];
+    const startX = start[0];
+    const startY = start[1];
+    const endX = end[0];
+    const endY = end[1];
+    const slope = (endY - startY) / (endX - startX);
+    let x, y;
     if (!!(endRel & Relationship_default.ABOVE) && !(startRel & Relationship_default.ABOVE)) {
       x = endX - (endY - maxY) / slope;
       intersects2 = x >= minX && x <= maxX;
@@ -1153,13 +954,13 @@ function intersectsSegment(extent, start, end) {
   }
   return intersects2;
 }
-function applyTransform(extent, transformFn, opt_extent, opt_stops) {
-  var coordinates2 = [];
-  if (opt_stops > 1) {
-    var width = extent[2] - extent[0];
-    var height = extent[3] - extent[1];
-    for (var i = 0; i < opt_stops; ++i) {
-      coordinates2.push(extent[0] + width * i / opt_stops, extent[1], extent[2], extent[1] + height * i / opt_stops, extent[2] - width * i / opt_stops, extent[3], extent[0], extent[3] - height * i / opt_stops);
+function applyTransform(extent, transformFn, dest, stops) {
+  let coordinates2 = [];
+  if (stops > 1) {
+    const width = extent[2] - extent[0];
+    const height = extent[3] - extent[1];
+    for (let i = 0; i < stops; ++i) {
+      coordinates2.push(extent[0] + width * i / stops, extent[1], extent[2], extent[1] + height * i / stops, extent[2] - width * i / stops, extent[3], extent[0], extent[3] - height * i / stops);
     }
   } else {
     coordinates2 = [
@@ -1174,13 +975,48 @@ function applyTransform(extent, transformFn, opt_extent, opt_stops) {
     ];
   }
   transformFn(coordinates2, coordinates2, 2);
-  var xs = [];
-  var ys = [];
-  for (var i = 0, l = coordinates2.length; i < l; i += 2) {
+  const xs = [];
+  const ys = [];
+  for (let i = 0, l = coordinates2.length; i < l; i += 2) {
     xs.push(coordinates2[i]);
     ys.push(coordinates2[i + 1]);
   }
-  return _boundingExtentXYs(xs, ys, opt_extent);
+  return _boundingExtentXYs(xs, ys, dest);
+}
+
+// ../node_modules/ol/math.js
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+function squaredSegmentDistance(x, y, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  if (dx !== 0 || dy !== 0) {
+    const t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
+    if (t > 1) {
+      x1 = x2;
+      y1 = y2;
+    } else if (t > 0) {
+      x1 += dx * t;
+      y1 += dy * t;
+    }
+  }
+  return squaredDistance(x, y, x1, y1);
+}
+function squaredDistance(x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  return dx * dx + dy * dy;
+}
+function toRadians(angleInDegrees) {
+  return angleInDegrees * Math.PI / 180;
+}
+function modulo(a, b) {
+  const r = a % b;
+  return r * b < 0 ? r + b : r;
+}
+function lerp(a, b, x) {
+  return a + x * (b - a);
 }
 
 // ../node_modules/ol/coordinate.js
@@ -1190,8 +1026,8 @@ function add3(coordinate, delta) {
   return coordinate;
 }
 function equals2(coordinate1, coordinate2) {
-  var equals3 = true;
-  for (var i = coordinate1.length - 1; i >= 0; --i) {
+  let equals3 = true;
+  for (let i = coordinate1.length - 1; i >= 0; --i) {
     if (coordinate1[i] != coordinate2[i]) {
       equals3 = false;
       break;
@@ -1200,39 +1036,53 @@ function equals2(coordinate1, coordinate2) {
   return equals3;
 }
 function rotate(coordinate, angle) {
-  var cosAngle = Math.cos(angle);
-  var sinAngle = Math.sin(angle);
-  var x = coordinate[0] * cosAngle - coordinate[1] * sinAngle;
-  var y = coordinate[1] * cosAngle + coordinate[0] * sinAngle;
+  const cosAngle = Math.cos(angle);
+  const sinAngle = Math.sin(angle);
+  const x = coordinate[0] * cosAngle - coordinate[1] * sinAngle;
+  const y = coordinate[1] * cosAngle + coordinate[0] * sinAngle;
   coordinate[0] = x;
   coordinate[1] = y;
   return coordinate;
 }
 
+// ../node_modules/ol/console.js
+var levels = {
+  info: 1,
+  warn: 2,
+  error: 3,
+  none: 4
+};
+var level = levels.info;
+function warn(...args) {
+  if (level > levels.warn) {
+    return;
+  }
+  console.warn(...args);
+}
+
 // ../node_modules/ol/proj.js
 var showCoordinateWarning = true;
-function disableCoordinateWarning(opt_disable) {
-  var hide = opt_disable === void 0 ? true : opt_disable;
+function disableCoordinateWarning(disable2) {
+  const hide = disable2 === void 0 ? true : disable2;
   showCoordinateWarning = !hide;
 }
-function cloneTransform(input, opt_output, opt_dimension) {
-  var output;
-  if (opt_output !== void 0) {
-    for (var i = 0, ii = input.length; i < ii; ++i) {
-      opt_output[i] = input[i];
+function cloneTransform(input, output) {
+  if (output !== void 0) {
+    for (let i = 0, ii = input.length; i < ii; ++i) {
+      output[i] = input[i];
     }
-    output = opt_output;
+    output = output;
   } else {
     output = input.slice();
   }
   return output;
 }
-function identityTransform(input, opt_output, opt_dimension) {
-  if (opt_output !== void 0 && input !== opt_output) {
-    for (var i = 0, ii = input.length; i < ii; ++i) {
-      opt_output[i] = input[i];
+function identityTransform(input, output) {
+  if (output !== void 0 && input !== output) {
+    for (let i = 0, ii = input.length; i < ii; ++i) {
+      output[i] = input[i];
     }
-    input = opt_output;
+    input = output;
   }
   return input;
 }
@@ -1269,31 +1119,30 @@ function createProjection(projection, defaultCode) {
     return get3(defaultCode);
   } else if (typeof projection === "string") {
     return get3(projection);
-  } else {
-    return projection;
   }
+  return projection;
 }
 function getTransformFromProjections(sourceProjection, destinationProjection) {
-  var sourceCode = sourceProjection.getCode();
-  var destinationCode = destinationProjection.getCode();
-  var transformFunc = get2(sourceCode, destinationCode);
+  const sourceCode = sourceProjection.getCode();
+  const destinationCode = destinationProjection.getCode();
+  let transformFunc = get2(sourceCode, destinationCode);
   if (!transformFunc) {
     transformFunc = identityTransform;
   }
   return transformFunc;
 }
 function getTransform(source, destination) {
-  var sourceProjection = get3(source);
-  var destinationProjection = get3(destination);
+  const sourceProjection = get3(source);
+  const destinationProjection = get3(destination);
   return getTransformFromProjections(sourceProjection, destinationProjection);
 }
 function transform(coordinate, source, destination) {
-  var transformFunc = getTransform(source, destination);
+  const transformFunc = getTransform(source, destination);
   return transformFunc(coordinate, void 0, coordinate.length);
 }
-function transformExtent(extent, source, destination, opt_stops) {
-  var transformFunc = getTransform(source, destination);
-  return applyTransform(extent, transformFunc, void 0, opt_stops);
+function transformExtent(extent, source, destination, stops) {
+  const transformFunc = getTransform(source, destination);
+  return applyTransform(extent, transformFunc, void 0, stops);
 }
 var userProjection = null;
 function getUserProjection() {
@@ -1309,7 +1158,7 @@ function fromUserCoordinate(coordinate, destProjection) {
   if (!userProjection) {
     if (showCoordinateWarning && !equals2(coordinate, [0, 0]) && coordinate[0] >= -180 && coordinate[0] <= 180 && coordinate[1] >= -90 && coordinate[1] <= 90) {
       showCoordinateWarning = false;
-      console.warn("Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates.");
+      warn("Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates.");
     }
     return coordinate;
   }
@@ -1336,21 +1185,21 @@ addCommon();
 
 // ../node_modules/ol/centerconstraint.js
 function createExtent(extent, onlyCenter, smooth) {
-  return function(center, resolution, size, opt_isMoving, opt_centerShift) {
+  return function(center, resolution, size, isMoving, centerShift) {
     if (!center) {
       return void 0;
     }
     if (!resolution && !onlyCenter) {
       return center;
     }
-    var viewWidth = onlyCenter ? 0 : size[0] * resolution;
-    var viewHeight = onlyCenter ? 0 : size[1] * resolution;
-    var shiftX = opt_centerShift ? opt_centerShift[0] : 0;
-    var shiftY = opt_centerShift ? opt_centerShift[1] : 0;
-    var minX = extent[0] + viewWidth / 2 + shiftX;
-    var maxX = extent[2] - viewWidth / 2 + shiftX;
-    var minY = extent[1] + viewHeight / 2 + shiftY;
-    var maxY = extent[3] - viewHeight / 2 + shiftY;
+    const viewWidth = onlyCenter ? 0 : size[0] * resolution;
+    const viewHeight = onlyCenter ? 0 : size[1] * resolution;
+    const shiftX = centerShift ? centerShift[0] : 0;
+    const shiftY = centerShift ? centerShift[1] : 0;
+    let minX = extent[0] + viewWidth / 2 + shiftX;
+    let maxX = extent[2] - viewWidth / 2 + shiftX;
+    let minY = extent[1] + viewHeight / 2 + shiftY;
+    let maxY = extent[3] - viewHeight / 2 + shiftY;
     if (minX > maxX) {
       minX = (maxX + minX) / 2;
       maxX = minX;
@@ -1359,10 +1208,10 @@ function createExtent(extent, onlyCenter, smooth) {
       minY = (maxY + minY) / 2;
       maxY = minY;
     }
-    var x = clamp(center[0], minX, maxX);
-    var y = clamp(center[1], minY, maxY);
-    if (opt_isMoving && smooth && resolution) {
-      var ratio = 30 * resolution;
+    let x = clamp(center[0], minX, maxX);
+    let y = clamp(center[1], minY, maxY);
+    if (isMoving && smooth && resolution) {
+      const ratio = 30 * resolution;
       x += -ratio * Math.log(1 + Math.max(0, minX - center[0]) / ratio) + ratio * Math.log(1 + Math.max(0, center[0] - maxX) / ratio);
       y += -ratio * Math.log(1 + Math.max(0, minY - center[1]) / ratio) + ratio * Math.log(1 + Math.max(0, center[1] - maxY) / ratio);
     }
@@ -1375,16 +1224,16 @@ function none(center) {
 
 // ../node_modules/ol/resolutionconstraint.js
 function getViewportClampedResolution(resolution, maxExtent, viewportSize, showFullExtent) {
-  var xResolution = getWidth(maxExtent) / viewportSize[0];
-  var yResolution = getHeight(maxExtent) / viewportSize[1];
+  const xResolution = getWidth(maxExtent) / viewportSize[0];
+  const yResolution = getHeight(maxExtent) / viewportSize[1];
   if (showFullExtent) {
     return Math.min(resolution, Math.max(xResolution, yResolution));
   }
   return Math.min(resolution, Math.min(xResolution, yResolution));
 }
 function getSmoothClampedResolution(resolution, maxResolution, minResolution) {
-  var result = Math.min(resolution, maxResolution);
-  var ratio = 50;
+  let result = Math.min(resolution, maxResolution);
+  const ratio = 50;
   result *= Math.log(1 + ratio * Math.max(0, resolution / maxResolution - 1)) / ratio + 1;
   if (minResolution) {
     result = Math.max(result, minResolution);
@@ -1392,67 +1241,64 @@ function getSmoothClampedResolution(resolution, maxResolution, minResolution) {
   }
   return clamp(result, minResolution / 2, maxResolution * 2);
 }
-function createSnapToResolutions(resolutions, opt_smooth, opt_maxExtent, opt_showFullExtent) {
-  return function(resolution, direction, size, opt_isMoving) {
+function createSnapToResolutions(resolutions, smooth, maxExtent, showFullExtent) {
+  smooth = smooth !== void 0 ? smooth : true;
+  return function(resolution, direction, size, isMoving) {
     if (resolution !== void 0) {
-      var maxResolution = resolutions[0];
-      var minResolution = resolutions[resolutions.length - 1];
-      var cappedMaxRes = opt_maxExtent ? getViewportClampedResolution(maxResolution, opt_maxExtent, size, opt_showFullExtent) : maxResolution;
-      if (opt_isMoving) {
-        var smooth = opt_smooth !== void 0 ? opt_smooth : true;
+      const maxResolution = resolutions[0];
+      const minResolution = resolutions[resolutions.length - 1];
+      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
+      if (isMoving) {
         if (!smooth) {
           return clamp(resolution, minResolution, cappedMaxRes);
         }
         return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
       }
-      var capped = Math.min(cappedMaxRes, resolution);
-      var z = Math.floor(linearFindNearest(resolutions, capped, direction));
+      const capped = Math.min(cappedMaxRes, resolution);
+      const z = Math.floor(linearFindNearest(resolutions, capped, direction));
       if (resolutions[z] > cappedMaxRes && z < resolutions.length - 1) {
         return resolutions[z + 1];
       }
       return resolutions[z];
-    } else {
-      return void 0;
     }
+    return void 0;
   };
 }
-function createSnapToPower(power, maxResolution, opt_minResolution, opt_smooth, opt_maxExtent, opt_showFullExtent) {
-  return function(resolution, direction, size, opt_isMoving) {
+function createSnapToPower(power, maxResolution, minResolution, smooth, maxExtent, showFullExtent) {
+  smooth = smooth !== void 0 ? smooth : true;
+  minResolution = minResolution !== void 0 ? minResolution : 0;
+  return function(resolution, direction, size, isMoving) {
     if (resolution !== void 0) {
-      var cappedMaxRes = opt_maxExtent ? getViewportClampedResolution(maxResolution, opt_maxExtent, size, opt_showFullExtent) : maxResolution;
-      var minResolution = opt_minResolution !== void 0 ? opt_minResolution : 0;
-      if (opt_isMoving) {
-        var smooth = opt_smooth !== void 0 ? opt_smooth : true;
+      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
+      if (isMoving) {
         if (!smooth) {
           return clamp(resolution, minResolution, cappedMaxRes);
         }
         return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
       }
-      var tolerance = 1e-9;
-      var minZoomLevel = Math.ceil(Math.log(maxResolution / cappedMaxRes) / Math.log(power) - tolerance);
-      var offset = -direction * (0.5 - tolerance) + 0.5;
-      var capped = Math.min(cappedMaxRes, resolution);
-      var cappedZoomLevel = Math.floor(Math.log(maxResolution / capped) / Math.log(power) + offset);
-      var zoomLevel = Math.max(minZoomLevel, cappedZoomLevel);
-      var newResolution = maxResolution / Math.pow(power, zoomLevel);
+      const tolerance = 1e-9;
+      const minZoomLevel = Math.ceil(Math.log(maxResolution / cappedMaxRes) / Math.log(power) - tolerance);
+      const offset = -direction * (0.5 - tolerance) + 0.5;
+      const capped = Math.min(cappedMaxRes, resolution);
+      const cappedZoomLevel = Math.floor(Math.log(maxResolution / capped) / Math.log(power) + offset);
+      const zoomLevel = Math.max(minZoomLevel, cappedZoomLevel);
+      const newResolution = maxResolution / Math.pow(power, zoomLevel);
       return clamp(newResolution, minResolution, cappedMaxRes);
-    } else {
-      return void 0;
     }
+    return void 0;
   };
 }
-function createMinMaxResolution(maxResolution, minResolution, opt_smooth, opt_maxExtent, opt_showFullExtent) {
-  return function(resolution, direction, size, opt_isMoving) {
+function createMinMaxResolution(maxResolution, minResolution, smooth, maxExtent, showFullExtent) {
+  smooth = smooth !== void 0 ? smooth : true;
+  return function(resolution, direction, size, isMoving) {
     if (resolution !== void 0) {
-      var cappedMaxRes = opt_maxExtent ? getViewportClampedResolution(maxResolution, opt_maxExtent, size, opt_showFullExtent) : maxResolution;
-      var smooth = opt_smooth !== void 0 ? opt_smooth : true;
-      if (!smooth || !opt_isMoving) {
+      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
+      if (!smooth || !isMoving) {
         return clamp(resolution, minResolution, cappedMaxRes);
       }
       return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
-    } else {
-      return void 0;
     }
+    return void 0;
   };
 }
 
@@ -1460,46 +1306,41 @@ function createMinMaxResolution(maxResolution, minResolution, opt_smooth, opt_ma
 function disable(rotation) {
   if (rotation !== void 0) {
     return 0;
-  } else {
-    return void 0;
   }
+  return void 0;
 }
 function none2(rotation) {
   if (rotation !== void 0) {
     return rotation;
-  } else {
-    return void 0;
   }
+  return void 0;
 }
 function createSnapToN(n) {
-  var theta = 2 * Math.PI / n;
-  return function(rotation, opt_isMoving) {
-    if (opt_isMoving) {
+  const theta = 2 * Math.PI / n;
+  return function(rotation, isMoving) {
+    if (isMoving) {
       return rotation;
     }
     if (rotation !== void 0) {
       rotation = Math.floor(rotation / theta + 0.5) * theta;
       return rotation;
-    } else {
-      return void 0;
     }
+    return void 0;
   };
 }
-function createSnapToZero(opt_tolerance) {
-  var tolerance = opt_tolerance || toRadians(5);
-  return function(rotation, opt_isMoving) {
-    if (opt_isMoving) {
+function createSnapToZero(tolerance) {
+  tolerance = tolerance || toRadians(5);
+  return function(rotation, isMoving) {
+    if (isMoving) {
       return rotation;
     }
     if (rotation !== void 0) {
       if (Math.abs(rotation) <= tolerance) {
         return 0;
-      } else {
-        return rotation;
       }
-    } else {
-      return void 0;
+      return rotation;
     }
+    return void 0;
   };
 }
 
@@ -1514,22 +1355,14 @@ function inAndOut(t) {
   return 3 * t * t - 2 * t * t * t;
 }
 
-// ../node_modules/ol/geom/GeometryLayout.js
-var GeometryLayout_default = {
-  XY: "XY",
-  XYZ: "XYZ",
-  XYM: "XYM",
-  XYZM: "XYZM"
-};
-
 // ../node_modules/ol/transform.js
 var tmp_ = new Array(6);
 function create() {
   return [1, 0, 0, 1, 0, 0];
 }
 function compose(transform2, dx1, dy1, sx, sy, angle, dx2, dy2) {
-  var sin = Math.sin(angle);
-  var cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const cos = Math.cos(angle);
   transform2[0] = sx * cos;
   transform2[1] = sy * sin;
   transform2[2] = -sx * sin;
@@ -1540,242 +1373,195 @@ function compose(transform2, dx1, dy1, sx, sy, angle, dx2, dy2) {
 }
 
 // ../node_modules/ol/geom/flat/transform.js
-function transform2D(flatCoordinates, offset, end, stride, transform2, opt_dest) {
-  var dest = opt_dest ? opt_dest : [];
-  var i = 0;
-  for (var j = offset; j < end; j += stride) {
-    var x = flatCoordinates[j];
-    var y = flatCoordinates[j + 1];
+function transform2D(flatCoordinates, offset, end, stride, transform2, dest) {
+  dest = dest ? dest : [];
+  let i = 0;
+  for (let j = offset; j < end; j += stride) {
+    const x = flatCoordinates[j];
+    const y = flatCoordinates[j + 1];
     dest[i++] = transform2[0] * x + transform2[2] * y + transform2[4];
     dest[i++] = transform2[1] * x + transform2[3] * y + transform2[5];
   }
-  if (opt_dest && dest.length != i) {
+  if (dest && dest.length != i) {
     dest.length = i;
   }
   return dest;
 }
-function rotate2(flatCoordinates, offset, end, stride, angle, anchor, opt_dest) {
-  var dest = opt_dest ? opt_dest : [];
-  var cos = Math.cos(angle);
-  var sin = Math.sin(angle);
-  var anchorX = anchor[0];
-  var anchorY = anchor[1];
-  var i = 0;
-  for (var j = offset; j < end; j += stride) {
-    var deltaX = flatCoordinates[j] - anchorX;
-    var deltaY = flatCoordinates[j + 1] - anchorY;
+function rotate2(flatCoordinates, offset, end, stride, angle, anchor, dest) {
+  dest = dest ? dest : [];
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const anchorX = anchor[0];
+  const anchorY = anchor[1];
+  let i = 0;
+  for (let j = offset; j < end; j += stride) {
+    const deltaX = flatCoordinates[j] - anchorX;
+    const deltaY = flatCoordinates[j + 1] - anchorY;
     dest[i++] = anchorX + deltaX * cos - deltaY * sin;
     dest[i++] = anchorY + deltaX * sin + deltaY * cos;
-    for (var k = j + 2; k < j + stride; ++k) {
+    for (let k = j + 2; k < j + stride; ++k) {
       dest[i++] = flatCoordinates[k];
     }
   }
-  if (opt_dest && dest.length != i) {
+  if (dest && dest.length != i) {
     dest.length = i;
   }
   return dest;
 }
-function scale(flatCoordinates, offset, end, stride, sx, sy, anchor, opt_dest) {
-  var dest = opt_dest ? opt_dest : [];
-  var anchorX = anchor[0];
-  var anchorY = anchor[1];
-  var i = 0;
-  for (var j = offset; j < end; j += stride) {
-    var deltaX = flatCoordinates[j] - anchorX;
-    var deltaY = flatCoordinates[j + 1] - anchorY;
+function scale(flatCoordinates, offset, end, stride, sx, sy, anchor, dest) {
+  dest = dest ? dest : [];
+  const anchorX = anchor[0];
+  const anchorY = anchor[1];
+  let i = 0;
+  for (let j = offset; j < end; j += stride) {
+    const deltaX = flatCoordinates[j] - anchorX;
+    const deltaY = flatCoordinates[j + 1] - anchorY;
     dest[i++] = anchorX + sx * deltaX;
     dest[i++] = anchorY + sy * deltaY;
-    for (var k = j + 2; k < j + stride; ++k) {
+    for (let k = j + 2; k < j + stride; ++k) {
       dest[i++] = flatCoordinates[k];
     }
   }
-  if (opt_dest && dest.length != i) {
+  if (dest && dest.length != i) {
     dest.length = i;
   }
   return dest;
 }
-function translate(flatCoordinates, offset, end, stride, deltaX, deltaY, opt_dest) {
-  var dest = opt_dest ? opt_dest : [];
-  var i = 0;
-  for (var j = offset; j < end; j += stride) {
+function translate(flatCoordinates, offset, end, stride, deltaX, deltaY, dest) {
+  dest = dest ? dest : [];
+  let i = 0;
+  for (let j = offset; j < end; j += stride) {
     dest[i++] = flatCoordinates[j] + deltaX;
     dest[i++] = flatCoordinates[j + 1] + deltaY;
-    for (var k = j + 2; k < j + stride; ++k) {
+    for (let k = j + 2; k < j + stride; ++k) {
       dest[i++] = flatCoordinates[k];
     }
   }
-  if (opt_dest && dest.length != i) {
+  if (dest && dest.length != i) {
     dest.length = i;
   }
   return dest;
 }
 
 // ../node_modules/ol/geom/Geometry.js
-var __extends7 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
 var tmpTransform = create();
-var Geometry = function(_super) {
-  __extends7(Geometry2, _super);
-  function Geometry2() {
-    var _this = _super.call(this) || this;
-    _this.extent_ = createEmpty();
-    _this.extentRevision_ = -1;
-    _this.simplifiedGeometryMaxMinSquaredTolerance = 0;
-    _this.simplifiedGeometryRevision = 0;
-    _this.simplifyTransformedInternal = memoizeOne(function(revision, squaredTolerance, opt_transform) {
-      if (!opt_transform) {
+var Geometry = class extends Object_default {
+  constructor() {
+    super();
+    this.extent_ = createEmpty();
+    this.extentRevision_ = -1;
+    this.simplifiedGeometryMaxMinSquaredTolerance = 0;
+    this.simplifiedGeometryRevision = 0;
+    this.simplifyTransformedInternal = memoizeOne(function(revision, squaredTolerance, transform2) {
+      if (!transform2) {
         return this.getSimplifiedGeometry(squaredTolerance);
       }
-      var clone = this.clone();
-      clone.applyTransform(opt_transform);
+      const clone = this.clone();
+      clone.applyTransform(transform2);
       return clone.getSimplifiedGeometry(squaredTolerance);
     });
-    return _this;
   }
-  Geometry2.prototype.simplifyTransformed = function(squaredTolerance, opt_transform) {
-    return this.simplifyTransformedInternal(this.getRevision(), squaredTolerance, opt_transform);
-  };
-  Geometry2.prototype.clone = function() {
+  simplifyTransformed(squaredTolerance, transform2) {
+    return this.simplifyTransformedInternal(this.getRevision(), squaredTolerance, transform2);
+  }
+  clone() {
     return abstract();
-  };
-  Geometry2.prototype.closestPointXY = function(x, y, closestPoint, minSquaredDistance) {
+  }
+  closestPointXY(x, y, closestPoint, minSquaredDistance) {
     return abstract();
-  };
-  Geometry2.prototype.containsXY = function(x, y) {
-    var coord = this.getClosestPoint([x, y]);
+  }
+  containsXY(x, y) {
+    const coord = this.getClosestPoint([x, y]);
     return coord[0] === x && coord[1] === y;
-  };
-  Geometry2.prototype.getClosestPoint = function(point, opt_closestPoint) {
-    var closestPoint = opt_closestPoint ? opt_closestPoint : [NaN, NaN];
+  }
+  getClosestPoint(point, closestPoint) {
+    closestPoint = closestPoint ? closestPoint : [NaN, NaN];
     this.closestPointXY(point[0], point[1], closestPoint, Infinity);
     return closestPoint;
-  };
-  Geometry2.prototype.intersectsCoordinate = function(coordinate) {
+  }
+  intersectsCoordinate(coordinate) {
     return this.containsXY(coordinate[0], coordinate[1]);
-  };
-  Geometry2.prototype.computeExtent = function(extent) {
+  }
+  computeExtent(extent) {
     return abstract();
-  };
-  Geometry2.prototype.getExtent = function(opt_extent) {
+  }
+  getExtent(extent) {
     if (this.extentRevision_ != this.getRevision()) {
-      var extent = this.computeExtent(this.extent_);
-      if (isNaN(extent[0]) || isNaN(extent[1])) {
-        createOrUpdateEmpty(extent);
+      const extent2 = this.computeExtent(this.extent_);
+      if (isNaN(extent2[0]) || isNaN(extent2[1])) {
+        createOrUpdateEmpty(extent2);
       }
       this.extentRevision_ = this.getRevision();
     }
-    return returnOrUpdate(this.extent_, opt_extent);
-  };
-  Geometry2.prototype.rotate = function(angle, anchor) {
+    return returnOrUpdate(this.extent_, extent);
+  }
+  rotate(angle, anchor) {
     abstract();
-  };
-  Geometry2.prototype.scale = function(sx, opt_sy, opt_anchor) {
+  }
+  scale(sx, sy, anchor) {
     abstract();
-  };
-  Geometry2.prototype.simplify = function(tolerance) {
+  }
+  simplify(tolerance) {
     return this.getSimplifiedGeometry(tolerance * tolerance);
-  };
-  Geometry2.prototype.getSimplifiedGeometry = function(squaredTolerance) {
+  }
+  getSimplifiedGeometry(squaredTolerance) {
     return abstract();
-  };
-  Geometry2.prototype.getType = function() {
+  }
+  getType() {
     return abstract();
-  };
-  Geometry2.prototype.applyTransform = function(transformFn) {
+  }
+  applyTransform(transformFn) {
     abstract();
-  };
-  Geometry2.prototype.intersectsExtent = function(extent) {
+  }
+  intersectsExtent(extent) {
     return abstract();
-  };
-  Geometry2.prototype.translate = function(deltaX, deltaY) {
+  }
+  translate(deltaX, deltaY) {
     abstract();
-  };
-  Geometry2.prototype.transform = function(source, destination) {
-    var sourceProj = get3(source);
-    var transformFn = sourceProj.getUnits() == Units_default.TILE_PIXELS ? function(inCoordinates, outCoordinates, stride) {
-      var pixelExtent = sourceProj.getExtent();
-      var projectedExtent = sourceProj.getWorldExtent();
-      var scale2 = getHeight(projectedExtent) / getHeight(pixelExtent);
+  }
+  transform(source, destination) {
+    const sourceProj = get3(source);
+    const transformFn = sourceProj.getUnits() == "tile-pixels" ? function(inCoordinates, outCoordinates, stride) {
+      const pixelExtent = sourceProj.getExtent();
+      const projectedExtent = sourceProj.getWorldExtent();
+      const scale2 = getHeight(projectedExtent) / getHeight(pixelExtent);
       compose(tmpTransform, projectedExtent[0], projectedExtent[3], scale2, -scale2, 0, 0, 0);
       transform2D(inCoordinates, 0, inCoordinates.length, stride, tmpTransform, outCoordinates);
       return getTransform(sourceProj, destination)(inCoordinates, outCoordinates, stride);
     } : getTransform(sourceProj, destination);
     this.applyTransform(transformFn);
     return this;
-  };
-  return Geometry2;
-}(Object_default);
+  }
+};
 var Geometry_default = Geometry;
 
 // ../node_modules/ol/geom/SimpleGeometry.js
-var __extends8 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var SimpleGeometry = function(_super) {
-  __extends8(SimpleGeometry2, _super);
-  function SimpleGeometry2() {
-    var _this = _super.call(this) || this;
-    _this.layout = GeometryLayout_default.XY;
-    _this.stride = 2;
-    _this.flatCoordinates = null;
-    return _this;
+var SimpleGeometry = class extends Geometry_default {
+  constructor() {
+    super();
+    this.layout = "XY";
+    this.stride = 2;
+    this.flatCoordinates = null;
   }
-  SimpleGeometry2.prototype.computeExtent = function(extent) {
+  computeExtent(extent) {
     return createOrUpdateFromFlatCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, extent);
-  };
-  SimpleGeometry2.prototype.getCoordinates = function() {
+  }
+  getCoordinates() {
     return abstract();
-  };
-  SimpleGeometry2.prototype.getFirstCoordinate = function() {
+  }
+  getFirstCoordinate() {
     return this.flatCoordinates.slice(0, this.stride);
-  };
-  SimpleGeometry2.prototype.getFlatCoordinates = function() {
+  }
+  getFlatCoordinates() {
     return this.flatCoordinates;
-  };
-  SimpleGeometry2.prototype.getLastCoordinate = function() {
+  }
+  getLastCoordinate() {
     return this.flatCoordinates.slice(this.flatCoordinates.length - this.stride);
-  };
-  SimpleGeometry2.prototype.getLayout = function() {
+  }
+  getLayout() {
     return this.layout;
-  };
-  SimpleGeometry2.prototype.getSimplifiedGeometry = function(squaredTolerance) {
+  }
+  getSimplifiedGeometry(squaredTolerance) {
     if (this.simplifiedGeometryRevision !== this.getRevision()) {
       this.simplifiedGeometryMaxMinSquaredTolerance = 0;
       this.simplifiedGeometryRevision = this.getRevision();
@@ -1783,107 +1569,102 @@ var SimpleGeometry = function(_super) {
     if (squaredTolerance < 0 || this.simplifiedGeometryMaxMinSquaredTolerance !== 0 && squaredTolerance <= this.simplifiedGeometryMaxMinSquaredTolerance) {
       return this;
     }
-    var simplifiedGeometry = this.getSimplifiedGeometryInternal(squaredTolerance);
-    var simplifiedFlatCoordinates = simplifiedGeometry.getFlatCoordinates();
+    const simplifiedGeometry = this.getSimplifiedGeometryInternal(squaredTolerance);
+    const simplifiedFlatCoordinates = simplifiedGeometry.getFlatCoordinates();
     if (simplifiedFlatCoordinates.length < this.flatCoordinates.length) {
       return simplifiedGeometry;
-    } else {
-      this.simplifiedGeometryMaxMinSquaredTolerance = squaredTolerance;
-      return this;
     }
-  };
-  SimpleGeometry2.prototype.getSimplifiedGeometryInternal = function(squaredTolerance) {
+    this.simplifiedGeometryMaxMinSquaredTolerance = squaredTolerance;
     return this;
-  };
-  SimpleGeometry2.prototype.getStride = function() {
+  }
+  getSimplifiedGeometryInternal(squaredTolerance) {
+    return this;
+  }
+  getStride() {
     return this.stride;
-  };
-  SimpleGeometry2.prototype.setFlatCoordinates = function(layout, flatCoordinates) {
+  }
+  setFlatCoordinates(layout, flatCoordinates) {
     this.stride = getStrideForLayout(layout);
     this.layout = layout;
     this.flatCoordinates = flatCoordinates;
-  };
-  SimpleGeometry2.prototype.setCoordinates = function(coordinates2, opt_layout) {
+  }
+  setCoordinates(coordinates2, layout) {
     abstract();
-  };
-  SimpleGeometry2.prototype.setLayout = function(layout, coordinates2, nesting) {
-    var stride;
+  }
+  setLayout(layout, coordinates2, nesting) {
+    let stride;
     if (layout) {
       stride = getStrideForLayout(layout);
     } else {
-      for (var i = 0; i < nesting; ++i) {
+      for (let i = 0; i < nesting; ++i) {
         if (coordinates2.length === 0) {
-          this.layout = GeometryLayout_default.XY;
+          this.layout = "XY";
           this.stride = 2;
           return;
-        } else {
-          coordinates2 = coordinates2[0];
         }
+        coordinates2 = coordinates2[0];
       }
       stride = coordinates2.length;
       layout = getLayoutForStride(stride);
     }
     this.layout = layout;
     this.stride = stride;
-  };
-  SimpleGeometry2.prototype.applyTransform = function(transformFn) {
+  }
+  applyTransform(transformFn) {
     if (this.flatCoordinates) {
       transformFn(this.flatCoordinates, this.flatCoordinates, this.stride);
       this.changed();
     }
-  };
-  SimpleGeometry2.prototype.rotate = function(angle, anchor) {
-    var flatCoordinates = this.getFlatCoordinates();
+  }
+  rotate(angle, anchor) {
+    const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
-      var stride = this.getStride();
+      const stride = this.getStride();
       rotate2(flatCoordinates, 0, flatCoordinates.length, stride, angle, anchor, flatCoordinates);
       this.changed();
     }
-  };
-  SimpleGeometry2.prototype.scale = function(sx, opt_sy, opt_anchor) {
-    var sy = opt_sy;
+  }
+  scale(sx, sy, anchor) {
     if (sy === void 0) {
       sy = sx;
     }
-    var anchor = opt_anchor;
     if (!anchor) {
       anchor = getCenter(this.getExtent());
     }
-    var flatCoordinates = this.getFlatCoordinates();
+    const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
-      var stride = this.getStride();
+      const stride = this.getStride();
       scale(flatCoordinates, 0, flatCoordinates.length, stride, sx, sy, anchor, flatCoordinates);
       this.changed();
     }
-  };
-  SimpleGeometry2.prototype.translate = function(deltaX, deltaY) {
-    var flatCoordinates = this.getFlatCoordinates();
+  }
+  translate(deltaX, deltaY) {
+    const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
-      var stride = this.getStride();
+      const stride = this.getStride();
       translate(flatCoordinates, 0, flatCoordinates.length, stride, deltaX, deltaY, flatCoordinates);
       this.changed();
     }
-  };
-  return SimpleGeometry2;
-}(Geometry_default);
+  }
+};
 function getLayoutForStride(stride) {
-  var layout;
+  let layout;
   if (stride == 2) {
-    layout = GeometryLayout_default.XY;
+    layout = "XY";
   } else if (stride == 3) {
-    layout = GeometryLayout_default.XYZ;
+    layout = "XYZ";
   } else if (stride == 4) {
-    layout = GeometryLayout_default.XYZM;
+    layout = "XYZM";
   }
   return layout;
 }
 function getStrideForLayout(layout) {
-  var stride;
-  if (layout == GeometryLayout_default.XY) {
+  let stride;
+  if (layout == "XY") {
     stride = 2;
-  } else if (layout == GeometryLayout_default.XYZ || layout == GeometryLayout_default.XYM) {
+  } else if (layout == "XYZ" || layout == "XYM") {
     stride = 3;
-  } else if (layout == GeometryLayout_default.XYZM) {
+  } else if (layout == "XYZM") {
     stride = 4;
   }
   return stride;
@@ -1892,19 +1673,19 @@ var SimpleGeometry_default = SimpleGeometry;
 
 // ../node_modules/ol/geom/flat/closest.js
 function assignClosest(flatCoordinates, offset1, offset2, stride, x, y, closestPoint) {
-  var x1 = flatCoordinates[offset1];
-  var y1 = flatCoordinates[offset1 + 1];
-  var dx = flatCoordinates[offset2] - x1;
-  var dy = flatCoordinates[offset2 + 1] - y1;
-  var offset;
+  const x1 = flatCoordinates[offset1];
+  const y1 = flatCoordinates[offset1 + 1];
+  const dx = flatCoordinates[offset2] - x1;
+  const dy = flatCoordinates[offset2 + 1] - y1;
+  let offset;
   if (dx === 0 && dy === 0) {
     offset = offset1;
   } else {
-    var t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
+    const t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
     if (t > 1) {
       offset = offset2;
     } else if (t > 0) {
-      for (var i = 0; i < stride; ++i) {
+      for (let i = 0; i < stride; ++i) {
         closestPoint[i] = lerp(flatCoordinates[offset1 + i], flatCoordinates[offset2 + i], t);
       }
       closestPoint.length = stride;
@@ -1913,18 +1694,18 @@ function assignClosest(flatCoordinates, offset1, offset2, stride, x, y, closestP
       offset = offset1;
     }
   }
-  for (var i = 0; i < stride; ++i) {
+  for (let i = 0; i < stride; ++i) {
     closestPoint[i] = flatCoordinates[offset + i];
   }
   closestPoint.length = stride;
 }
 function maxSquaredDelta(flatCoordinates, offset, end, stride, max) {
-  var x1 = flatCoordinates[offset];
-  var y1 = flatCoordinates[offset + 1];
+  let x1 = flatCoordinates[offset];
+  let y1 = flatCoordinates[offset + 1];
   for (offset += stride; offset < end; offset += stride) {
-    var x2 = flatCoordinates[offset];
-    var y2 = flatCoordinates[offset + 1];
-    var squaredDelta = squaredDistance(x1, y1, x2, y2);
+    const x2 = flatCoordinates[offset];
+    const y2 = flatCoordinates[offset + 1];
+    const squaredDelta = squaredDistance(x1, y1, x2, y2);
     if (squaredDelta > max) {
       max = squaredDelta;
     }
@@ -1934,18 +1715,18 @@ function maxSquaredDelta(flatCoordinates, offset, end, stride, max) {
   return max;
 }
 function arrayMaxSquaredDelta(flatCoordinates, offset, ends, stride, max) {
-  for (var i = 0, ii = ends.length; i < ii; ++i) {
-    var end = ends[i];
+  for (let i = 0, ii = ends.length; i < ii; ++i) {
+    const end = ends[i];
     max = maxSquaredDelta(flatCoordinates, offset, end, stride, max);
     offset = end;
   }
   return max;
 }
-function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, opt_tmpPoint) {
+function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, tmpPoint) {
   if (offset == end) {
     return minSquaredDistance;
   }
-  var i, squaredDistance2;
+  let i, squaredDistance2;
   if (maxDelta === 0) {
     squaredDistance2 = squaredDistance(x, y, flatCoordinates[offset], flatCoordinates[offset + 1]);
     if (squaredDistance2 < minSquaredDistance) {
@@ -1954,12 +1735,11 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
       }
       closestPoint.length = stride;
       return squaredDistance2;
-    } else {
-      return minSquaredDistance;
     }
+    return minSquaredDistance;
   }
-  var tmpPoint = opt_tmpPoint ? opt_tmpPoint : [NaN, NaN];
-  var index = offset + stride;
+  tmpPoint = tmpPoint ? tmpPoint : [NaN, NaN];
+  let index = offset + stride;
   while (index < end) {
     assignClosest(flatCoordinates, index - stride, index, stride, x, y, tmpPoint);
     squaredDistance2 = squaredDistance(x, y, tmpPoint[0], tmpPoint[1]);
@@ -1987,10 +1767,10 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
   }
   return minSquaredDistance;
 }
-function assignClosestArrayPoint(flatCoordinates, offset, ends, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, opt_tmpPoint) {
-  var tmpPoint = opt_tmpPoint ? opt_tmpPoint : [NaN, NaN];
-  for (var i = 0, ii = ends.length; i < ii; ++i) {
-    var end = ends[i];
+function assignClosestArrayPoint(flatCoordinates, offset, ends, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, tmpPoint) {
+  tmpPoint = tmpPoint ? tmpPoint : [NaN, NaN];
+  for (let i = 0, ii = ends.length; i < ii; ++i) {
+    const end = ends[i];
     minSquaredDistance = assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, tmpPoint);
     offset = end;
   }
@@ -1999,25 +1779,25 @@ function assignClosestArrayPoint(flatCoordinates, offset, ends, stride, maxDelta
 
 // ../node_modules/ol/geom/flat/deflate.js
 function deflateCoordinate(flatCoordinates, offset, coordinate, stride) {
-  for (var i = 0, ii = coordinate.length; i < ii; ++i) {
+  for (let i = 0, ii = coordinate.length; i < ii; ++i) {
     flatCoordinates[offset++] = coordinate[i];
   }
   return offset;
 }
 function deflateCoordinates(flatCoordinates, offset, coordinates2, stride) {
-  for (var i = 0, ii = coordinates2.length; i < ii; ++i) {
-    var coordinate = coordinates2[i];
-    for (var j = 0; j < stride; ++j) {
+  for (let i = 0, ii = coordinates2.length; i < ii; ++i) {
+    const coordinate = coordinates2[i];
+    for (let j = 0; j < stride; ++j) {
       flatCoordinates[offset++] = coordinate[j];
     }
   }
   return offset;
 }
-function deflateCoordinatesArray(flatCoordinates, offset, coordinatess, stride, opt_ends) {
-  var ends = opt_ends ? opt_ends : [];
-  var i = 0;
-  for (var j = 0, jj = coordinatess.length; j < jj; ++j) {
-    var end = deflateCoordinates(flatCoordinates, offset, coordinatess[j], stride);
+function deflateCoordinatesArray(flatCoordinates, offset, coordinatess, stride, ends) {
+  ends = ends ? ends : [];
+  let i = 0;
+  for (let j = 0, jj = coordinatess.length; j < jj; ++j) {
+    const end = deflateCoordinates(flatCoordinates, offset, coordinatess[j], stride);
     ends[i++] = end;
     offset = end;
   }
@@ -2027,7 +1807,7 @@ function deflateCoordinatesArray(flatCoordinates, offset, coordinatess, stride, 
 
 // ../node_modules/ol/geom/flat/simplify.js
 function douglasPeucker(flatCoordinates, offset, end, stride, squaredTolerance, simplifiedFlatCoordinates, simplifiedOffset) {
-  var n = (end - offset) / stride;
+  const n = (end - offset) / stride;
   if (n < 3) {
     for (; offset < end; offset += stride) {
       simplifiedFlatCoordinates[simplifiedOffset++] = flatCoordinates[offset];
@@ -2035,26 +1815,26 @@ function douglasPeucker(flatCoordinates, offset, end, stride, squaredTolerance, 
     }
     return simplifiedOffset;
   }
-  var markers = new Array(n);
+  const markers = new Array(n);
   markers[0] = 1;
   markers[n - 1] = 1;
-  var stack = [offset, end - stride];
-  var index = 0;
+  const stack = [offset, end - stride];
+  let index = 0;
   while (stack.length > 0) {
-    var last = stack.pop();
-    var first = stack.pop();
-    var maxSquaredDistance = 0;
-    var x1 = flatCoordinates[first];
-    var y1 = flatCoordinates[first + 1];
-    var x2 = flatCoordinates[last];
-    var y2 = flatCoordinates[last + 1];
-    for (var i = first + stride; i < last; i += stride) {
-      var x = flatCoordinates[i];
-      var y = flatCoordinates[i + 1];
-      var squaredDistance_1 = squaredSegmentDistance(x, y, x1, y1, x2, y2);
-      if (squaredDistance_1 > maxSquaredDistance) {
+    const last = stack.pop();
+    const first = stack.pop();
+    let maxSquaredDistance = 0;
+    const x1 = flatCoordinates[first];
+    const y1 = flatCoordinates[first + 1];
+    const x2 = flatCoordinates[last];
+    const y2 = flatCoordinates[last + 1];
+    for (let i = first + stride; i < last; i += stride) {
+      const x = flatCoordinates[i];
+      const y = flatCoordinates[i + 1];
+      const squaredDistance2 = squaredSegmentDistance(x, y, x1, y1, x2, y2);
+      if (squaredDistance2 > maxSquaredDistance) {
         index = i;
-        maxSquaredDistance = squaredDistance_1;
+        maxSquaredDistance = squaredDistance2;
       }
     }
     if (maxSquaredDistance > squaredTolerance) {
@@ -2067,7 +1847,7 @@ function douglasPeucker(flatCoordinates, offset, end, stride, squaredTolerance, 
       }
     }
   }
-  for (var i = 0; i < n; ++i) {
+  for (let i = 0; i < n; ++i) {
     if (markers[i]) {
       simplifiedFlatCoordinates[simplifiedOffset++] = flatCoordinates[offset + i * stride];
       simplifiedFlatCoordinates[simplifiedOffset++] = flatCoordinates[offset + i * stride + 1];
@@ -2082,12 +1862,12 @@ function quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFla
   if (offset == end) {
     return simplifiedOffset;
   }
-  var x1 = snap(flatCoordinates[offset], tolerance);
-  var y1 = snap(flatCoordinates[offset + 1], tolerance);
+  let x1 = snap(flatCoordinates[offset], tolerance);
+  let y1 = snap(flatCoordinates[offset + 1], tolerance);
   offset += stride;
   simplifiedFlatCoordinates[simplifiedOffset++] = x1;
   simplifiedFlatCoordinates[simplifiedOffset++] = y1;
-  var x2, y2;
+  let x2, y2;
   do {
     x2 = snap(flatCoordinates[offset], tolerance);
     y2 = snap(flatCoordinates[offset + 1], tolerance);
@@ -2099,16 +1879,16 @@ function quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFla
     }
   } while (x2 == x1 && y2 == y1);
   while (offset < end) {
-    var x3 = snap(flatCoordinates[offset], tolerance);
-    var y3 = snap(flatCoordinates[offset + 1], tolerance);
+    const x3 = snap(flatCoordinates[offset], tolerance);
+    const y3 = snap(flatCoordinates[offset + 1], tolerance);
     offset += stride;
     if (x3 == x2 && y3 == y2) {
       continue;
     }
-    var dx1 = x2 - x1;
-    var dy1 = y2 - y1;
-    var dx2 = x3 - x1;
-    var dy2 = y3 - y1;
+    const dx1 = x2 - x1;
+    const dy1 = y2 - y1;
+    const dx2 = x3 - x1;
+    const dy2 = y3 - y1;
     if (dx1 * dy2 == dy1 * dx2 && (dx1 < 0 && dx2 < dx1 || dx1 == dx2 || dx1 > 0 && dx2 > dx1) && (dy1 < 0 && dy2 < dy1 || dy1 == dy2 || dy1 > 0 && dy2 > dy1)) {
       x2 = x3;
       y2 = y3;
@@ -2126,8 +1906,8 @@ function quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFla
   return simplifiedOffset;
 }
 function quantizeArray(flatCoordinates, offset, ends, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset, simplifiedEnds) {
-  for (var i = 0, ii = ends.length; i < ii; ++i) {
-    var end = ends[i];
+  for (let i = 0, ii = ends.length; i < ii; ++i) {
+    const end = ends[i];
     simplifiedOffset = quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset);
     simplifiedEnds.push(simplifiedOffset);
     offset = end;
@@ -2136,20 +1916,20 @@ function quantizeArray(flatCoordinates, offset, ends, stride, tolerance, simplif
 }
 
 // ../node_modules/ol/geom/flat/inflate.js
-function inflateCoordinates(flatCoordinates, offset, end, stride, opt_coordinates) {
-  var coordinates2 = opt_coordinates !== void 0 ? opt_coordinates : [];
-  var i = 0;
-  for (var j = offset; j < end; j += stride) {
+function inflateCoordinates(flatCoordinates, offset, end, stride, coordinates2) {
+  coordinates2 = coordinates2 !== void 0 ? coordinates2 : [];
+  let i = 0;
+  for (let j = offset; j < end; j += stride) {
     coordinates2[i++] = flatCoordinates.slice(j, j + stride);
   }
   coordinates2.length = i;
   return coordinates2;
 }
-function inflateCoordinatesArray(flatCoordinates, offset, ends, stride, opt_coordinatess) {
-  var coordinatess = opt_coordinatess !== void 0 ? opt_coordinatess : [];
-  var i = 0;
-  for (var j = 0, jj = ends.length; j < jj; ++j) {
-    var end = ends[j];
+function inflateCoordinatesArray(flatCoordinates, offset, ends, stride, coordinatess) {
+  coordinatess = coordinatess !== void 0 ? coordinatess : [];
+  let i = 0;
+  for (let j = 0, jj = ends.length; j < jj; ++j) {
+    const end = ends[j];
     coordinatess[i++] = inflateCoordinates(flatCoordinates, offset, end, stride, coordinatess[i]);
     offset = end;
   }
@@ -2159,12 +1939,12 @@ function inflateCoordinatesArray(flatCoordinates, offset, ends, stride, opt_coor
 
 // ../node_modules/ol/geom/flat/area.js
 function linearRing(flatCoordinates, offset, end, stride) {
-  var twiceArea = 0;
-  var x1 = flatCoordinates[end - stride];
-  var y1 = flatCoordinates[end - stride + 1];
+  let twiceArea = 0;
+  let x1 = flatCoordinates[end - stride];
+  let y1 = flatCoordinates[end - stride + 1];
   for (; offset < end; offset += stride) {
-    var x2 = flatCoordinates[offset];
-    var y2 = flatCoordinates[offset + 1];
+    const x2 = flatCoordinates[offset];
+    const y2 = flatCoordinates[offset + 1];
     twiceArea += y1 * x2 - x1 * y2;
     x1 = x2;
     y1 = y2;
@@ -2172,9 +1952,9 @@ function linearRing(flatCoordinates, offset, end, stride) {
   return twiceArea / 2;
 }
 function linearRings(flatCoordinates, offset, ends, stride) {
-  var area = 0;
-  for (var i = 0, ii = ends.length; i < ii; ++i) {
-    var end = ends[i];
+  let area = 0;
+  for (let i = 0, ii = ends.length; i < ii; ++i) {
+    const end = ends[i];
     area += linearRing(flatCoordinates, offset, end, stride);
     offset = end;
   }
@@ -2182,44 +1962,21 @@ function linearRings(flatCoordinates, offset, ends, stride) {
 }
 
 // ../node_modules/ol/geom/LinearRing.js
-var __extends9 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var LinearRing = function(_super) {
-  __extends9(LinearRing2, _super);
-  function LinearRing2(coordinates2, opt_layout) {
-    var _this = _super.call(this) || this;
-    _this.maxDelta_ = -1;
-    _this.maxDeltaRevision_ = -1;
-    if (opt_layout !== void 0 && !Array.isArray(coordinates2[0])) {
-      _this.setFlatCoordinates(opt_layout, coordinates2);
+var LinearRing = class extends SimpleGeometry_default {
+  constructor(coordinates2, layout) {
+    super();
+    this.maxDelta_ = -1;
+    this.maxDeltaRevision_ = -1;
+    if (layout !== void 0 && !Array.isArray(coordinates2[0])) {
+      this.setFlatCoordinates(layout, coordinates2);
     } else {
-      _this.setCoordinates(coordinates2, opt_layout);
+      this.setCoordinates(coordinates2, layout);
     }
-    return _this;
   }
-  LinearRing2.prototype.clone = function() {
-    return new LinearRing2(this.flatCoordinates.slice(), this.layout);
-  };
-  LinearRing2.prototype.closestPointXY = function(x, y, closestPoint, minSquaredDistance) {
+  clone() {
+    return new LinearRing(this.flatCoordinates.slice(), this.layout);
+  }
+  closestPointXY(x, y, closestPoint, minSquaredDistance) {
     if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
       return minSquaredDistance;
     }
@@ -2228,122 +1985,96 @@ var LinearRing = function(_super) {
       this.maxDeltaRevision_ = this.getRevision();
     }
     return assignClosestPoint(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, this.maxDelta_, true, x, y, closestPoint, minSquaredDistance);
-  };
-  LinearRing2.prototype.getArea = function() {
+  }
+  getArea() {
     return linearRing(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
-  };
-  LinearRing2.prototype.getCoordinates = function() {
+  }
+  getCoordinates() {
     return inflateCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
-  };
-  LinearRing2.prototype.getSimplifiedGeometryInternal = function(squaredTolerance) {
-    var simplifiedFlatCoordinates = [];
+  }
+  getSimplifiedGeometryInternal(squaredTolerance) {
+    const simplifiedFlatCoordinates = [];
     simplifiedFlatCoordinates.length = douglasPeucker(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, squaredTolerance, simplifiedFlatCoordinates, 0);
-    return new LinearRing2(simplifiedFlatCoordinates, GeometryLayout_default.XY);
-  };
-  LinearRing2.prototype.getType = function() {
-    return GeometryType_default.LINEAR_RING;
-  };
-  LinearRing2.prototype.intersectsExtent = function(extent) {
+    return new LinearRing(simplifiedFlatCoordinates, "XY");
+  }
+  getType() {
+    return "LinearRing";
+  }
+  intersectsExtent(extent) {
     return false;
-  };
-  LinearRing2.prototype.setCoordinates = function(coordinates2, opt_layout) {
-    this.setLayout(opt_layout, coordinates2, 1);
+  }
+  setCoordinates(coordinates2, layout) {
+    this.setLayout(layout, coordinates2, 1);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
     this.flatCoordinates.length = deflateCoordinates(this.flatCoordinates, 0, coordinates2, this.stride);
     this.changed();
-  };
-  return LinearRing2;
-}(SimpleGeometry_default);
+  }
+};
 var LinearRing_default = LinearRing;
 
 // ../node_modules/ol/geom/Point.js
-var __extends10 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var Point = function(_super) {
-  __extends10(Point2, _super);
-  function Point2(coordinates2, opt_layout) {
-    var _this = _super.call(this) || this;
-    _this.setCoordinates(coordinates2, opt_layout);
-    return _this;
+var Point = class extends SimpleGeometry_default {
+  constructor(coordinates2, layout) {
+    super();
+    this.setCoordinates(coordinates2, layout);
   }
-  Point2.prototype.clone = function() {
-    var point = new Point2(this.flatCoordinates.slice(), this.layout);
+  clone() {
+    const point = new Point(this.flatCoordinates.slice(), this.layout);
     point.applyProperties(this);
     return point;
-  };
-  Point2.prototype.closestPointXY = function(x, y, closestPoint, minSquaredDistance) {
-    var flatCoordinates = this.flatCoordinates;
-    var squaredDistance2 = squaredDistance(x, y, flatCoordinates[0], flatCoordinates[1]);
+  }
+  closestPointXY(x, y, closestPoint, minSquaredDistance) {
+    const flatCoordinates = this.flatCoordinates;
+    const squaredDistance2 = squaredDistance(x, y, flatCoordinates[0], flatCoordinates[1]);
     if (squaredDistance2 < minSquaredDistance) {
-      var stride = this.stride;
-      for (var i = 0; i < stride; ++i) {
+      const stride = this.stride;
+      for (let i = 0; i < stride; ++i) {
         closestPoint[i] = flatCoordinates[i];
       }
       closestPoint.length = stride;
       return squaredDistance2;
-    } else {
-      return minSquaredDistance;
     }
-  };
-  Point2.prototype.getCoordinates = function() {
+    return minSquaredDistance;
+  }
+  getCoordinates() {
     return !this.flatCoordinates ? [] : this.flatCoordinates.slice();
-  };
-  Point2.prototype.computeExtent = function(extent) {
+  }
+  computeExtent(extent) {
     return createOrUpdateFromCoordinate(this.flatCoordinates, extent);
-  };
-  Point2.prototype.getType = function() {
-    return GeometryType_default.POINT;
-  };
-  Point2.prototype.intersectsExtent = function(extent) {
+  }
+  getType() {
+    return "Point";
+  }
+  intersectsExtent(extent) {
     return containsXY(extent, this.flatCoordinates[0], this.flatCoordinates[1]);
-  };
-  Point2.prototype.setCoordinates = function(coordinates2, opt_layout) {
-    this.setLayout(opt_layout, coordinates2, 0);
+  }
+  setCoordinates(coordinates2, layout) {
+    this.setLayout(layout, coordinates2, 0);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
     this.flatCoordinates.length = deflateCoordinate(this.flatCoordinates, 0, coordinates2, this.stride);
     this.changed();
-  };
-  return Point2;
-}(SimpleGeometry_default);
+  }
+};
 var Point_default = Point;
 
 // ../node_modules/ol/geom/flat/contains.js
 function linearRingContainsExtent(flatCoordinates, offset, end, stride, extent) {
-  var outside = forEachCorner(extent, function(coordinate) {
+  const outside = forEachCorner(extent, function(coordinate) {
     return !linearRingContainsXY(flatCoordinates, offset, end, stride, coordinate[0], coordinate[1]);
   });
   return !outside;
 }
 function linearRingContainsXY(flatCoordinates, offset, end, stride, x, y) {
-  var wn = 0;
-  var x1 = flatCoordinates[end - stride];
-  var y1 = flatCoordinates[end - stride + 1];
+  let wn = 0;
+  let x1 = flatCoordinates[end - stride];
+  let y1 = flatCoordinates[end - stride + 1];
   for (; offset < end; offset += stride) {
-    var x2 = flatCoordinates[offset];
-    var y2 = flatCoordinates[offset + 1];
+    const x2 = flatCoordinates[offset];
+    const y2 = flatCoordinates[offset + 1];
     if (y1 <= y) {
       if (y2 > y && (x2 - x1) * (y - y1) - (x - x1) * (y2 - y1) > 0) {
         wn++;
@@ -2363,7 +2094,7 @@ function linearRingsContainsXY(flatCoordinates, offset, ends, stride, x, y) {
   if (!linearRingContainsXY(flatCoordinates, offset, ends[0], stride, x, y)) {
     return false;
   }
-  for (var i = 1, ii = ends.length; i < ii; ++i) {
+  for (let i = 1, ii = ends.length; i < ii; ++i) {
     if (linearRingContainsXY(flatCoordinates, ends[i - 1], ends[i], stride, x, y)) {
       return false;
     }
@@ -2372,12 +2103,12 @@ function linearRingsContainsXY(flatCoordinates, offset, ends, stride, x, y) {
 }
 
 // ../node_modules/ol/geom/flat/interiorpoint.js
-function getInteriorPointOfArray(flatCoordinates, offset, ends, stride, flatCenters, flatCentersOffset, opt_dest) {
-  var i, ii, x, x1, x2, y1, y2;
-  var y = flatCenters[flatCentersOffset + 1];
-  var intersections = [];
-  for (var r = 0, rr = ends.length; r < rr; ++r) {
-    var end = ends[r];
+function getInteriorPointOfArray(flatCoordinates, offset, ends, stride, flatCenters, flatCentersOffset, dest) {
+  let i, ii, x, x1, x2, y1, y2;
+  const y = flatCenters[flatCentersOffset + 1];
+  const intersections = [];
+  for (let r = 0, rr = ends.length; r < rr; ++r) {
+    const end = ends[r];
     x1 = flatCoordinates[end - stride];
     y1 = flatCoordinates[end - stride + 1];
     for (i = offset; i < end; i += stride) {
@@ -2391,13 +2122,13 @@ function getInteriorPointOfArray(flatCoordinates, offset, ends, stride, flatCent
       y1 = y2;
     }
   }
-  var pointX = NaN;
-  var maxSegmentLength = -Infinity;
-  intersections.sort(numberSafeCompareFunction);
+  let pointX = NaN;
+  let maxSegmentLength = -Infinity;
+  intersections.sort(ascending);
   x1 = intersections[0];
   for (i = 1, ii = intersections.length; i < ii; ++i) {
     x2 = intersections[i];
-    var segmentLength = Math.abs(x2 - x1);
+    const segmentLength = Math.abs(x2 - x1);
     if (segmentLength > maxSegmentLength) {
       x = (x1 + x2) / 2;
       if (linearRingsContainsXY(flatCoordinates, offset, ends, stride, x, y)) {
@@ -2410,17 +2141,16 @@ function getInteriorPointOfArray(flatCoordinates, offset, ends, stride, flatCent
   if (isNaN(pointX)) {
     pointX = flatCenters[flatCentersOffset];
   }
-  if (opt_dest) {
-    opt_dest.push(pointX, y, maxSegmentLength);
-    return opt_dest;
-  } else {
-    return [pointX, y, maxSegmentLength];
+  if (dest) {
+    dest.push(pointX, y, maxSegmentLength);
+    return dest;
   }
+  return [pointX, y, maxSegmentLength];
 }
 
 // ../node_modules/ol/geom/flat/segments.js
 function forEach(flatCoordinates, offset, end, stride, callback) {
-  var ret;
+  let ret;
   offset += stride;
   for (; offset < end; offset += stride) {
     ret = callback(flatCoordinates.slice(offset - stride, offset), flatCoordinates.slice(offset, offset + stride));
@@ -2433,7 +2163,7 @@ function forEach(flatCoordinates, offset, end, stride, callback) {
 
 // ../node_modules/ol/geom/flat/intersectsextent.js
 function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
-  var coordinatesExtent = extendFlatCoordinates(createEmpty(), flatCoordinates, offset, end, stride);
+  const coordinatesExtent = extendFlatCoordinates(createEmpty(), flatCoordinates, offset, end, stride);
   if (!intersects(extent, coordinatesExtent)) {
     return false;
   }
@@ -2475,7 +2205,7 @@ function intersectsLinearRingArray(flatCoordinates, offset, ends, stride, extent
   if (ends.length === 1) {
     return true;
   }
-  for (var i = 1, ii = ends.length; i < ii; ++i) {
+  for (let i = 1, ii = ends.length; i < ii; ++i) {
     if (linearRingContainsExtent(flatCoordinates, ends[i - 1], ends[i], stride, extent)) {
       if (!intersectsLineString(flatCoordinates, ends[i - 1], ends[i], stride, extent)) {
         return false;
@@ -2488,8 +2218,8 @@ function intersectsLinearRingArray(flatCoordinates, offset, ends, stride, extent
 // ../node_modules/ol/geom/flat/reverse.js
 function coordinates(flatCoordinates, offset, end, stride) {
   while (offset < end - stride) {
-    for (var i = 0; i < stride; ++i) {
-      var tmp = flatCoordinates[offset + i];
+    for (let i = 0; i < stride; ++i) {
+      const tmp = flatCoordinates[offset + i];
       flatCoordinates[offset + i] = flatCoordinates[end - stride + i];
       flatCoordinates[end - stride + i] = tmp;
     }
@@ -2500,23 +2230,23 @@ function coordinates(flatCoordinates, offset, end, stride) {
 
 // ../node_modules/ol/geom/flat/orient.js
 function linearRingIsClockwise(flatCoordinates, offset, end, stride) {
-  var edge = 0;
-  var x1 = flatCoordinates[end - stride];
-  var y1 = flatCoordinates[end - stride + 1];
+  let edge = 0;
+  let x1 = flatCoordinates[end - stride];
+  let y1 = flatCoordinates[end - stride + 1];
   for (; offset < end; offset += stride) {
-    var x2 = flatCoordinates[offset];
-    var y2 = flatCoordinates[offset + 1];
+    const x2 = flatCoordinates[offset];
+    const y2 = flatCoordinates[offset + 1];
     edge += (x2 - x1) * (y2 + y1);
     x1 = x2;
     y1 = y2;
   }
   return edge === 0 ? void 0 : edge > 0;
 }
-function linearRingsAreOriented(flatCoordinates, offset, ends, stride, opt_right) {
-  var right = opt_right !== void 0 ? opt_right : false;
-  for (var i = 0, ii = ends.length; i < ii; ++i) {
-    var end = ends[i];
-    var isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
+function linearRingsAreOriented(flatCoordinates, offset, ends, stride, right) {
+  right = right !== void 0 ? right : false;
+  for (let i = 0, ii = ends.length; i < ii; ++i) {
+    const end = ends[i];
+    const isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
     if (i === 0) {
       if (right && isClockwise || !right && !isClockwise) {
         return false;
@@ -2530,12 +2260,12 @@ function linearRingsAreOriented(flatCoordinates, offset, ends, stride, opt_right
   }
   return true;
 }
-function orientLinearRings(flatCoordinates, offset, ends, stride, opt_right) {
-  var right = opt_right !== void 0 ? opt_right : false;
-  for (var i = 0, ii = ends.length; i < ii; ++i) {
-    var end = ends[i];
-    var isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
-    var reverse = i === 0 ? right && isClockwise || !right && !isClockwise : right && !isClockwise || !right && isClockwise;
+function orientLinearRings(flatCoordinates, offset, ends, stride, right) {
+  right = right !== void 0 ? right : false;
+  for (let i = 0, ii = ends.length; i < ii; ++i) {
+    const end = ends[i];
+    const isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
+    const reverse = i === 0 ? right && isClockwise || !right && !isClockwise : right && !isClockwise || !right && isClockwise;
     if (reverse) {
       coordinates(flatCoordinates, offset, end, stride);
     }
@@ -2545,47 +2275,24 @@ function orientLinearRings(flatCoordinates, offset, ends, stride, opt_right) {
 }
 
 // ../node_modules/ol/geom/Polygon.js
-var __extends11 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var Polygon = function(_super) {
-  __extends11(Polygon2, _super);
-  function Polygon2(coordinates2, opt_layout, opt_ends) {
-    var _this = _super.call(this) || this;
-    _this.ends_ = [];
-    _this.flatInteriorPointRevision_ = -1;
-    _this.flatInteriorPoint_ = null;
-    _this.maxDelta_ = -1;
-    _this.maxDeltaRevision_ = -1;
-    _this.orientedRevision_ = -1;
-    _this.orientedFlatCoordinates_ = null;
-    if (opt_layout !== void 0 && opt_ends) {
-      _this.setFlatCoordinates(opt_layout, coordinates2);
-      _this.ends_ = opt_ends;
+var Polygon = class extends SimpleGeometry_default {
+  constructor(coordinates2, layout, ends) {
+    super();
+    this.ends_ = [];
+    this.flatInteriorPointRevision_ = -1;
+    this.flatInteriorPoint_ = null;
+    this.maxDelta_ = -1;
+    this.maxDeltaRevision_ = -1;
+    this.orientedRevision_ = -1;
+    this.orientedFlatCoordinates_ = null;
+    if (layout !== void 0 && ends) {
+      this.setFlatCoordinates(layout, coordinates2);
+      this.ends_ = ends;
     } else {
-      _this.setCoordinates(coordinates2, opt_layout);
+      this.setCoordinates(coordinates2, layout);
     }
-    return _this;
   }
-  Polygon2.prototype.appendLinearRing = function(linearRing2) {
+  appendLinearRing(linearRing2) {
     if (!this.flatCoordinates) {
       this.flatCoordinates = linearRing2.getFlatCoordinates().slice();
     } else {
@@ -2593,13 +2300,13 @@ var Polygon = function(_super) {
     }
     this.ends_.push(this.flatCoordinates.length);
     this.changed();
-  };
-  Polygon2.prototype.clone = function() {
-    var polygon = new Polygon2(this.flatCoordinates.slice(), this.layout, this.ends_.slice());
+  }
+  clone() {
+    const polygon = new Polygon(this.flatCoordinates.slice(), this.layout, this.ends_.slice());
     polygon.applyProperties(this);
     return polygon;
-  };
-  Polygon2.prototype.closestPointXY = function(x, y, closestPoint, minSquaredDistance) {
+  }
+  closestPointXY(x, y, closestPoint, minSquaredDistance) {
     if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
       return minSquaredDistance;
     }
@@ -2608,63 +2315,63 @@ var Polygon = function(_super) {
       this.maxDeltaRevision_ = this.getRevision();
     }
     return assignClosestArrayPoint(this.flatCoordinates, 0, this.ends_, this.stride, this.maxDelta_, true, x, y, closestPoint, minSquaredDistance);
-  };
-  Polygon2.prototype.containsXY = function(x, y) {
+  }
+  containsXY(x, y) {
     return linearRingsContainsXY(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, x, y);
-  };
-  Polygon2.prototype.getArea = function() {
+  }
+  getArea() {
     return linearRings(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride);
-  };
-  Polygon2.prototype.getCoordinates = function(opt_right) {
-    var flatCoordinates;
-    if (opt_right !== void 0) {
+  }
+  getCoordinates(right) {
+    let flatCoordinates;
+    if (right !== void 0) {
       flatCoordinates = this.getOrientedFlatCoordinates().slice();
-      orientLinearRings(flatCoordinates, 0, this.ends_, this.stride, opt_right);
+      orientLinearRings(flatCoordinates, 0, this.ends_, this.stride, right);
     } else {
       flatCoordinates = this.flatCoordinates;
     }
     return inflateCoordinatesArray(flatCoordinates, 0, this.ends_, this.stride);
-  };
-  Polygon2.prototype.getEnds = function() {
+  }
+  getEnds() {
     return this.ends_;
-  };
-  Polygon2.prototype.getFlatInteriorPoint = function() {
+  }
+  getFlatInteriorPoint() {
     if (this.flatInteriorPointRevision_ != this.getRevision()) {
-      var flatCenter = getCenter(this.getExtent());
+      const flatCenter = getCenter(this.getExtent());
       this.flatInteriorPoint_ = getInteriorPointOfArray(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, flatCenter, 0);
       this.flatInteriorPointRevision_ = this.getRevision();
     }
     return this.flatInteriorPoint_;
-  };
-  Polygon2.prototype.getInteriorPoint = function() {
-    return new Point_default(this.getFlatInteriorPoint(), GeometryLayout_default.XYM);
-  };
-  Polygon2.prototype.getLinearRingCount = function() {
+  }
+  getInteriorPoint() {
+    return new Point_default(this.getFlatInteriorPoint(), "XYM");
+  }
+  getLinearRingCount() {
     return this.ends_.length;
-  };
-  Polygon2.prototype.getLinearRing = function(index) {
+  }
+  getLinearRing(index) {
     if (index < 0 || this.ends_.length <= index) {
       return null;
     }
     return new LinearRing_default(this.flatCoordinates.slice(index === 0 ? 0 : this.ends_[index - 1], this.ends_[index]), this.layout);
-  };
-  Polygon2.prototype.getLinearRings = function() {
-    var layout = this.layout;
-    var flatCoordinates = this.flatCoordinates;
-    var ends = this.ends_;
-    var linearRings2 = [];
-    var offset = 0;
-    for (var i = 0, ii = ends.length; i < ii; ++i) {
-      var end = ends[i];
-      var linearRing2 = new LinearRing_default(flatCoordinates.slice(offset, end), layout);
+  }
+  getLinearRings() {
+    const layout = this.layout;
+    const flatCoordinates = this.flatCoordinates;
+    const ends = this.ends_;
+    const linearRings2 = [];
+    let offset = 0;
+    for (let i = 0, ii = ends.length; i < ii; ++i) {
+      const end = ends[i];
+      const linearRing2 = new LinearRing_default(flatCoordinates.slice(offset, end), layout);
       linearRings2.push(linearRing2);
       offset = end;
     }
     return linearRings2;
-  };
-  Polygon2.prototype.getOrientedFlatCoordinates = function() {
+  }
+  getOrientedFlatCoordinates() {
     if (this.orientedRevision_ != this.getRevision()) {
-      var flatCoordinates = this.flatCoordinates;
+      const flatCoordinates = this.flatCoordinates;
       if (linearRingsAreOriented(flatCoordinates, 0, this.ends_, this.stride)) {
         this.orientedFlatCoordinates_ = flatCoordinates;
       } else {
@@ -2674,36 +2381,35 @@ var Polygon = function(_super) {
       this.orientedRevision_ = this.getRevision();
     }
     return this.orientedFlatCoordinates_;
-  };
-  Polygon2.prototype.getSimplifiedGeometryInternal = function(squaredTolerance) {
-    var simplifiedFlatCoordinates = [];
-    var simplifiedEnds = [];
+  }
+  getSimplifiedGeometryInternal(squaredTolerance) {
+    const simplifiedFlatCoordinates = [];
+    const simplifiedEnds = [];
     simplifiedFlatCoordinates.length = quantizeArray(this.flatCoordinates, 0, this.ends_, this.stride, Math.sqrt(squaredTolerance), simplifiedFlatCoordinates, 0, simplifiedEnds);
-    return new Polygon2(simplifiedFlatCoordinates, GeometryLayout_default.XY, simplifiedEnds);
-  };
-  Polygon2.prototype.getType = function() {
-    return GeometryType_default.POLYGON;
-  };
-  Polygon2.prototype.intersectsExtent = function(extent) {
+    return new Polygon(simplifiedFlatCoordinates, "XY", simplifiedEnds);
+  }
+  getType() {
+    return "Polygon";
+  }
+  intersectsExtent(extent) {
     return intersectsLinearRingArray(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, extent);
-  };
-  Polygon2.prototype.setCoordinates = function(coordinates2, opt_layout) {
-    this.setLayout(opt_layout, coordinates2, 2);
+  }
+  setCoordinates(coordinates2, layout) {
+    this.setLayout(layout, coordinates2, 2);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
-    var ends = deflateCoordinatesArray(this.flatCoordinates, 0, coordinates2, this.stride, this.ends_);
+    const ends = deflateCoordinatesArray(this.flatCoordinates, 0, coordinates2, this.stride, this.ends_);
     this.flatCoordinates.length = ends.length === 0 ? 0 : ends[ends.length - 1];
     this.changed();
-  };
-  return Polygon2;
-}(SimpleGeometry_default);
+  }
+};
 function fromExtent(extent) {
-  var minX = extent[0];
-  var minY = extent[1];
-  var maxX = extent[2];
-  var maxY = extent[3];
-  var flatCoordinates = [
+  const minX = extent[0];
+  const minY = extent[1];
+  const maxX = extent[2];
+  const maxY = extent[3];
+  const flatCoordinates = [
     minX,
     minY,
     minX,
@@ -2715,82 +2421,57 @@ function fromExtent(extent) {
     minX,
     minY
   ];
-  return new Polygon(flatCoordinates, GeometryLayout_default.XY, [
-    flatCoordinates.length
-  ]);
+  return new Polygon(flatCoordinates, "XY", [flatCoordinates.length]);
 }
 
 // ../node_modules/ol/View.js
-var __extends12 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
 var DEFAULT_MIN_ZOOM = 0;
-var View = function(_super) {
-  __extends12(View2, _super);
-  function View2(opt_options) {
-    var _this = _super.call(this) || this;
-    _this.on;
-    _this.once;
-    _this.un;
-    var options = assign({}, opt_options);
-    _this.hints_ = [0, 0];
-    _this.animations_ = [];
-    _this.updateAnimationKey_;
-    _this.projection_ = createProjection(options.projection, "EPSG:3857");
-    _this.viewportSize_ = [100, 100];
-    _this.targetCenter_ = null;
-    _this.targetResolution_;
-    _this.targetRotation_;
-    _this.nextCenter_ = null;
-    _this.nextResolution_;
-    _this.nextRotation_;
-    _this.cancelAnchor_ = void 0;
+var View = class extends Object_default {
+  constructor(options) {
+    super();
+    this.on;
+    this.once;
+    this.un;
+    options = Object.assign({}, options);
+    this.hints_ = [0, 0];
+    this.animations_ = [];
+    this.updateAnimationKey_;
+    this.projection_ = createProjection(options.projection, "EPSG:3857");
+    this.viewportSize_ = [100, 100];
+    this.targetCenter_ = null;
+    this.targetResolution_;
+    this.targetRotation_;
+    this.nextCenter_ = null;
+    this.nextResolution_;
+    this.nextRotation_;
+    this.cancelAnchor_ = void 0;
     if (options.projection) {
       disableCoordinateWarning();
     }
     if (options.center) {
-      options.center = fromUserCoordinate(options.center, _this.projection_);
+      options.center = fromUserCoordinate(options.center, this.projection_);
     }
     if (options.extent) {
-      options.extent = fromUserExtent(options.extent, _this.projection_);
+      options.extent = fromUserExtent(options.extent, this.projection_);
     }
-    _this.applyOptions_(options);
-    return _this;
+    this.applyOptions_(options);
   }
-  View2.prototype.applyOptions_ = function(options) {
-    var properties = assign({}, options);
-    for (var key in ViewProperty_default) {
+  applyOptions_(options) {
+    const properties = Object.assign({}, options);
+    for (const key in ViewProperty_default) {
       delete properties[key];
     }
     this.setProperties(properties, true);
-    var resolutionConstraintInfo = createResolutionConstraint(options);
+    const resolutionConstraintInfo = createResolutionConstraint(options);
     this.maxResolution_ = resolutionConstraintInfo.maxResolution;
     this.minResolution_ = resolutionConstraintInfo.minResolution;
     this.zoomFactor_ = resolutionConstraintInfo.zoomFactor;
     this.resolutions_ = options.resolutions;
     this.padding_ = options.padding;
     this.minZoom_ = resolutionConstraintInfo.minZoom;
-    var centerConstraint = createCenterConstraint(options);
-    var resolutionConstraint = resolutionConstraintInfo.constraint;
-    var rotationConstraint = createRotationConstraint(options);
+    const centerConstraint = createCenterConstraint(options);
+    const resolutionConstraint = resolutionConstraintInfo.constraint;
+    const rotationConstraint = createRotationConstraint(options);
     this.constraints_ = {
       center: centerConstraint,
       resolution: resolutionConstraint,
@@ -2803,29 +2484,25 @@ var View = function(_super) {
     } else if (options.zoom !== void 0) {
       this.setZoom(options.zoom);
     }
-  };
-  Object.defineProperty(View2.prototype, "padding", {
-    get: function() {
-      return this.padding_;
-    },
-    set: function(padding) {
-      var oldPadding = this.padding_;
-      this.padding_ = padding;
-      var center = this.getCenter();
-      if (center) {
-        var newPadding = padding || [0, 0, 0, 0];
-        oldPadding = oldPadding || [0, 0, 0, 0];
-        var resolution = this.getResolution();
-        var offsetX = resolution / 2 * (newPadding[3] - oldPadding[3] + oldPadding[1] - newPadding[1]);
-        var offsetY = resolution / 2 * (newPadding[0] - oldPadding[0] + oldPadding[2] - newPadding[2]);
-        this.setCenterInternal([center[0] + offsetX, center[1] - offsetY]);
-      }
-    },
-    enumerable: false,
-    configurable: true
-  });
-  View2.prototype.getUpdatedOptions_ = function(newOptions) {
-    var options = this.getProperties();
+  }
+  get padding() {
+    return this.padding_;
+  }
+  set padding(padding) {
+    let oldPadding = this.padding_;
+    this.padding_ = padding;
+    const center = this.getCenterInternal();
+    if (center) {
+      const newPadding = padding || [0, 0, 0, 0];
+      oldPadding = oldPadding || [0, 0, 0, 0];
+      const resolution = this.getResolution();
+      const offsetX = resolution / 2 * (newPadding[3] - oldPadding[3] + oldPadding[1] - newPadding[1]);
+      const offsetY = resolution / 2 * (newPadding[0] - oldPadding[0] + oldPadding[2] - newPadding[2]);
+      this.setCenterInternal([center[0] + offsetX, center[1] - offsetY]);
+    }
+  }
+  getUpdatedOptions_(newOptions) {
+    const options = this.getProperties();
     if (options.resolution !== void 0) {
       options.resolution = this.getResolution();
     } else {
@@ -2833,37 +2510,37 @@ var View = function(_super) {
     }
     options.center = this.getCenterInternal();
     options.rotation = this.getRotation();
-    return assign({}, options, newOptions);
-  };
-  View2.prototype.animate = function(var_args) {
+    return Object.assign({}, options, newOptions);
+  }
+  animate(var_args) {
     if (this.isDef() && !this.getAnimating()) {
       this.resolveConstraints(0);
     }
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; ++i) {
-      var options = arguments[i];
+    const args = new Array(arguments.length);
+    for (let i = 0; i < args.length; ++i) {
+      let options = arguments[i];
       if (options.center) {
-        options = assign({}, options);
+        options = Object.assign({}, options);
         options.center = fromUserCoordinate(options.center, this.getProjection());
       }
       if (options.anchor) {
-        options = assign({}, options);
+        options = Object.assign({}, options);
         options.anchor = fromUserCoordinate(options.anchor, this.getProjection());
       }
       args[i] = options;
     }
     this.animateInternal.apply(this, args);
-  };
-  View2.prototype.animateInternal = function(var_args) {
-    var animationCount = arguments.length;
-    var callback;
+  }
+  animateInternal(var_args) {
+    let animationCount = arguments.length;
+    let callback;
     if (animationCount > 1 && typeof arguments[animationCount - 1] === "function") {
       callback = arguments[animationCount - 1];
       --animationCount;
     }
-    var i = 0;
+    let i = 0;
     for (; i < animationCount && !this.isDef(); ++i) {
-      var state = arguments[i];
+      const state = arguments[i];
       if (state.center) {
         this.setCenterInternal(state.center);
       }
@@ -2882,14 +2559,14 @@ var View = function(_super) {
       }
       return;
     }
-    var start = Date.now();
-    var center = this.targetCenter_.slice();
-    var resolution = this.targetResolution_;
-    var rotation = this.targetRotation_;
-    var series = [];
+    let start = Date.now();
+    let center = this.targetCenter_.slice();
+    let resolution = this.targetResolution_;
+    let rotation = this.targetRotation_;
+    const series = [];
     for (; i < animationCount; ++i) {
-      var options = arguments[i];
-      var animation = {
+      const options = arguments[i];
+      const animation = {
         start,
         complete: false,
         anchor: options.anchor,
@@ -2913,7 +2590,7 @@ var View = function(_super) {
       }
       if (options.rotation !== void 0) {
         animation.sourceRotation = rotation;
-        var delta = modulo(options.rotation - rotation + Math.PI, 2 * Math.PI) - Math.PI;
+        const delta = modulo(options.rotation - rotation + Math.PI, 2 * Math.PI) - Math.PI;
         animation.targetRotation = rotation + delta;
         rotation = animation.targetRotation;
       }
@@ -2927,24 +2604,24 @@ var View = function(_super) {
     this.animations_.push(series);
     this.setHint(ViewHint_default.ANIMATING, 1);
     this.updateAnimations_();
-  };
-  View2.prototype.getAnimating = function() {
+  }
+  getAnimating() {
     return this.hints_[ViewHint_default.ANIMATING] > 0;
-  };
-  View2.prototype.getInteracting = function() {
+  }
+  getInteracting() {
     return this.hints_[ViewHint_default.INTERACTING] > 0;
-  };
-  View2.prototype.cancelAnimations = function() {
+  }
+  cancelAnimations() {
     this.setHint(ViewHint_default.ANIMATING, -this.hints_[ViewHint_default.ANIMATING]);
-    var anchor;
-    for (var i = 0, ii = this.animations_.length; i < ii; ++i) {
-      var series = this.animations_[i];
+    let anchor;
+    for (let i = 0, ii = this.animations_.length; i < ii; ++i) {
+      const series = this.animations_[i];
       if (series[0].callback) {
         animationCallback(series[0].callback, false);
       }
       if (!anchor) {
-        for (var j = 0, jj = series.length; j < jj; ++j) {
-          var animation = series[j];
+        for (let j = 0, jj = series.length; j < jj; ++j) {
+          const animation = series[j];
           if (!animation.complete) {
             anchor = animation.anchor;
             break;
@@ -2957,8 +2634,8 @@ var View = function(_super) {
     this.nextCenter_ = null;
     this.nextResolution_ = NaN;
     this.nextRotation_ = NaN;
-  };
-  View2.prototype.updateAnimations_ = function() {
+  }
+  updateAnimations_() {
     if (this.updateAnimationKey_ !== void 0) {
       cancelAnimationFrame(this.updateAnimationKey_);
       this.updateAnimationKey_ = void 0;
@@ -2966,40 +2643,40 @@ var View = function(_super) {
     if (!this.getAnimating()) {
       return;
     }
-    var now = Date.now();
-    var more = false;
-    for (var i = this.animations_.length - 1; i >= 0; --i) {
-      var series = this.animations_[i];
-      var seriesComplete = true;
-      for (var j = 0, jj = series.length; j < jj; ++j) {
-        var animation = series[j];
+    const now = Date.now();
+    let more = false;
+    for (let i = this.animations_.length - 1; i >= 0; --i) {
+      const series = this.animations_[i];
+      let seriesComplete = true;
+      for (let j = 0, jj = series.length; j < jj; ++j) {
+        const animation = series[j];
         if (animation.complete) {
           continue;
         }
-        var elapsed = now - animation.start;
-        var fraction = animation.duration > 0 ? elapsed / animation.duration : 1;
+        const elapsed = now - animation.start;
+        let fraction = animation.duration > 0 ? elapsed / animation.duration : 1;
         if (fraction >= 1) {
           animation.complete = true;
           fraction = 1;
         } else {
           seriesComplete = false;
         }
-        var progress = animation.easing(fraction);
+        const progress = animation.easing(fraction);
         if (animation.sourceCenter) {
-          var x0 = animation.sourceCenter[0];
-          var y0 = animation.sourceCenter[1];
-          var x1 = animation.targetCenter[0];
-          var y1 = animation.targetCenter[1];
+          const x0 = animation.sourceCenter[0];
+          const y0 = animation.sourceCenter[1];
+          const x1 = animation.targetCenter[0];
+          const y1 = animation.targetCenter[1];
           this.nextCenter_ = animation.targetCenter;
-          var x = x0 + progress * (x1 - x0);
-          var y = y0 + progress * (y1 - y0);
+          const x = x0 + progress * (x1 - x0);
+          const y = y0 + progress * (y1 - y0);
           this.targetCenter_ = [x, y];
         }
         if (animation.sourceResolution && animation.targetResolution) {
-          var resolution = progress === 1 ? animation.targetResolution : animation.sourceResolution + progress * (animation.targetResolution - animation.sourceResolution);
+          const resolution = progress === 1 ? animation.targetResolution : animation.sourceResolution + progress * (animation.targetResolution - animation.sourceResolution);
           if (animation.anchor) {
-            var size = this.getViewportSize_(this.getRotation());
-            var constrainedResolution = this.constraints_.resolution(resolution, 0, size, true);
+            const size = this.getViewportSize_(this.getRotation());
+            const constrainedResolution = this.constraints_.resolution(resolution, 0, size, true);
             this.targetCenter_ = this.calculateCenterZoom(constrainedResolution, animation.anchor);
           }
           this.nextResolution_ = animation.targetResolution;
@@ -3007,9 +2684,9 @@ var View = function(_super) {
           this.applyTargetState_(true);
         }
         if (animation.sourceRotation !== void 0 && animation.targetRotation !== void 0) {
-          var rotation = progress === 1 ? modulo(animation.targetRotation + Math.PI, 2 * Math.PI) - Math.PI : animation.sourceRotation + progress * (animation.targetRotation - animation.sourceRotation);
+          const rotation = progress === 1 ? modulo(animation.targetRotation + Math.PI, 2 * Math.PI) - Math.PI : animation.sourceRotation + progress * (animation.targetRotation - animation.sourceRotation);
           if (animation.anchor) {
-            var constrainedRotation = this.constraints_.rotation(rotation, true);
+            const constrainedRotation = this.constraints_.rotation(rotation, true);
             this.targetCenter_ = this.calculateCenterRotate(constrainedRotation, animation.anchor);
           }
           this.nextRotation_ = animation.targetRotation;
@@ -3027,7 +2704,7 @@ var View = function(_super) {
         this.nextCenter_ = null;
         this.nextResolution_ = NaN;
         this.nextRotation_ = NaN;
-        var callback = series[0].callback;
+        const callback = series[0].callback;
         if (callback) {
           animationCallback(callback, true);
         }
@@ -3037,151 +2714,149 @@ var View = function(_super) {
     if (more && this.updateAnimationKey_ === void 0) {
       this.updateAnimationKey_ = requestAnimationFrame(this.updateAnimations_.bind(this));
     }
-  };
-  View2.prototype.calculateCenterRotate = function(rotation, anchor) {
-    var center;
-    var currentCenter = this.getCenterInternal();
+  }
+  calculateCenterRotate(rotation, anchor) {
+    let center;
+    const currentCenter = this.getCenterInternal();
     if (currentCenter !== void 0) {
       center = [currentCenter[0] - anchor[0], currentCenter[1] - anchor[1]];
       rotate(center, rotation - this.getRotation());
       add3(center, anchor);
     }
     return center;
-  };
-  View2.prototype.calculateCenterZoom = function(resolution, anchor) {
-    var center;
-    var currentCenter = this.getCenterInternal();
-    var currentResolution = this.getResolution();
+  }
+  calculateCenterZoom(resolution, anchor) {
+    let center;
+    const currentCenter = this.getCenterInternal();
+    const currentResolution = this.getResolution();
     if (currentCenter !== void 0 && currentResolution !== void 0) {
-      var x = anchor[0] - resolution * (anchor[0] - currentCenter[0]) / currentResolution;
-      var y = anchor[1] - resolution * (anchor[1] - currentCenter[1]) / currentResolution;
+      const x = anchor[0] - resolution * (anchor[0] - currentCenter[0]) / currentResolution;
+      const y = anchor[1] - resolution * (anchor[1] - currentCenter[1]) / currentResolution;
       center = [x, y];
     }
     return center;
-  };
-  View2.prototype.getViewportSize_ = function(opt_rotation) {
-    var size = this.viewportSize_;
-    if (opt_rotation) {
-      var w = size[0];
-      var h = size[1];
+  }
+  getViewportSize_(rotation) {
+    const size = this.viewportSize_;
+    if (rotation) {
+      const w = size[0];
+      const h = size[1];
       return [
-        Math.abs(w * Math.cos(opt_rotation)) + Math.abs(h * Math.sin(opt_rotation)),
-        Math.abs(w * Math.sin(opt_rotation)) + Math.abs(h * Math.cos(opt_rotation))
+        Math.abs(w * Math.cos(rotation)) + Math.abs(h * Math.sin(rotation)),
+        Math.abs(w * Math.sin(rotation)) + Math.abs(h * Math.cos(rotation))
       ];
-    } else {
-      return size;
     }
-  };
-  View2.prototype.setViewportSize = function(opt_size) {
-    this.viewportSize_ = Array.isArray(opt_size) ? opt_size.slice() : [100, 100];
+    return size;
+  }
+  setViewportSize(size) {
+    this.viewportSize_ = Array.isArray(size) ? size.slice() : [100, 100];
     if (!this.getAnimating()) {
       this.resolveConstraints(0);
     }
-  };
-  View2.prototype.getCenter = function() {
-    var center = this.getCenterInternal();
+  }
+  getCenter() {
+    const center = this.getCenterInternal();
     if (!center) {
       return center;
     }
     return toUserCoordinate(center, this.getProjection());
-  };
-  View2.prototype.getCenterInternal = function() {
+  }
+  getCenterInternal() {
     return this.get(ViewProperty_default.CENTER);
-  };
-  View2.prototype.getConstraints = function() {
+  }
+  getConstraints() {
     return this.constraints_;
-  };
-  View2.prototype.getConstrainResolution = function() {
+  }
+  getConstrainResolution() {
     return this.get("constrainResolution");
-  };
-  View2.prototype.getHints = function(opt_hints) {
-    if (opt_hints !== void 0) {
-      opt_hints[0] = this.hints_[0];
-      opt_hints[1] = this.hints_[1];
-      return opt_hints;
-    } else {
-      return this.hints_.slice();
+  }
+  getHints(hints) {
+    if (hints !== void 0) {
+      hints[0] = this.hints_[0];
+      hints[1] = this.hints_[1];
+      return hints;
     }
-  };
-  View2.prototype.calculateExtent = function(opt_size) {
-    var extent = this.calculateExtentInternal(opt_size);
+    return this.hints_.slice();
+  }
+  calculateExtent(size) {
+    const extent = this.calculateExtentInternal(size);
     return toUserExtent(extent, this.getProjection());
-  };
-  View2.prototype.calculateExtentInternal = function(opt_size) {
-    var size = opt_size || this.getViewportSizeMinusPadding_();
-    var center = this.getCenterInternal();
+  }
+  calculateExtentInternal(size) {
+    size = size || this.getViewportSizeMinusPadding_();
+    const center = this.getCenterInternal();
     assert(center, 1);
-    var resolution = this.getResolution();
+    const resolution = this.getResolution();
     assert(resolution !== void 0, 2);
-    var rotation = this.getRotation();
+    const rotation = this.getRotation();
     assert(rotation !== void 0, 3);
     return getForViewAndSize(center, resolution, rotation, size);
-  };
-  View2.prototype.getMaxResolution = function() {
+  }
+  getMaxResolution() {
     return this.maxResolution_;
-  };
-  View2.prototype.getMinResolution = function() {
+  }
+  getMinResolution() {
     return this.minResolution_;
-  };
-  View2.prototype.getMaxZoom = function() {
+  }
+  getMaxZoom() {
     return this.getZoomForResolution(this.minResolution_);
-  };
-  View2.prototype.setMaxZoom = function(zoom) {
+  }
+  setMaxZoom(zoom) {
     this.applyOptions_(this.getUpdatedOptions_({ maxZoom: zoom }));
-  };
-  View2.prototype.getMinZoom = function() {
+  }
+  getMinZoom() {
     return this.getZoomForResolution(this.maxResolution_);
-  };
-  View2.prototype.setMinZoom = function(zoom) {
+  }
+  setMinZoom(zoom) {
     this.applyOptions_(this.getUpdatedOptions_({ minZoom: zoom }));
-  };
-  View2.prototype.setConstrainResolution = function(enabled) {
+  }
+  setConstrainResolution(enabled) {
     this.applyOptions_(this.getUpdatedOptions_({ constrainResolution: enabled }));
-  };
-  View2.prototype.getProjection = function() {
+  }
+  getProjection() {
     return this.projection_;
-  };
-  View2.prototype.getResolution = function() {
+  }
+  getResolution() {
     return this.get(ViewProperty_default.RESOLUTION);
-  };
-  View2.prototype.getResolutions = function() {
+  }
+  getResolutions() {
     return this.resolutions_;
-  };
-  View2.prototype.getResolutionForExtent = function(extent, opt_size) {
-    return this.getResolutionForExtentInternal(fromUserExtent(extent, this.getProjection()), opt_size);
-  };
-  View2.prototype.getResolutionForExtentInternal = function(extent, opt_size) {
-    var size = opt_size || this.getViewportSizeMinusPadding_();
-    var xResolution = getWidth(extent) / size[0];
-    var yResolution = getHeight(extent) / size[1];
+  }
+  getResolutionForExtent(extent, size) {
+    return this.getResolutionForExtentInternal(fromUserExtent(extent, this.getProjection()), size);
+  }
+  getResolutionForExtentInternal(extent, size) {
+    size = size || this.getViewportSizeMinusPadding_();
+    const xResolution = getWidth(extent) / size[0];
+    const yResolution = getHeight(extent) / size[1];
     return Math.max(xResolution, yResolution);
-  };
-  View2.prototype.getResolutionForValueFunction = function(opt_power) {
-    var power = opt_power || 2;
-    var maxResolution = this.getConstrainedResolution(this.maxResolution_);
-    var minResolution = this.minResolution_;
-    var max = Math.log(maxResolution / minResolution) / Math.log(power);
+  }
+  getResolutionForValueFunction(power) {
+    power = power || 2;
+    const maxResolution = this.getConstrainedResolution(this.maxResolution_);
+    const minResolution = this.minResolution_;
+    const max = Math.log(maxResolution / minResolution) / Math.log(power);
     return function(value) {
-      var resolution = maxResolution / Math.pow(power, value * max);
+      const resolution = maxResolution / Math.pow(power, value * max);
       return resolution;
     };
-  };
-  View2.prototype.getRotation = function() {
+  }
+  getRotation() {
     return this.get(ViewProperty_default.ROTATION);
-  };
-  View2.prototype.getValueForResolutionFunction = function(opt_power) {
-    var logPower = Math.log(opt_power || 2);
-    var maxResolution = this.getConstrainedResolution(this.maxResolution_);
-    var minResolution = this.minResolution_;
-    var max = Math.log(maxResolution / minResolution) / logPower;
+  }
+  getValueForResolutionFunction(power) {
+    const logPower = Math.log(power || 2);
+    const maxResolution = this.getConstrainedResolution(this.maxResolution_);
+    const minResolution = this.minResolution_;
+    const max = Math.log(maxResolution / minResolution) / logPower;
     return function(resolution) {
-      var value = Math.log(maxResolution / resolution) / logPower / max;
+      const value = Math.log(maxResolution / resolution) / logPower / max;
       return value;
     };
-  };
-  View2.prototype.getViewportSizeMinusPadding_ = function(opt_rotation) {
-    var size = this.getViewportSize_(opt_rotation);
-    var padding = this.padding_;
+  }
+  getViewportSizeMinusPadding_(rotation) {
+    let size = this.getViewportSize_(rotation);
+    const padding = this.padding_;
     if (padding) {
       size = [
         size[0] - padding[1] - padding[3],
@@ -3189,15 +2864,15 @@ var View = function(_super) {
       ];
     }
     return size;
-  };
-  View2.prototype.getState = function() {
-    var projection = this.getProjection();
-    var resolution = this.getResolution();
-    var rotation = this.getRotation();
-    var center = this.getCenterInternal();
-    var padding = this.padding_;
+  }
+  getState() {
+    const projection = this.getProjection();
+    const resolution = this.getResolution();
+    const rotation = this.getRotation();
+    let center = this.getCenterInternal();
+    const padding = this.padding_;
     if (padding) {
-      var reducedSize = this.getViewportSizeMinusPadding_();
+      const reducedSize = this.getViewportSizeMinusPadding_();
       center = calculateCenterOn(center, this.getViewportSize_(), [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]], resolution, rotation);
     }
     return {
@@ -3210,20 +2885,26 @@ var View = function(_super) {
       rotation,
       zoom: this.getZoom()
     };
-  };
-  View2.prototype.getZoom = function() {
-    var zoom;
-    var resolution = this.getResolution();
+  }
+  getViewStateAndExtent() {
+    return {
+      viewState: this.getState(),
+      extent: this.calculateExtent()
+    };
+  }
+  getZoom() {
+    let zoom;
+    const resolution = this.getResolution();
     if (resolution !== void 0) {
       zoom = this.getZoomForResolution(resolution);
     }
     return zoom;
-  };
-  View2.prototype.getZoomForResolution = function(resolution) {
-    var offset = this.minZoom_ || 0;
-    var max, zoomFactor;
+  }
+  getZoomForResolution(resolution) {
+    let offset = this.minZoom_ || 0;
+    let max, zoomFactor;
     if (this.resolutions_) {
-      var nearest = linearFindNearest(this.resolutions_, resolution, 1);
+      const nearest = linearFindNearest(this.resolutions_, resolution, 1);
       offset = nearest;
       max = this.resolutions_[nearest];
       if (nearest == this.resolutions_.length - 1) {
@@ -3236,69 +2917,68 @@ var View = function(_super) {
       zoomFactor = this.zoomFactor_;
     }
     return offset + Math.log(max / resolution) / Math.log(zoomFactor);
-  };
-  View2.prototype.getResolutionForZoom = function(zoom) {
+  }
+  getResolutionForZoom(zoom) {
     if (this.resolutions_) {
       if (this.resolutions_.length <= 1) {
         return 0;
       }
-      var baseLevel = clamp(Math.floor(zoom), 0, this.resolutions_.length - 2);
-      var zoomFactor = this.resolutions_[baseLevel] / this.resolutions_[baseLevel + 1];
+      const baseLevel = clamp(Math.floor(zoom), 0, this.resolutions_.length - 2);
+      const zoomFactor = this.resolutions_[baseLevel] / this.resolutions_[baseLevel + 1];
       return this.resolutions_[baseLevel] / Math.pow(zoomFactor, clamp(zoom - baseLevel, 0, 1));
-    } else {
-      return this.maxResolution_ / Math.pow(this.zoomFactor_, zoom - this.minZoom_);
     }
-  };
-  View2.prototype.fit = function(geometryOrExtent, opt_options) {
-    var geometry;
+    return this.maxResolution_ / Math.pow(this.zoomFactor_, zoom - this.minZoom_);
+  }
+  fit(geometryOrExtent, options) {
+    let geometry;
     assert(Array.isArray(geometryOrExtent) || typeof geometryOrExtent.getSimplifiedGeometry === "function", 24);
     if (Array.isArray(geometryOrExtent)) {
       assert(!isEmpty2(geometryOrExtent), 25);
-      var extent = fromUserExtent(geometryOrExtent, this.getProjection());
+      const extent = fromUserExtent(geometryOrExtent, this.getProjection());
       geometry = fromExtent(extent);
-    } else if (geometryOrExtent.getType() === GeometryType_default.CIRCLE) {
-      var extent = fromUserExtent(geometryOrExtent.getExtent(), this.getProjection());
+    } else if (geometryOrExtent.getType() === "Circle") {
+      const extent = fromUserExtent(geometryOrExtent.getExtent(), this.getProjection());
       geometry = fromExtent(extent);
       geometry.rotate(this.getRotation(), getCenter(extent));
     } else {
-      var userProjection2 = getUserProjection();
+      const userProjection2 = getUserProjection();
       if (userProjection2) {
         geometry = geometryOrExtent.clone().transform(userProjection2, this.getProjection());
       } else {
         geometry = geometryOrExtent;
       }
     }
-    this.fitInternal(geometry, opt_options);
-  };
-  View2.prototype.rotatedExtentForGeometry = function(geometry) {
-    var rotation = this.getRotation();
-    var cosAngle = Math.cos(rotation);
-    var sinAngle = Math.sin(-rotation);
-    var coords = geometry.getFlatCoordinates();
-    var stride = geometry.getStride();
-    var minRotX = Infinity;
-    var minRotY = Infinity;
-    var maxRotX = -Infinity;
-    var maxRotY = -Infinity;
-    for (var i = 0, ii = coords.length; i < ii; i += stride) {
-      var rotX = coords[i] * cosAngle - coords[i + 1] * sinAngle;
-      var rotY = coords[i] * sinAngle + coords[i + 1] * cosAngle;
+    this.fitInternal(geometry, options);
+  }
+  rotatedExtentForGeometry(geometry) {
+    const rotation = this.getRotation();
+    const cosAngle = Math.cos(rotation);
+    const sinAngle = Math.sin(-rotation);
+    const coords = geometry.getFlatCoordinates();
+    const stride = geometry.getStride();
+    let minRotX = Infinity;
+    let minRotY = Infinity;
+    let maxRotX = -Infinity;
+    let maxRotY = -Infinity;
+    for (let i = 0, ii = coords.length; i < ii; i += stride) {
+      const rotX = coords[i] * cosAngle - coords[i + 1] * sinAngle;
+      const rotY = coords[i] * sinAngle + coords[i + 1] * cosAngle;
       minRotX = Math.min(minRotX, rotX);
       minRotY = Math.min(minRotY, rotY);
       maxRotX = Math.max(maxRotX, rotX);
       maxRotY = Math.max(maxRotY, rotY);
     }
     return [minRotX, minRotY, maxRotX, maxRotY];
-  };
-  View2.prototype.fitInternal = function(geometry, opt_options) {
-    var options = opt_options || {};
-    var size = options.size;
+  }
+  fitInternal(geometry, options) {
+    options = options || {};
+    let size = options.size;
     if (!size) {
       size = this.getViewportSizeMinusPadding_();
     }
-    var padding = options.padding !== void 0 ? options.padding : [0, 0, 0, 0];
-    var nearest = options.nearest !== void 0 ? options.nearest : false;
-    var minResolution;
+    const padding = options.padding !== void 0 ? options.padding : [0, 0, 0, 0];
+    const nearest = options.nearest !== void 0 ? options.nearest : false;
+    let minResolution;
     if (options.minResolution !== void 0) {
       minResolution = options.minResolution;
     } else if (options.maxZoom !== void 0) {
@@ -3306,23 +2986,23 @@ var View = function(_super) {
     } else {
       minResolution = 0;
     }
-    var rotatedExtent = this.rotatedExtentForGeometry(geometry);
-    var resolution = this.getResolutionForExtentInternal(rotatedExtent, [
+    const rotatedExtent = this.rotatedExtentForGeometry(geometry);
+    let resolution = this.getResolutionForExtentInternal(rotatedExtent, [
       size[0] - padding[1] - padding[3],
       size[1] - padding[0] - padding[2]
     ]);
     resolution = isNaN(resolution) ? minResolution : Math.max(resolution, minResolution);
     resolution = this.getConstrainedResolution(resolution, nearest ? 0 : 1);
-    var rotation = this.getRotation();
-    var sinAngle = Math.sin(rotation);
-    var cosAngle = Math.cos(rotation);
-    var centerRot = getCenter(rotatedExtent);
+    const rotation = this.getRotation();
+    const sinAngle = Math.sin(rotation);
+    const cosAngle = Math.cos(rotation);
+    const centerRot = getCenter(rotatedExtent);
     centerRot[0] += (padding[1] - padding[3]) / 2 * resolution;
     centerRot[1] += (padding[0] - padding[2]) / 2 * resolution;
-    var centerX = centerRot[0] * cosAngle - centerRot[1] * sinAngle;
-    var centerY = centerRot[1] * cosAngle + centerRot[0] * sinAngle;
-    var center = this.getConstrainedCenter([centerX, centerY], resolution);
-    var callback = options.callback ? options.callback : VOID;
+    const centerX = centerRot[0] * cosAngle - centerRot[1] * sinAngle;
+    const centerY = centerRot[1] * cosAngle + centerRot[0] * sinAngle;
+    const center = this.getConstrainedCenter([centerX, centerY], resolution);
+    const callback = options.callback ? options.callback : VOID;
     if (options.duration !== void 0) {
       this.animateInternal({
         resolution,
@@ -3336,104 +3016,104 @@ var View = function(_super) {
       this.applyTargetState_(false, true);
       animationCallback(callback, true);
     }
-  };
-  View2.prototype.centerOn = function(coordinate, size, position) {
+  }
+  centerOn(coordinate, size, position) {
     this.centerOnInternal(fromUserCoordinate(coordinate, this.getProjection()), size, position);
-  };
-  View2.prototype.centerOnInternal = function(coordinate, size, position) {
+  }
+  centerOnInternal(coordinate, size, position) {
     this.setCenterInternal(calculateCenterOn(coordinate, size, position, this.getResolution(), this.getRotation()));
-  };
-  View2.prototype.calculateCenterShift = function(center, resolution, rotation, size) {
-    var centerShift;
-    var padding = this.padding_;
+  }
+  calculateCenterShift(center, resolution, rotation, size) {
+    let centerShift;
+    const padding = this.padding_;
     if (padding && center) {
-      var reducedSize = this.getViewportSizeMinusPadding_(-rotation);
-      var shiftedCenter = calculateCenterOn(center, size, [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]], resolution, rotation);
+      const reducedSize = this.getViewportSizeMinusPadding_(-rotation);
+      const shiftedCenter = calculateCenterOn(center, size, [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]], resolution, rotation);
       centerShift = [
         center[0] - shiftedCenter[0],
         center[1] - shiftedCenter[1]
       ];
     }
     return centerShift;
-  };
-  View2.prototype.isDef = function() {
+  }
+  isDef() {
     return !!this.getCenterInternal() && this.getResolution() !== void 0;
-  };
-  View2.prototype.adjustCenter = function(deltaCoordinates) {
-    var center = toUserCoordinate(this.targetCenter_, this.getProjection());
+  }
+  adjustCenter(deltaCoordinates) {
+    const center = toUserCoordinate(this.targetCenter_, this.getProjection());
     this.setCenter([
       center[0] + deltaCoordinates[0],
       center[1] + deltaCoordinates[1]
     ]);
-  };
-  View2.prototype.adjustCenterInternal = function(deltaCoordinates) {
-    var center = this.targetCenter_;
+  }
+  adjustCenterInternal(deltaCoordinates) {
+    const center = this.targetCenter_;
     this.setCenterInternal([
       center[0] + deltaCoordinates[0],
       center[1] + deltaCoordinates[1]
     ]);
-  };
-  View2.prototype.adjustResolution = function(ratio, opt_anchor) {
-    var anchor = opt_anchor && fromUserCoordinate(opt_anchor, this.getProjection());
+  }
+  adjustResolution(ratio, anchor) {
+    anchor = anchor && fromUserCoordinate(anchor, this.getProjection());
     this.adjustResolutionInternal(ratio, anchor);
-  };
-  View2.prototype.adjustResolutionInternal = function(ratio, opt_anchor) {
-    var isMoving = this.getAnimating() || this.getInteracting();
-    var size = this.getViewportSize_(this.getRotation());
-    var newResolution = this.constraints_.resolution(this.targetResolution_ * ratio, 0, size, isMoving);
-    if (opt_anchor) {
-      this.targetCenter_ = this.calculateCenterZoom(newResolution, opt_anchor);
+  }
+  adjustResolutionInternal(ratio, anchor) {
+    const isMoving = this.getAnimating() || this.getInteracting();
+    const size = this.getViewportSize_(this.getRotation());
+    const newResolution = this.constraints_.resolution(this.targetResolution_ * ratio, 0, size, isMoving);
+    if (anchor) {
+      this.targetCenter_ = this.calculateCenterZoom(newResolution, anchor);
     }
     this.targetResolution_ *= ratio;
     this.applyTargetState_();
-  };
-  View2.prototype.adjustZoom = function(delta, opt_anchor) {
-    this.adjustResolution(Math.pow(this.zoomFactor_, -delta), opt_anchor);
-  };
-  View2.prototype.adjustRotation = function(delta, opt_anchor) {
-    if (opt_anchor) {
-      opt_anchor = fromUserCoordinate(opt_anchor, this.getProjection());
+  }
+  adjustZoom(delta, anchor) {
+    this.adjustResolution(Math.pow(this.zoomFactor_, -delta), anchor);
+  }
+  adjustRotation(delta, anchor) {
+    if (anchor) {
+      anchor = fromUserCoordinate(anchor, this.getProjection());
     }
-    this.adjustRotationInternal(delta, opt_anchor);
-  };
-  View2.prototype.adjustRotationInternal = function(delta, opt_anchor) {
-    var isMoving = this.getAnimating() || this.getInteracting();
-    var newRotation = this.constraints_.rotation(this.targetRotation_ + delta, isMoving);
-    if (opt_anchor) {
-      this.targetCenter_ = this.calculateCenterRotate(newRotation, opt_anchor);
+    this.adjustRotationInternal(delta, anchor);
+  }
+  adjustRotationInternal(delta, anchor) {
+    const isMoving = this.getAnimating() || this.getInteracting();
+    const newRotation = this.constraints_.rotation(this.targetRotation_ + delta, isMoving);
+    if (anchor) {
+      this.targetCenter_ = this.calculateCenterRotate(newRotation, anchor);
     }
     this.targetRotation_ += delta;
     this.applyTargetState_();
-  };
-  View2.prototype.setCenter = function(center) {
+  }
+  setCenter(center) {
     this.setCenterInternal(center ? fromUserCoordinate(center, this.getProjection()) : center);
-  };
-  View2.prototype.setCenterInternal = function(center) {
+  }
+  setCenterInternal(center) {
     this.targetCenter_ = center;
     this.applyTargetState_();
-  };
-  View2.prototype.setHint = function(hint, delta) {
+  }
+  setHint(hint, delta) {
     this.hints_[hint] += delta;
     this.changed();
     return this.hints_[hint];
-  };
-  View2.prototype.setResolution = function(resolution) {
+  }
+  setResolution(resolution) {
     this.targetResolution_ = resolution;
     this.applyTargetState_();
-  };
-  View2.prototype.setRotation = function(rotation) {
+  }
+  setRotation(rotation) {
     this.targetRotation_ = rotation;
     this.applyTargetState_();
-  };
-  View2.prototype.setZoom = function(zoom) {
+  }
+  setZoom(zoom) {
     this.setResolution(this.getResolutionForZoom(zoom));
-  };
-  View2.prototype.applyTargetState_ = function(opt_doNotCancelAnims, opt_forceMoving) {
-    var isMoving = this.getAnimating() || this.getInteracting() || opt_forceMoving;
-    var newRotation = this.constraints_.rotation(this.targetRotation_, isMoving);
-    var size = this.getViewportSize_(newRotation);
-    var newResolution = this.constraints_.resolution(this.targetResolution_, 0, size, isMoving);
-    var newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, isMoving, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
+  }
+  applyTargetState_(doNotCancelAnims, forceMoving) {
+    const isMoving = this.getAnimating() || this.getInteracting() || forceMoving;
+    const newRotation = this.constraints_.rotation(this.targetRotation_, isMoving);
+    const size = this.getViewportSize_(newRotation);
+    const newResolution = this.constraints_.resolution(this.targetResolution_, 0, size, isMoving);
+    const newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, isMoving, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
     if (this.get(ViewProperty_default.ROTATION) !== newRotation) {
       this.set(ViewProperty_default.ROTATION, newRotation);
     }
@@ -3444,18 +3124,18 @@ var View = function(_super) {
     if (!newCenter || !this.get(ViewProperty_default.CENTER) || !equals2(this.get(ViewProperty_default.CENTER), newCenter)) {
       this.set(ViewProperty_default.CENTER, newCenter);
     }
-    if (this.getAnimating() && !opt_doNotCancelAnims) {
+    if (this.getAnimating() && !doNotCancelAnims) {
       this.cancelAnimations();
     }
     this.cancelAnchor_ = void 0;
-  };
-  View2.prototype.resolveConstraints = function(opt_duration, opt_resolutionDirection, opt_anchor) {
-    var duration = opt_duration !== void 0 ? opt_duration : 200;
-    var direction = opt_resolutionDirection || 0;
-    var newRotation = this.constraints_.rotation(this.targetRotation_);
-    var size = this.getViewportSize_(newRotation);
-    var newResolution = this.constraints_.resolution(this.targetResolution_, direction, size);
-    var newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, false, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
+  }
+  resolveConstraints(duration, resolutionDirection, anchor) {
+    duration = duration !== void 0 ? duration : 200;
+    const direction = resolutionDirection || 0;
+    const newRotation = this.constraints_.rotation(this.targetRotation_);
+    const size = this.getViewportSize_(newRotation);
+    const newResolution = this.constraints_.resolution(this.targetResolution_, direction, size);
+    const newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, false, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
     if (duration === 0 && !this.cancelAnchor_) {
       this.targetResolution_ = newResolution;
       this.targetRotation_ = newRotation;
@@ -3463,7 +3143,7 @@ var View = function(_super) {
       this.applyTargetState_();
       return;
     }
-    var anchor = opt_anchor || (duration === 0 ? this.cancelAnchor_ : void 0);
+    anchor = anchor || (duration === 0 ? this.cancelAnchor_ : void 0);
     this.cancelAnchor_ = void 0;
     if (this.getResolution() !== newResolution || this.getRotation() !== newRotation || !this.getCenterInternal() || !equals2(this.getCenterInternal(), newCenter)) {
       if (this.getAnimating()) {
@@ -3478,34 +3158,36 @@ var View = function(_super) {
         anchor
       });
     }
-  };
-  View2.prototype.beginInteraction = function() {
+  }
+  beginInteraction() {
     this.resolveConstraints(0);
     this.setHint(ViewHint_default.INTERACTING, 1);
-  };
-  View2.prototype.endInteraction = function(opt_duration, opt_resolutionDirection, opt_anchor) {
-    var anchor = opt_anchor && fromUserCoordinate(opt_anchor, this.getProjection());
-    this.endInteractionInternal(opt_duration, opt_resolutionDirection, anchor);
-  };
-  View2.prototype.endInteractionInternal = function(opt_duration, opt_resolutionDirection, opt_anchor) {
+  }
+  endInteraction(duration, resolutionDirection, anchor) {
+    anchor = anchor && fromUserCoordinate(anchor, this.getProjection());
+    this.endInteractionInternal(duration, resolutionDirection, anchor);
+  }
+  endInteractionInternal(duration, resolutionDirection, anchor) {
+    if (!this.getInteracting()) {
+      return;
+    }
     this.setHint(ViewHint_default.INTERACTING, -1);
-    this.resolveConstraints(opt_duration, opt_resolutionDirection, opt_anchor);
-  };
-  View2.prototype.getConstrainedCenter = function(targetCenter, opt_targetResolution) {
-    var size = this.getViewportSize_(this.getRotation());
-    return this.constraints_.center(targetCenter, opt_targetResolution || this.getResolution(), size);
-  };
-  View2.prototype.getConstrainedZoom = function(targetZoom, opt_direction) {
-    var targetRes = this.getResolutionForZoom(targetZoom);
-    return this.getZoomForResolution(this.getConstrainedResolution(targetRes, opt_direction));
-  };
-  View2.prototype.getConstrainedResolution = function(targetResolution, opt_direction) {
-    var direction = opt_direction || 0;
-    var size = this.getViewportSize_(this.getRotation());
+    this.resolveConstraints(duration, resolutionDirection, anchor);
+  }
+  getConstrainedCenter(targetCenter, targetResolution) {
+    const size = this.getViewportSize_(this.getRotation());
+    return this.constraints_.center(targetCenter, targetResolution || this.getResolution(), size);
+  }
+  getConstrainedZoom(targetZoom, direction) {
+    const targetRes = this.getResolutionForZoom(targetZoom);
+    return this.getZoomForResolution(this.getConstrainedResolution(targetRes, direction));
+  }
+  getConstrainedResolution(targetResolution, direction) {
+    direction = direction || 0;
+    const size = this.getViewportSize_(this.getRotation());
     return this.constraints_.resolution(targetResolution, direction, size);
-  };
-  return View2;
-}(Object_default);
+  }
+};
 function animationCallback(callback, returnValue) {
   setTimeout(function() {
     callback(returnValue);
@@ -3513,12 +3195,12 @@ function animationCallback(callback, returnValue) {
 }
 function createCenterConstraint(options) {
   if (options.extent !== void 0) {
-    var smooth = options.smoothExtentConstraint !== void 0 ? options.smoothExtentConstraint : true;
+    const smooth = options.smoothExtentConstraint !== void 0 ? options.smoothExtentConstraint : true;
     return createExtent(options.extent, options.constrainOnlyCenter, smooth);
   }
-  var projection = createProjection(options.projection, "EPSG:3857");
+  const projection = createProjection(options.projection, "EPSG:3857");
   if (options.multiWorld !== true && projection.isGlobal()) {
-    var extent = projection.getExtent().slice();
+    const extent = projection.getExtent().slice();
     extent[0] = -Infinity;
     extent[2] = Infinity;
     return createExtent(extent, false, false);
@@ -3526,27 +3208,27 @@ function createCenterConstraint(options) {
   return none;
 }
 function createResolutionConstraint(options) {
-  var resolutionConstraint;
-  var maxResolution;
-  var minResolution;
-  var defaultMaxZoom = 28;
-  var defaultZoomFactor = 2;
-  var minZoom = options.minZoom !== void 0 ? options.minZoom : DEFAULT_MIN_ZOOM;
-  var maxZoom = options.maxZoom !== void 0 ? options.maxZoom : defaultMaxZoom;
-  var zoomFactor = options.zoomFactor !== void 0 ? options.zoomFactor : defaultZoomFactor;
-  var multiWorld = options.multiWorld !== void 0 ? options.multiWorld : false;
-  var smooth = options.smoothResolutionConstraint !== void 0 ? options.smoothResolutionConstraint : true;
-  var showFullExtent = options.showFullExtent !== void 0 ? options.showFullExtent : false;
-  var projection = createProjection(options.projection, "EPSG:3857");
-  var projExtent = projection.getExtent();
-  var constrainOnlyCenter = options.constrainOnlyCenter;
-  var extent = options.extent;
+  let resolutionConstraint;
+  let maxResolution;
+  let minResolution;
+  const defaultMaxZoom = 28;
+  const defaultZoomFactor = 2;
+  let minZoom = options.minZoom !== void 0 ? options.minZoom : DEFAULT_MIN_ZOOM;
+  let maxZoom = options.maxZoom !== void 0 ? options.maxZoom : defaultMaxZoom;
+  const zoomFactor = options.zoomFactor !== void 0 ? options.zoomFactor : defaultZoomFactor;
+  const multiWorld = options.multiWorld !== void 0 ? options.multiWorld : false;
+  const smooth = options.smoothResolutionConstraint !== void 0 ? options.smoothResolutionConstraint : true;
+  const showFullExtent = options.showFullExtent !== void 0 ? options.showFullExtent : false;
+  const projection = createProjection(options.projection, "EPSG:3857");
+  const projExtent = projection.getExtent();
+  let constrainOnlyCenter = options.constrainOnlyCenter;
+  let extent = options.extent;
   if (!multiWorld && !extent && projection.isGlobal()) {
     constrainOnlyCenter = false;
     extent = projExtent;
   }
   if (options.resolutions !== void 0) {
-    var resolutions = options.resolutions;
+    const resolutions = options.resolutions;
     maxResolution = resolutions[minZoom];
     minResolution = resolutions[maxZoom] !== void 0 ? resolutions[maxZoom] : resolutions[resolutions.length - 1];
     if (options.constrainResolution) {
@@ -3555,9 +3237,9 @@ function createResolutionConstraint(options) {
       resolutionConstraint = createMinMaxResolution(maxResolution, minResolution, smooth, !constrainOnlyCenter && extent, showFullExtent);
     }
   } else {
-    var size = !projExtent ? 360 * METERS_PER_UNIT[Units_default.DEGREES] / projection.getMetersPerUnit() : Math.max(getWidth(projExtent), getHeight(projExtent));
-    var defaultMaxResolution = size / DEFAULT_TILE_SIZE / Math.pow(defaultZoomFactor, DEFAULT_MIN_ZOOM);
-    var defaultMinResolution = defaultMaxResolution / Math.pow(defaultZoomFactor, defaultMaxZoom - DEFAULT_MIN_ZOOM);
+    const size = !projExtent ? 360 * METERS_PER_UNIT.degrees / projection.getMetersPerUnit() : Math.max(getWidth(projExtent), getHeight(projExtent));
+    const defaultMaxResolution = size / DEFAULT_TILE_SIZE / Math.pow(defaultZoomFactor, DEFAULT_MIN_ZOOM);
+    const defaultMinResolution = defaultMaxResolution / Math.pow(defaultZoomFactor, defaultMaxZoom - DEFAULT_MIN_ZOOM);
     maxResolution = options.maxResolution;
     if (maxResolution !== void 0) {
       minZoom = 0;
@@ -3593,21 +3275,19 @@ function createResolutionConstraint(options) {
   };
 }
 function createRotationConstraint(options) {
-  var enableRotation = options.enableRotation !== void 0 ? options.enableRotation : true;
+  const enableRotation = options.enableRotation !== void 0 ? options.enableRotation : true;
   if (enableRotation) {
-    var constrainRotation = options.constrainRotation;
+    const constrainRotation = options.constrainRotation;
     if (constrainRotation === void 0 || constrainRotation === true) {
       return createSnapToZero();
     } else if (constrainRotation === false) {
       return none2;
     } else if (typeof constrainRotation === "number") {
       return createSnapToN(constrainRotation);
-    } else {
-      return none2;
     }
-  } else {
-    return disable;
+    return none2;
   }
+  return disable;
 }
 function isNoopAnimation(animation) {
   if (animation.sourceCenter && animation.targetCenter) {
@@ -3624,15 +3304,15 @@ function isNoopAnimation(animation) {
   return true;
 }
 function calculateCenterOn(coordinate, size, position, resolution, rotation) {
-  var cosAngle = Math.cos(-rotation);
-  var sinAngle = Math.sin(-rotation);
-  var rotX = coordinate[0] * cosAngle - coordinate[1] * sinAngle;
-  var rotY = coordinate[1] * cosAngle + coordinate[0] * sinAngle;
+  const cosAngle = Math.cos(-rotation);
+  let sinAngle = Math.sin(-rotation);
+  let rotX = coordinate[0] * cosAngle - coordinate[1] * sinAngle;
+  let rotY = coordinate[1] * cosAngle + coordinate[0] * sinAngle;
   rotX += (size[0] / 2 - position[0]) * resolution;
   rotY += (position[1] - size[1] / 2) * resolution;
   sinAngle = -sinAngle;
-  var centerX = rotX * cosAngle - rotY * sinAngle;
-  var centerY = rotY * cosAngle + rotX * sinAngle;
+  const centerX = rotX * cosAngle - rotY * sinAngle;
+  const centerY = rotY * cosAngle + rotX * sinAngle;
   return [centerX, centerY];
 }
 var View_default = View;

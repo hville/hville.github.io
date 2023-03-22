@@ -1,31 +1,15 @@
 // ../node_modules/ol/proj/Units.js
-var Units = {
-  RADIANS: "radians",
-  DEGREES: "degrees",
-  FEET: "ft",
-  METERS: "m",
-  PIXELS: "pixels",
-  TILE_PIXELS: "tile-pixels",
-  USFEET: "us-ft"
+var METERS_PER_UNIT = {
+  "radians": 6370997 / (2 * Math.PI),
+  "degrees": 2 * Math.PI * 6370997 / 360,
+  "ft": 0.3048,
+  "m": 1,
+  "us-ft": 1200 / 3937
 };
-var unitByCode = {
-  "9001": Units.METERS,
-  "9002": Units.FEET,
-  "9003": Units.USFEET,
-  "9101": Units.RADIANS,
-  "9102": Units.DEGREES
-};
-var METERS_PER_UNIT = {};
-METERS_PER_UNIT[Units.RADIANS] = 6370997 / (2 * Math.PI);
-METERS_PER_UNIT[Units.DEGREES] = 2 * Math.PI * 6370997 / 360;
-METERS_PER_UNIT[Units.FEET] = 0.3048;
-METERS_PER_UNIT[Units.METERS] = 1;
-METERS_PER_UNIT[Units.USFEET] = 1200 / 3937;
-var Units_default = Units;
 
 // ../node_modules/ol/proj/Projection.js
-var Projection = function() {
-  function Projection2(options) {
+var Projection = class {
+  constructor(options) {
     this.code_ = options.code;
     this.units_ = options.units;
     this.extent_ = options.extent !== void 0 ? options.extent : null;
@@ -37,135 +21,76 @@ var Projection = function() {
     this.defaultTileGrid_ = null;
     this.metersPerUnit_ = options.metersPerUnit;
   }
-  Projection2.prototype.canWrapX = function() {
+  canWrapX() {
     return this.canWrapX_;
-  };
-  Projection2.prototype.getCode = function() {
+  }
+  getCode() {
     return this.code_;
-  };
-  Projection2.prototype.getExtent = function() {
+  }
+  getExtent() {
     return this.extent_;
-  };
-  Projection2.prototype.getUnits = function() {
+  }
+  getUnits() {
     return this.units_;
-  };
-  Projection2.prototype.getMetersPerUnit = function() {
+  }
+  getMetersPerUnit() {
     return this.metersPerUnit_ || METERS_PER_UNIT[this.units_];
-  };
-  Projection2.prototype.getWorldExtent = function() {
+  }
+  getWorldExtent() {
     return this.worldExtent_;
-  };
-  Projection2.prototype.getAxisOrientation = function() {
+  }
+  getAxisOrientation() {
     return this.axisOrientation_;
-  };
-  Projection2.prototype.isGlobal = function() {
+  }
+  isGlobal() {
     return this.global_;
-  };
-  Projection2.prototype.setGlobal = function(global) {
+  }
+  setGlobal(global) {
     this.global_ = global;
     this.canWrapX_ = !!(global && this.extent_);
-  };
-  Projection2.prototype.getDefaultTileGrid = function() {
+  }
+  getDefaultTileGrid() {
     return this.defaultTileGrid_;
-  };
-  Projection2.prototype.setDefaultTileGrid = function(tileGrid) {
+  }
+  setDefaultTileGrid(tileGrid) {
     this.defaultTileGrid_ = tileGrid;
-  };
-  Projection2.prototype.setExtent = function(extent) {
+  }
+  setExtent(extent) {
     this.extent_ = extent;
     this.canWrapX_ = !!(this.global_ && extent);
-  };
-  Projection2.prototype.setWorldExtent = function(worldExtent) {
+  }
+  setWorldExtent(worldExtent) {
     this.worldExtent_ = worldExtent;
-  };
-  Projection2.prototype.setGetPointResolution = function(func) {
+  }
+  setGetPointResolution(func) {
     this.getPointResolutionFunc_ = func;
-  };
-  Projection2.prototype.getPointResolutionFunc = function() {
+  }
+  getPointResolutionFunc() {
     return this.getPointResolutionFunc_;
-  };
-  return Projection2;
-}();
+  }
+};
 var Projection_default = Projection;
 
-// ../node_modules/ol/math.js
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-var cosh = function() {
-  var cosh2;
-  if ("cosh" in Math) {
-    cosh2 = Math.cosh;
-  } else {
-    cosh2 = function(x) {
-      var y = Math.exp(x);
-      return (y + 1 / y) / 2;
-    };
-  }
-  return cosh2;
-}();
-var log2 = function() {
-  var log22;
-  if ("log2" in Math) {
-    log22 = Math.log2;
-  } else {
-    log22 = function(x) {
-      return Math.log(x) * Math.LOG2E;
-    };
-  }
-  return log22;
-}();
-function toRadians(angleInDegrees) {
-  return angleInDegrees * Math.PI / 180;
-}
-function modulo(a, b) {
-  var r = a % b;
-  return r * b < 0 ? r + b : r;
-}
-
 // ../node_modules/ol/proj/epsg3857.js
-var __extends = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
 var RADIUS = 6378137;
 var HALF_SIZE = Math.PI * RADIUS;
 var EXTENT = [-HALF_SIZE, -HALF_SIZE, HALF_SIZE, HALF_SIZE];
 var WORLD_EXTENT = [-180, -85, 180, 85];
 var MAX_SAFE_Y = RADIUS * Math.log(Math.tan(Math.PI / 2));
-var EPSG3857Projection = function(_super) {
-  __extends(EPSG3857Projection2, _super);
-  function EPSG3857Projection2(code) {
-    return _super.call(this, {
+var EPSG3857Projection = class extends Projection_default {
+  constructor(code) {
+    super({
       code,
-      units: Units_default.METERS,
+      units: "m",
       extent: EXTENT,
       global: true,
       worldExtent: WORLD_EXTENT,
       getPointResolution: function(resolution, point) {
-        return resolution / cosh(point[1] / RADIUS);
+        return resolution / Math.cosh(point[1] / RADIUS);
       }
-    }) || this;
+    });
   }
-  return EPSG3857Projection2;
-}(Projection_default);
+};
 var PROJECTIONS = [
   new EPSG3857Projection("EPSG:3857"),
   new EPSG3857Projection("EPSG:102100"),
@@ -174,10 +99,9 @@ var PROJECTIONS = [
   new EPSG3857Projection("http://www.opengis.net/def/crs/EPSG/0/3857"),
   new EPSG3857Projection("http://www.opengis.net/gml/srs/epsg.xml#3857")
 ];
-function fromEPSG4326(input, opt_output, opt_dimension) {
-  var length = input.length;
-  var dimension = opt_dimension > 1 ? opt_dimension : 2;
-  var output = opt_output;
+function fromEPSG4326(input, output, dimension) {
+  const length = input.length;
+  dimension = dimension > 1 ? dimension : 2;
   if (output === void 0) {
     if (dimension > 2) {
       output = input.slice();
@@ -185,9 +109,9 @@ function fromEPSG4326(input, opt_output, opt_dimension) {
       output = new Array(length);
     }
   }
-  for (var i = 0; i < length; i += dimension) {
+  for (let i = 0; i < length; i += dimension) {
     output[i] = HALF_SIZE * input[i] / 180;
-    var y = RADIUS * Math.log(Math.tan(Math.PI * (+input[i + 1] + 90) / 360));
+    let y = RADIUS * Math.log(Math.tan(Math.PI * (+input[i + 1] + 90) / 360));
     if (y > MAX_SAFE_Y) {
       y = MAX_SAFE_Y;
     } else if (y < -MAX_SAFE_Y) {
@@ -197,10 +121,9 @@ function fromEPSG4326(input, opt_output, opt_dimension) {
   }
   return output;
 }
-function toEPSG4326(input, opt_output, opt_dimension) {
-  var length = input.length;
-  var dimension = opt_dimension > 1 ? opt_dimension : 2;
-  var output = opt_output;
+function toEPSG4326(input, output, dimension) {
+  const length = input.length;
+  dimension = dimension > 1 ? dimension : 2;
   if (output === void 0) {
     if (dimension > 2) {
       output = input.slice();
@@ -208,7 +131,7 @@ function toEPSG4326(input, opt_output, opt_dimension) {
       output = new Array(length);
     }
   }
-  for (var i = 0; i < length; i += dimension) {
+  for (let i = 0; i < length; i += dimension) {
     output[i] = 180 * input[i] / HALF_SIZE;
     output[i + 1] = 360 * Math.atan(Math.exp(input[i + 1] / RADIUS)) / Math.PI - 90;
   }
@@ -216,45 +139,22 @@ function toEPSG4326(input, opt_output, opt_dimension) {
 }
 
 // ../node_modules/ol/proj/epsg4326.js
-var __extends2 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
 var RADIUS2 = 6378137;
 var EXTENT2 = [-180, -90, 180, 90];
 var METERS_PER_UNIT2 = Math.PI * RADIUS2 / 180;
-var EPSG4326Projection = function(_super) {
-  __extends2(EPSG4326Projection2, _super);
-  function EPSG4326Projection2(code, opt_axisOrientation) {
-    return _super.call(this, {
+var EPSG4326Projection = class extends Projection_default {
+  constructor(code, axisOrientation) {
+    super({
       code,
-      units: Units_default.DEGREES,
+      units: "degrees",
       extent: EXTENT2,
-      axisOrientation: opt_axisOrientation,
+      axisOrientation,
       global: true,
       metersPerUnit: METERS_PER_UNIT2,
       worldExtent: EXTENT2
-    }) || this;
+    });
   }
-  return EPSG4326Projection2;
-}(Projection_default);
+};
 var PROJECTIONS2 = [
   new EPSG4326Projection("CRS:84"),
   new EPSG4326Projection("EPSG:4326", "neu"),
@@ -283,15 +183,15 @@ function clear2() {
   transforms = {};
 }
 function add2(source, destination, transformFn) {
-  var sourceCode = source.getCode();
-  var destinationCode = destination.getCode();
+  const sourceCode = source.getCode();
+  const destinationCode = destination.getCode();
   if (!(sourceCode in transforms)) {
     transforms[sourceCode] = {};
   }
   transforms[sourceCode][destinationCode] = transformFn;
 }
 function get2(sourceCode, destinationCode) {
-  var transform2;
+  let transform2;
   if (sourceCode in transforms && destinationCode in transforms[sourceCode]) {
     transform2 = transforms[sourceCode][destinationCode];
   }
@@ -299,34 +199,33 @@ function get2(sourceCode, destinationCode) {
 }
 
 // ../node_modules/ol/extent.js
-function _boundingExtentXYs(xs, ys, opt_extent) {
-  var minX = Math.min.apply(null, xs);
-  var minY = Math.min.apply(null, ys);
-  var maxX = Math.max.apply(null, xs);
-  var maxY = Math.max.apply(null, ys);
-  return createOrUpdate(minX, minY, maxX, maxY, opt_extent);
+function _boundingExtentXYs(xs, ys, dest) {
+  const minX = Math.min.apply(null, xs);
+  const minY = Math.min.apply(null, ys);
+  const maxX = Math.max.apply(null, xs);
+  const maxY = Math.max.apply(null, ys);
+  return createOrUpdate(minX, minY, maxX, maxY, dest);
 }
-function createOrUpdate(minX, minY, maxX, maxY, opt_extent) {
-  if (opt_extent) {
-    opt_extent[0] = minX;
-    opt_extent[1] = minY;
-    opt_extent[2] = maxX;
-    opt_extent[3] = maxY;
-    return opt_extent;
-  } else {
-    return [minX, minY, maxX, maxY];
+function createOrUpdate(minX, minY, maxX, maxY, dest) {
+  if (dest) {
+    dest[0] = minX;
+    dest[1] = minY;
+    dest[2] = maxX;
+    dest[3] = maxY;
+    return dest;
   }
+  return [minX, minY, maxX, maxY];
 }
 function getWidth(extent) {
   return extent[2] - extent[0];
 }
-function applyTransform(extent, transformFn, opt_extent, opt_stops) {
-  var coordinates = [];
-  if (opt_stops > 1) {
-    var width = extent[2] - extent[0];
-    var height = extent[3] - extent[1];
-    for (var i = 0; i < opt_stops; ++i) {
-      coordinates.push(extent[0] + width * i / opt_stops, extent[1], extent[2], extent[1] + height * i / opt_stops, extent[2] - width * i / opt_stops, extent[3], extent[0], extent[3] - height * i / opt_stops);
+function applyTransform(extent, transformFn, dest, stops) {
+  let coordinates = [];
+  if (stops > 1) {
+    const width = extent[2] - extent[0];
+    const height = extent[3] - extent[1];
+    for (let i = 0; i < stops; ++i) {
+      coordinates.push(extent[0] + width * i / stops, extent[1], extent[2], extent[1] + height * i / stops, extent[2] - width * i / stops, extent[3], extent[0], extent[3] - height * i / stops);
     }
   } else {
     coordinates = [
@@ -341,19 +240,31 @@ function applyTransform(extent, transformFn, opt_extent, opt_stops) {
     ];
   }
   transformFn(coordinates, coordinates, 2);
-  var xs = [];
-  var ys = [];
-  for (var i = 0, l = coordinates.length; i < l; i += 2) {
+  const xs = [];
+  const ys = [];
+  for (let i = 0, l = coordinates.length; i < l; i += 2) {
     xs.push(coordinates[i]);
     ys.push(coordinates[i + 1]);
   }
-  return _boundingExtentXYs(xs, ys, opt_extent);
+  return _boundingExtentXYs(xs, ys, dest);
+}
+
+// ../node_modules/ol/math.js
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+function toRadians(angleInDegrees) {
+  return angleInDegrees * Math.PI / 180;
+}
+function modulo(a, b) {
+  const r = a % b;
+  return r * b < 0 ? r + b : r;
 }
 
 // ../node_modules/ol/coordinate.js
 function equals(coordinate1, coordinate2) {
-  var equals2 = true;
-  for (var i = coordinate1.length - 1; i >= 0; --i) {
+  let equals2 = true;
+  for (let i = coordinate1.length - 1; i >= 0; --i) {
     if (coordinate1[i] != coordinate2[i]) {
       equals2 = false;
       break;
@@ -361,11 +272,11 @@ function equals(coordinate1, coordinate2) {
   }
   return equals2;
 }
-function getWorldsAway(coordinate, projection, opt_sourceExtentWidth) {
-  var projectionExtent = projection.getExtent();
-  var worldsAway = 0;
+function getWorldsAway(coordinate, projection, sourceExtentWidth) {
+  const projectionExtent = projection.getExtent();
+  let worldsAway = 0;
   if (projection.canWrapX() && (coordinate[0] < projectionExtent[0] || coordinate[0] > projectionExtent[2])) {
-    var sourceExtentWidth = opt_sourceExtentWidth || getWidth(projectionExtent);
+    sourceExtentWidth = sourceExtentWidth || getWidth(projectionExtent);
     worldsAway = Math.floor((coordinate[0] - projectionExtent[0]) / sourceExtentWidth);
   }
   return worldsAway;
@@ -373,40 +284,54 @@ function getWorldsAway(coordinate, projection, opt_sourceExtentWidth) {
 
 // ../node_modules/ol/sphere.js
 var DEFAULT_RADIUS = 63710088e-1;
-function getDistance(c1, c2, opt_radius) {
-  var radius = opt_radius || DEFAULT_RADIUS;
-  var lat1 = toRadians(c1[1]);
-  var lat2 = toRadians(c2[1]);
-  var deltaLatBy2 = (lat2 - lat1) / 2;
-  var deltaLonBy2 = toRadians(c2[0] - c1[0]) / 2;
-  var a = Math.sin(deltaLatBy2) * Math.sin(deltaLatBy2) + Math.sin(deltaLonBy2) * Math.sin(deltaLonBy2) * Math.cos(lat1) * Math.cos(lat2);
+function getDistance(c1, c2, radius) {
+  radius = radius || DEFAULT_RADIUS;
+  const lat1 = toRadians(c1[1]);
+  const lat2 = toRadians(c2[1]);
+  const deltaLatBy2 = (lat2 - lat1) / 2;
+  const deltaLonBy2 = toRadians(c2[0] - c1[0]) / 2;
+  const a = Math.sin(deltaLatBy2) * Math.sin(deltaLatBy2) + Math.sin(deltaLonBy2) * Math.sin(deltaLonBy2) * Math.cos(lat1) * Math.cos(lat2);
   return 2 * radius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ../node_modules/ol/console.js
+var levels = {
+  info: 1,
+  warn: 2,
+  error: 3,
+  none: 4
+};
+var level = levels.info;
+function warn(...args) {
+  if (level > levels.warn) {
+    return;
+  }
+  console.warn(...args);
 }
 
 // ../node_modules/ol/proj.js
 var showCoordinateWarning = true;
-function disableCoordinateWarning(opt_disable) {
-  var hide = opt_disable === void 0 ? true : opt_disable;
+function disableCoordinateWarning(disable) {
+  const hide = disable === void 0 ? true : disable;
   showCoordinateWarning = !hide;
 }
-function cloneTransform(input, opt_output, opt_dimension) {
-  var output;
-  if (opt_output !== void 0) {
-    for (var i = 0, ii = input.length; i < ii; ++i) {
-      opt_output[i] = input[i];
+function cloneTransform(input, output) {
+  if (output !== void 0) {
+    for (let i = 0, ii = input.length; i < ii; ++i) {
+      output[i] = input[i];
     }
-    output = opt_output;
+    output = output;
   } else {
     output = input.slice();
   }
   return output;
 }
-function identityTransform(input, opt_output, opt_dimension) {
-  if (opt_output !== void 0 && input !== opt_output) {
-    for (var i = 0, ii = input.length; i < ii; ++i) {
-      opt_output[i] = input[i];
+function identityTransform(input, output) {
+  if (output !== void 0 && input !== output) {
+    for (let i = 0, ii = input.length; i < ii; ++i) {
+      output[i] = input[i];
     }
-    input = opt_output;
+    input = output;
   }
   return input;
 }
@@ -420,28 +345,28 @@ function addProjections(projections) {
 function get3(projectionLike) {
   return typeof projectionLike === "string" ? get(projectionLike) : projectionLike || null;
 }
-function getPointResolution(projection, resolution, point, opt_units) {
+function getPointResolution(projection, resolution, point, units) {
   projection = get3(projection);
-  var pointResolution;
-  var getter = projection.getPointResolutionFunc();
+  let pointResolution;
+  const getter = projection.getPointResolutionFunc();
   if (getter) {
     pointResolution = getter(resolution, point);
-    if (opt_units && opt_units !== projection.getUnits()) {
-      var metersPerUnit = projection.getMetersPerUnit();
+    if (units && units !== projection.getUnits()) {
+      const metersPerUnit = projection.getMetersPerUnit();
       if (metersPerUnit) {
-        pointResolution = pointResolution * metersPerUnit / METERS_PER_UNIT[opt_units];
+        pointResolution = pointResolution * metersPerUnit / METERS_PER_UNIT[units];
       }
     }
   } else {
-    var units = projection.getUnits();
-    if (units == Units_default.DEGREES && !opt_units || opt_units == Units_default.DEGREES) {
+    const projUnits = projection.getUnits();
+    if (projUnits == "degrees" && !units || units == "degrees") {
       pointResolution = resolution;
     } else {
-      var toEPSG4326_1 = getTransformFromProjections(projection, get3("EPSG:4326"));
-      if (toEPSG4326_1 === identityTransform && units !== Units_default.DEGREES) {
+      const toEPSG43262 = getTransformFromProjections(projection, get3("EPSG:4326"));
+      if (toEPSG43262 === identityTransform && projUnits !== "degrees") {
         pointResolution = resolution * projection.getMetersPerUnit();
       } else {
-        var vertices = [
+        let vertices = [
           point[0] - resolution / 2,
           point[1],
           point[0] + resolution / 2,
@@ -451,12 +376,12 @@ function getPointResolution(projection, resolution, point, opt_units) {
           point[0],
           point[1] + resolution / 2
         ];
-        vertices = toEPSG4326_1(vertices, vertices, 2);
-        var width = getDistance(vertices.slice(0, 2), vertices.slice(2, 4));
-        var height = getDistance(vertices.slice(4, 6), vertices.slice(6, 8));
+        vertices = toEPSG43262(vertices, vertices, 2);
+        const width = getDistance(vertices.slice(0, 2), vertices.slice(2, 4));
+        const height = getDistance(vertices.slice(4, 6), vertices.slice(6, 8));
         pointResolution = (width + height) / 2;
       }
-      var metersPerUnit = opt_units ? METERS_PER_UNIT[opt_units] : projection.getMetersPerUnit();
+      const metersPerUnit = units ? METERS_PER_UNIT[units] : projection.getMetersPerUnit();
       if (metersPerUnit !== void 0) {
         pointResolution /= metersPerUnit;
       }
@@ -491,39 +416,37 @@ function createProjection(projection, defaultCode) {
     return get3(defaultCode);
   } else if (typeof projection === "string") {
     return get3(projection);
-  } else {
-    return projection;
   }
+  return projection;
 }
 function createTransformFromCoordinateTransform(coordTransform) {
-  return function(input, opt_output, opt_dimension) {
-    var length = input.length;
-    var dimension = opt_dimension !== void 0 ? opt_dimension : 2;
-    var output = opt_output !== void 0 ? opt_output : new Array(length);
-    for (var i = 0; i < length; i += dimension) {
-      var point = coordTransform([input[i], input[i + 1]]);
-      output[i] = point[0];
-      output[i + 1] = point[1];
-      for (var j = dimension - 1; j >= 2; --j) {
-        output[i + j] = input[i + j];
+  return function(input, output, dimension) {
+    const length = input.length;
+    dimension = dimension !== void 0 ? dimension : 2;
+    output = output !== void 0 ? output : new Array(length);
+    for (let i = 0; i < length; i += dimension) {
+      const point = coordTransform(input.slice(i, i + dimension));
+      const pointLength = point.length;
+      for (let j = 0, jj = dimension; j < jj; ++j) {
+        output[i + j] = j >= pointLength ? input[i + j] : point[j];
       }
     }
     return output;
   };
 }
 function addCoordinateTransforms(source, destination, forward, inverse) {
-  var sourceProj = get3(source);
-  var destProj = get3(destination);
+  const sourceProj = get3(source);
+  const destProj = get3(destination);
   add2(sourceProj, destProj, createTransformFromCoordinateTransform(forward));
   add2(destProj, sourceProj, createTransformFromCoordinateTransform(inverse));
 }
-function fromLonLat(coordinate, opt_projection) {
+function fromLonLat(coordinate, projection) {
   disableCoordinateWarning();
-  return transform(coordinate, "EPSG:4326", opt_projection !== void 0 ? opt_projection : "EPSG:3857");
+  return transform(coordinate, "EPSG:4326", projection !== void 0 ? projection : "EPSG:3857");
 }
-function toLonLat(coordinate, opt_projection) {
-  var lonLat = transform(coordinate, opt_projection !== void 0 ? opt_projection : "EPSG:3857", "EPSG:4326");
-  var lon = lonLat[0];
+function toLonLat(coordinate, projection) {
+  const lonLat = transform(coordinate, projection !== void 0 ? projection : "EPSG:3857", "EPSG:4326");
+  const lon = lonLat[0];
   if (lon < -180 || lon > 180) {
     lonLat[0] = modulo(lon + 180, 360) - 180;
   }
@@ -533,38 +456,37 @@ function equivalent(projection1, projection2) {
   if (projection1 === projection2) {
     return true;
   }
-  var equalUnits = projection1.getUnits() === projection2.getUnits();
+  const equalUnits = projection1.getUnits() === projection2.getUnits();
   if (projection1.getCode() === projection2.getCode()) {
     return equalUnits;
-  } else {
-    var transformFunc = getTransformFromProjections(projection1, projection2);
-    return transformFunc === cloneTransform && equalUnits;
   }
+  const transformFunc = getTransformFromProjections(projection1, projection2);
+  return transformFunc === cloneTransform && equalUnits;
 }
 function getTransformFromProjections(sourceProjection, destinationProjection) {
-  var sourceCode = sourceProjection.getCode();
-  var destinationCode = destinationProjection.getCode();
-  var transformFunc = get2(sourceCode, destinationCode);
+  const sourceCode = sourceProjection.getCode();
+  const destinationCode = destinationProjection.getCode();
+  let transformFunc = get2(sourceCode, destinationCode);
   if (!transformFunc) {
     transformFunc = identityTransform;
   }
   return transformFunc;
 }
 function getTransform(source, destination) {
-  var sourceProjection = get3(source);
-  var destinationProjection = get3(destination);
+  const sourceProjection = get3(source);
+  const destinationProjection = get3(destination);
   return getTransformFromProjections(sourceProjection, destinationProjection);
 }
 function transform(coordinate, source, destination) {
-  var transformFunc = getTransform(source, destination);
+  const transformFunc = getTransform(source, destination);
   return transformFunc(coordinate, void 0, coordinate.length);
 }
-function transformExtent(extent, source, destination, opt_stops) {
-  var transformFunc = getTransform(source, destination);
-  return applyTransform(extent, transformFunc, void 0, opt_stops);
+function transformExtent(extent, source, destination, stops) {
+  const transformFunc = getTransform(source, destination);
+  return applyTransform(extent, transformFunc, void 0, stops);
 }
 function transformWithProjections(point, sourceProjection, destinationProjection) {
-  var transformFunc = getTransformFromProjections(sourceProjection, destinationProjection);
+  const transformFunc = getTransformFromProjections(sourceProjection, destinationProjection);
   return transformFunc(point);
 }
 var userProjection = null;
@@ -590,7 +512,7 @@ function fromUserCoordinate(coordinate, destProjection) {
   if (!userProjection) {
     if (showCoordinateWarning && !equals(coordinate, [0, 0]) && coordinate[0] >= -180 && coordinate[0] <= 180 && coordinate[1] >= -90 && coordinate[1] <= 90) {
       showCoordinateWarning = false;
-      console.warn("Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates.");
+      warn("Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates.");
     }
     return coordinate;
   }
@@ -612,33 +534,32 @@ function toUserResolution(resolution, sourceProjection) {
   if (!userProjection) {
     return resolution;
   }
-  var sourceUnits = get3(sourceProjection).getUnits();
-  var userUnits = userProjection.getUnits();
+  const sourceUnits = get3(sourceProjection).getUnits();
+  const userUnits = userProjection.getUnits();
   return sourceUnits && userUnits ? resolution * METERS_PER_UNIT[sourceUnits] / METERS_PER_UNIT[userUnits] : resolution;
 }
 function fromUserResolution(resolution, destProjection) {
   if (!userProjection) {
     return resolution;
   }
-  var sourceUnits = get3(destProjection).getUnits();
-  var userUnits = userProjection.getUnits();
+  const sourceUnits = get3(destProjection).getUnits();
+  const userUnits = userProjection.getUnits();
   return sourceUnits && userUnits ? resolution * METERS_PER_UNIT[userUnits] / METERS_PER_UNIT[sourceUnits] : resolution;
 }
 function createSafeCoordinateTransform(sourceProj, destProj, transform2) {
   return function(coord) {
-    var sourceX = coord[0];
-    var sourceY = coord[1];
-    var transformed, worldsAway;
+    let transformed, worldsAway;
     if (sourceProj.canWrapX()) {
-      var sourceExtent = sourceProj.getExtent();
-      var sourceExtentWidth = getWidth(sourceExtent);
+      const sourceExtent = sourceProj.getExtent();
+      const sourceExtentWidth = getWidth(sourceExtent);
+      coord = coord.slice(0);
       worldsAway = getWorldsAway(coord, sourceProj, sourceExtentWidth);
       if (worldsAway) {
-        sourceX = sourceX - worldsAway * sourceExtentWidth;
+        coord[0] = coord[0] - worldsAway * sourceExtentWidth;
       }
-      sourceX = clamp(sourceX, sourceExtent[0], sourceExtent[2]);
-      sourceY = clamp(sourceY, sourceExtent[1], sourceExtent[3]);
-      transformed = transform2([sourceX, sourceY]);
+      coord[0] = clamp(coord[0], sourceExtent[0], sourceExtent[2]);
+      coord[1] = clamp(coord[1], sourceExtent[1], sourceExtent[3]);
+      transformed = transform2(coord);
     } else {
       transformed = transform2(coord);
     }

@@ -60,7 +60,7 @@ function CodeJar(editor, highlight, opt = {}) {
         recording = true;
       }
     }
-    if (isLegacy)
+    if (isLegacy && !isCopy(event))
       restore(save());
   });
   on("keyup", (event) => {
@@ -93,6 +93,12 @@ function CodeJar(editor, highlight, opt = {}) {
     let { anchorNode, anchorOffset, focusNode, focusOffset } = s;
     if (!anchorNode || !focusNode)
       throw "error1";
+    if (anchorNode === editor && focusNode === editor) {
+      pos.start = anchorOffset > 0 && editor.textContent ? editor.textContent.length : 0;
+      pos.end = focusOffset > 0 && editor.textContent ? editor.textContent.length : 0;
+      pos.dir = focusOffset >= anchorOffset ? "->" : "<-";
+      return pos;
+    }
     if (anchorNode.nodeType === Node.ELEMENT_NODE) {
       const node = document.createTextNode("");
       anchorNode.insertBefore(node, anchorNode.childNodes[anchorOffset]);
@@ -349,10 +355,19 @@ function CodeJar(editor, highlight, opt = {}) {
     return event.metaKey || event.ctrlKey;
   }
   function isUndo(event) {
-    return isCtrl(event) && !event.shiftKey && event.code === "KeyZ";
+    return isCtrl(event) && !event.shiftKey && getKeyCode(event) === "Z";
   }
   function isRedo(event) {
-    return isCtrl(event) && event.shiftKey && event.code === "KeyZ";
+    return isCtrl(event) && event.shiftKey && getKeyCode(event) === "Z";
+  }
+  function isCopy(event) {
+    return isCtrl(event) && getKeyCode(event) === "C";
+  }
+  function getKeyCode(event) {
+    let key = event.key || event.keyCode || event.which;
+    if (!key)
+      return void 0;
+    return (typeof key === "string" ? key : String.fromCharCode(key)).toUpperCase();
   }
   function insert(text) {
     text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");

@@ -1,36 +1,34 @@
 // ../node_modules/ol/Disposable.js
-var Disposable = function() {
-  function Disposable2() {
+var Disposable = class {
+  constructor() {
     this.disposed = false;
   }
-  Disposable2.prototype.dispose = function() {
+  dispose() {
     if (!this.disposed) {
       this.disposed = true;
       this.disposeInternal();
     }
-  };
-  Disposable2.prototype.disposeInternal = function() {
-  };
-  return Disposable2;
-}();
+  }
+  disposeInternal() {
+  }
+};
 var Disposable_default = Disposable;
 
 // ../node_modules/ol/events/Event.js
-var BaseEvent = function() {
-  function BaseEvent2(type) {
+var BaseEvent = class {
+  constructor(type) {
     this.propagationStopped;
     this.defaultPrevented;
     this.type = type;
     this.target = null;
   }
-  BaseEvent2.prototype.preventDefault = function() {
+  preventDefault() {
     this.defaultPrevented = true;
-  };
-  BaseEvent2.prototype.stopPropagation = function() {
+  }
+  stopPropagation() {
     this.propagationStopped = true;
-  };
-  return BaseEvent2;
-}();
+  }
+};
 var Event_default = BaseEvent;
 
 // ../node_modules/ol/functions.js
@@ -39,73 +37,50 @@ function VOID() {
 
 // ../node_modules/ol/obj.js
 function clear(object) {
-  for (var property in object) {
+  for (const property in object) {
     delete object[property];
   }
 }
 
 // ../node_modules/ol/events/Target.js
-var __extends = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var Target = function(_super) {
-  __extends(Target2, _super);
-  function Target2(opt_target) {
-    var _this = _super.call(this) || this;
-    _this.eventTarget_ = opt_target;
-    _this.pendingRemovals_ = null;
-    _this.dispatching_ = null;
-    _this.listeners_ = null;
-    return _this;
+var Target = class extends Disposable_default {
+  constructor(target) {
+    super();
+    this.eventTarget_ = target;
+    this.pendingRemovals_ = null;
+    this.dispatching_ = null;
+    this.listeners_ = null;
   }
-  Target2.prototype.addEventListener = function(type, listener) {
+  addEventListener(type, listener) {
     if (!type || !listener) {
       return;
     }
-    var listeners = this.listeners_ || (this.listeners_ = {});
-    var listenersForType = listeners[type] || (listeners[type] = []);
-    if (listenersForType.indexOf(listener) === -1) {
+    const listeners = this.listeners_ || (this.listeners_ = {});
+    const listenersForType = listeners[type] || (listeners[type] = []);
+    if (!listenersForType.includes(listener)) {
       listenersForType.push(listener);
     }
-  };
-  Target2.prototype.dispatchEvent = function(event) {
-    var isString = typeof event === "string";
-    var type = isString ? event : event.type;
-    var listeners = this.listeners_ && this.listeners_[type];
+  }
+  dispatchEvent(event) {
+    const isString = typeof event === "string";
+    const type = isString ? event : event.type;
+    const listeners = this.listeners_ && this.listeners_[type];
     if (!listeners) {
       return;
     }
-    var evt = isString ? new Event_default(event) : event;
+    const evt = isString ? new Event_default(event) : event;
     if (!evt.target) {
       evt.target = this.eventTarget_ || this;
     }
-    var dispatching = this.dispatching_ || (this.dispatching_ = {});
-    var pendingRemovals = this.pendingRemovals_ || (this.pendingRemovals_ = {});
+    const dispatching = this.dispatching_ || (this.dispatching_ = {});
+    const pendingRemovals = this.pendingRemovals_ || (this.pendingRemovals_ = {});
     if (!(type in dispatching)) {
       dispatching[type] = 0;
       pendingRemovals[type] = 0;
     }
     ++dispatching[type];
-    var propagate;
-    for (var i = 0, ii = listeners.length; i < ii; ++i) {
+    let propagate;
+    for (let i = 0, ii = listeners.length; i < ii; ++i) {
       if ("handleEvent" in listeners[i]) {
         propagate = listeners[i].handleEvent(evt);
       } else {
@@ -117,7 +92,7 @@ var Target = function(_super) {
       }
     }
     if (--dispatching[type] === 0) {
-      var pr = pendingRemovals[type];
+      let pr = pendingRemovals[type];
       delete pendingRemovals[type];
       while (pr--) {
         this.removeEventListener(type, VOID);
@@ -125,23 +100,23 @@ var Target = function(_super) {
       delete dispatching[type];
     }
     return propagate;
-  };
-  Target2.prototype.disposeInternal = function() {
+  }
+  disposeInternal() {
     this.listeners_ && clear(this.listeners_);
-  };
-  Target2.prototype.getListeners = function(type) {
+  }
+  getListeners(type) {
     return this.listeners_ && this.listeners_[type] || void 0;
-  };
-  Target2.prototype.hasListener = function(opt_type) {
+  }
+  hasListener(type) {
     if (!this.listeners_) {
       return false;
     }
-    return opt_type ? opt_type in this.listeners_ : Object.keys(this.listeners_).length > 0;
-  };
-  Target2.prototype.removeEventListener = function(type, listener) {
-    var listeners = this.listeners_ && this.listeners_[type];
+    return type ? type in this.listeners_ : Object.keys(this.listeners_).length > 0;
+  }
+  removeEventListener(type, listener) {
+    const listeners = this.listeners_ && this.listeners_[type];
     if (listeners) {
-      var index = listeners.indexOf(listener);
+      const index = listeners.indexOf(listener);
       if (index !== -1) {
         if (this.pendingRemovals_ && type in this.pendingRemovals_) {
           listeners[index] = VOID;
@@ -154,9 +129,8 @@ var Target = function(_super) {
         }
       }
     }
-  };
-  return Target2;
-}(Disposable_default);
+  }
+};
 var Target_default = Target;
 
 // ../node_modules/ol/events/EventType.js
@@ -191,9 +165,7 @@ var TileState_default = {
 
 // ../node_modules/ol/util.js
 function abstract() {
-  return function() {
-    throw new Error("Unimplemented abstract method.");
-  }();
+  throw new Error("Unimplemented abstract method.");
 }
 
 // ../node_modules/ol/easing.js
@@ -202,54 +174,34 @@ function easeIn(t) {
 }
 
 // ../node_modules/ol/Tile.js
-var __extends2 = function() {
-  var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-      d2.__proto__ = b2;
-    } || function(d2, b2) {
-      for (var p in b2)
-        if (Object.prototype.hasOwnProperty.call(b2, p))
-          d2[p] = b2[p];
-    };
-    return extendStatics(d, b);
-  };
-  return function(d, b) {
-    if (typeof b !== "function" && b !== null)
-      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-    extendStatics(d, b);
-    function __() {
-      this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-var Tile = function(_super) {
-  __extends2(Tile2, _super);
-  function Tile2(tileCoord, state, opt_options) {
-    var _this = _super.call(this) || this;
-    var options = opt_options ? opt_options : {};
-    _this.tileCoord = tileCoord;
-    _this.state = state;
-    _this.interimTile = null;
-    _this.key = "";
-    _this.transition_ = options.transition === void 0 ? 250 : options.transition;
-    _this.transitionStarts_ = {};
-    _this.interpolate = !!options.interpolate;
-    return _this;
+var Tile = class extends Target_default {
+  constructor(tileCoord, state, options) {
+    super();
+    options = options ? options : {};
+    this.tileCoord = tileCoord;
+    this.state = state;
+    this.interimTile = null;
+    this.key = "";
+    this.transition_ = options.transition === void 0 ? 250 : options.transition;
+    this.transitionStarts_ = {};
+    this.interpolate = !!options.interpolate;
   }
-  Tile2.prototype.changed = function() {
+  changed() {
     this.dispatchEvent(EventType_default.CHANGE);
-  };
-  Tile2.prototype.release = function() {
-  };
-  Tile2.prototype.getKey = function() {
+  }
+  release() {
+    if (this.state === TileState_default.ERROR) {
+      this.setState(TileState_default.EMPTY);
+    }
+  }
+  getKey() {
     return this.key + "/" + this.tileCoord;
-  };
-  Tile2.prototype.getInterimTile = function() {
+  }
+  getInterimTile() {
     if (!this.interimTile) {
       return this;
     }
-    var tile = this.interimTile;
+    let tile = this.interimTile;
     do {
       if (tile.getState() == TileState_default.LOADED) {
         this.transition_ = 0;
@@ -258,13 +210,13 @@ var Tile = function(_super) {
       tile = tile.interimTile;
     } while (tile);
     return this;
-  };
-  Tile2.prototype.refreshInterimChain = function() {
+  }
+  refreshInterimChain() {
     if (!this.interimTile) {
       return;
     }
-    var tile = this.interimTile;
-    var prev = this;
+    let tile = this.interimTile;
+    let prev = this;
     do {
       if (tile.getState() == TileState_default.LOADED) {
         tile.interimTile = null;
@@ -278,53 +230,52 @@ var Tile = function(_super) {
       }
       tile = prev.interimTile;
     } while (tile);
-  };
-  Tile2.prototype.getTileCoord = function() {
+  }
+  getTileCoord() {
     return this.tileCoord;
-  };
-  Tile2.prototype.getState = function() {
+  }
+  getState() {
     return this.state;
-  };
-  Tile2.prototype.setState = function(state) {
+  }
+  setState(state) {
     if (this.state !== TileState_default.ERROR && this.state > state) {
       throw new Error("Tile load sequence violation");
     }
     this.state = state;
     this.changed();
-  };
-  Tile2.prototype.load = function() {
+  }
+  load() {
     abstract();
-  };
-  Tile2.prototype.getAlpha = function(id, time) {
+  }
+  getAlpha(id, time) {
     if (!this.transition_) {
       return 1;
     }
-    var start = this.transitionStarts_[id];
+    let start = this.transitionStarts_[id];
     if (!start) {
       start = time;
       this.transitionStarts_[id] = start;
     } else if (start === -1) {
       return 1;
     }
-    var delta = time - start + 1e3 / 60;
+    const delta = time - start + 1e3 / 60;
     if (delta >= this.transition_) {
       return 1;
     }
     return easeIn(delta / this.transition_);
-  };
-  Tile2.prototype.inTransition = function(id) {
+  }
+  inTransition(id) {
     if (!this.transition_) {
       return false;
     }
     return this.transitionStarts_[id] !== -1;
-  };
-  Tile2.prototype.endTransition = function(id) {
+  }
+  endTransition(id) {
     if (this.transition_) {
       this.transitionStarts_[id] = -1;
     }
-  };
-  return Tile2;
-}(Target_default);
+  }
+};
 var Tile_default = Tile;
 export {
   Tile_default as default
