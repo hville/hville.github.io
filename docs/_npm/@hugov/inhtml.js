@@ -1,23 +1,33 @@
 // ../node_modules/@hugov/inhtml/in-frame.js
 var ISMOD = /^[\s]*import[\s'"`*{;]/;
 function frame(code, init = "", attributes = ISMOD.test(init) ? "type=module" : "") {
-  const uid = "_" + Math.floor(Math.random() * 28e11).toString(36);
-  const iframeEl = document.createElement("iframe");
+  const uid = "$" + Math.floor(Math.random() * 2 ** (5 * 6)).toString(32).padStart(6, 0), iframeEl = document.createElement("iframe"), { port1, port2 } = new MessageChannel();
   iframeEl.style.display = "none";
-  iframeEl.sandbox = "allow-scripts allow-same-origin";
-  iframeEl.srcdoc = `<script ${attributes}>Object.defineProperties(window,{parent:{value:window},frameElement:{value:null}});${init};window.${uid}=(${code}).bind(window)<\/script>`;
-  return new Promise((p, f) => {
+  iframeEl.sandbox = "allow-scripts";
+  iframeEl.srcdoc = `<script ${attributes}>${init}; onmessage = ({ports:[port2]}) => {
+		port2.onmessage = async evt => port2.postMessage(await window.${uid}(...evt.data))
+};
+window.${uid}=${code};
+<\/script>`;
+  return new Promise((pass, fail) => {
     iframeEl.onerror = (e) => {
-      f(e);
+      fail(e);
       iframeEl.remove();
     };
     iframeEl.onload = () => {
-      const fcn = iframeEl.contentWindow[uid];
-      if (typeof fcn === "function") {
-        fcn.remove = iframeEl.remove.bind(iframeEl);
-        p(fcn);
-      } else
-        f(new Error("not a function"));
+      let ret, err;
+      iframeEl.contentWindow.postMessage("", "*", [port2]);
+      port1.onmessage = (evt) => ret(evt.data);
+      port1.onerror = (evt) => err(evt);
+      function framedFunction(...args) {
+        return new Promise((p, f) => {
+          ret = p;
+          err = f;
+          port1.postMessage(args);
+        });
+      }
+      framedFunction.remove = iframeEl.remove.bind(iframeEl);
+      pass(framedFunction);
     };
     document.body.appendChild(iframeEl);
   });

@@ -50,27 +50,6 @@ function logn_default(low, high, prob = 0.5) {
   };
 }
 
-// ../node_modules/grosso-modo/dice.js
-function dice_default(min, max) {
-  if (max <= min)
-    throw Error("max <= min");
-  if (max % 1 || min % 1)
-    throw Error("min and max must be integers");
-  const size = max - min + 1, refs = [];
-  let i = 1;
-  for (; i < size; ++i)
-    refs[i - 1] = icdf_voutier_default(i / size);
-  refs[i - 1] = Infinity;
-  return function(zSeed) {
-    if (zSeed === void 0)
-      return min + Math.floor(Math.random() * size);
-    let k = 0;
-    while (zSeed > refs[k])
-      ++k;
-    return min + k;
-  };
-}
-
 // ../node_modules/norm-dist/pdf.js
 function pdf_default(z) {
   return Math.exp(-(Math.log(2 * Math.PI) + z * z) * 0.5);
@@ -90,6 +69,17 @@ function cdf_default(z) {
     return 0;
   const t = 1 / (1 + b02 * Math.abs(z)), t2 = t * t, y = t * (b12 + b2 * t + (b3 + b4 * t + b5 * t2) * t2);
   return z < 0 ? pdf_default(-z) * y : 1 - pdf_default(z) * y;
+}
+
+// ../node_modules/grosso-modo/gumbel.js
+function gumbel_default(low, high, prob = 0.5) {
+  if (high <= low)
+    throw Error("high <= low");
+  const p = (1 - prob) / 2, lnln1p = Math.log(-Math.log(p)), lnln1q = Math.log(-Math.log(1 - p)), s = (high - low) / (lnln1q - lnln1p), m = (high * lnln1p - low * lnln1q) / (lnln1p - lnln1q);
+  return function(zSeed) {
+    const p2 = zSeed === void 0 ? Math.random() : cdf_default(zSeed);
+    return m + s * Math.log(-Math.log(p2));
+  };
 }
 
 // ../node_modules/grosso-modo/uniform.js
@@ -119,14 +109,19 @@ function weibull_default(low, high, prob = 0.5) {
   };
 }
 
-// ../node_modules/grosso-modo/gumbel.js
-function gumbel_default(low, high, prob = 0.5) {
+// ../node_modules/grosso-modo/dagum.js
+function dagum_default(low, high, prob = 0.5) {
   if (high <= low)
     throw Error("high <= low");
-  const p = (1 - prob) / 2, lnln1p = Math.log(-Math.log(p)), lnln1q = Math.log(-Math.log(1 - p)), s = (high - low) / (lnln1q - lnln1p), m = (high * lnln1p - low * lnln1q) / (lnln1p - lnln1q);
-  return function(zSeed) {
-    const p2 = zSeed === void 0 ? Math.random() : cdf_default(zSeed);
-    return m + s * Math.log(-Math.log(p2));
+  if (high * low <= 0)
+    throw Error("range must not cross 0");
+  const q_p = (1 + prob) / (1 - prob), H_L = low > 0 ? high / low : low / high, _a = 0.5 * Math.log(H_L) / Math.log(q_p), b = (low > 0 ? low : high) * Math.pow(q_p, _a);
+  return low > 0 ? function(zSeed) {
+    const p = zSeed === void 0 ? Math.random() : cdf_default(zSeed);
+    return b * Math.pow(p / (1 - p), _a);
+  } : function(zSeed) {
+    const p = zSeed === void 0 ? Math.random() : cdf_default(-zSeed);
+    return b * Math.pow(p / (1 - p), _a);
   };
 }
 
@@ -570,10 +565,10 @@ var Sim = class {
 function sim_default(factory, { confidence = 0.5, resolution = 128 } = {}) {
   const risks = [], rndNs = [], conf = confidence <= 1 ? confidence : Math.pow(2, 1 - 1 / confidence) - 1, rndFs = {};
   let init = false;
-  for (const [key, fcn] of Object.entries({ N: norm_default, L: logn_default, D: dice_default, U: uniform_default, W: weibull_default, G: gumbel_default })) {
+  for (const [key, fcn] of Object.entries({ N: norm_default, L: logn_default, G: gumbel_default, U: uniform_default, W: weibull_default, D: dagum_default })) {
     rndFs[key] = (low, top, ...args) => {
       if (init)
-        throw Error(`distribution ${key} definition must be at initiation`);
+        throw Error("distribution definition must be at initiation");
       return rndNs[rndNs.length] = new RandomNumber(fcn(low, top, conf))._link(risks, args);
     };
   }

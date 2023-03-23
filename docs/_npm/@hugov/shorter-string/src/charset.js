@@ -9,9 +9,9 @@ var PCHAR = UNRESERVED + "%!$&'()*+,;=:@";
 var RFC1924 = BASE62 + "!#$%&()*+-;<=>?@^_`{|}~";
 var QUERY = UNRESERVED + "%!$&()*+,;=:@";
 var HASH = PCHAR + "/?#";
-var MTF = charRange(127, 127, charRange(0, 8, charRange(11, 31, " " + LOWER + `,.'":;-?()[]{}
-!` + DIGIT + "+/*=_~<>^`#%	$&@|\\" + UPPER)));
-function charRange(i, j, s) {
+var MTF = ` ${LOWER},.'":;-?()[]{}
+!${DIGIT}+/*=_~<>^\`#%	$&@|\\${UPPER}\v\f\r${chars(0, 8) + chars(14, 31)}\x7F`;
+function chars(i, j, s = "") {
   while (i <= j)
     s += String.fromCharCode(i++);
   return s;
