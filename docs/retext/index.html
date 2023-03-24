@@ -37,7 +37,7 @@
 <pre><code id=action contenteditable=true>($`-$&-$')($`-$1-$2-$&lt;Lx2&gt;-$')</code></pre>
 
 <h3>source</h3>
-<pre><code id=string contenteditable=true data-lang>excellent</code></pre>
+<pre><code id=string contenteditable=true>excellent</code></pre>
 
 <h3 data-lang>result // résultat</h3>
 <pre id=result></pre>
@@ -73,7 +73,7 @@ const dohash = hashData( ({lang, data}) => {
 	let regexp, action, string
 	resultEl.textContent = '...'
 	if (data) {
-		[regexp, action, string] = data.split('\0')
+		[regexp, action, string] = data.split('\v')
 		regexpEl.textContent = regexp
 		actionEl.textContent = action
 		stringEl.textContent = string
@@ -88,7 +88,7 @@ const dohash = hashData( ({lang, data}) => {
 
 regexpEl.oninput = actionEl.oninput = stringEl.oninput = () => {
 	console.log('oninput', regexp, action, string)
-	dohash({data: [regexpEl.textContent, actionEl.textContent, stringEl.textContent].join('\0')})
+	dohash({data: [regexpEl.textContent, actionEl.textContent, stringEl.textContent].join('\v')})
 }
 
 </script>
