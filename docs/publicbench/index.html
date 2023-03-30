@@ -55,7 +55,7 @@
 	</tr>
 	<tr>
 		<td>
-			<pre><code id=init contenteditable=true></code></pre>
+			<pre><code id=init placeholder="// init code"></code></pre>
 		</td>
 		<td style="text-align: center; vertical-align: middle;">
 			<button id=run data-lang>
@@ -76,7 +76,7 @@
 <template>
 	<tr id=row>
 		<td>
-			<pre><code id=code contenteditable=true></code></pre>
+			<pre><code id=code placeholder="// test code"></code></pre>
 		</td>
 		<td style="text-align: center; vertical-align: middle;">
 			<out id=time style="white-space: pre-wrap;"></out>
@@ -96,13 +96,14 @@ const init = $('#init'),
 
 // row factory
 const makeRow = cast('template', ({row, code, time}, codeVal='') => {
-	editable(code)
-	code.textContent = codeVal
+	editable(code).textContent = codeVal
 	time.update = res => time.textContent = !res ? '' : res.map( v => v.toPrecision(3) ).join('  ')
+	code.oninput = () => console.log('patate')
 	code.onchange = () => {
 		time.textContent = ''
 		if (!code.textContent) row.remove()
 		else if (!row.nextSibling) row.after(makeRow())
+		console.log(code)
 		save()
 	}
 	row.$ids = {code, time}
@@ -129,7 +130,7 @@ const saveData = hashData( ({data, lang}) => {
 	if (rows.length) tbody.textContent = '' //reset rows
 	if (data) {
 		const itms = data.split('\v') //vertial tab as seperator
-		init.textContent = itms.shift()
+		init.value = itms.shift()
 		itms.forEach( code => { if (code) tbody.append(makeRow(code)) } )
 	}
 	// one last empty line to allow adding new lines
@@ -138,9 +139,9 @@ const saveData = hashData( ({data, lang}) => {
 
 function save() {
 	//TODO might be easier to to all rows and replace last with init
-	const values = [init.textContent]
+	const values = [init.value]
 	//get all rows but the last
-	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
+	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.value)
 	saveData( {data: values.join('\v')} )
 }
 editable(init)
