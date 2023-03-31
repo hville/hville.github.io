@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>monte carlo</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="in browser benchmarking">
+	<link rel="stylesheet" href="../_src/main.css">
+	<link href="https://unpkg.com/prismjs@1.24.1/themes/prism.css" rel="stylesheet" />
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2>Monte Carlo</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<details>
+	<summary data-lang>templates and examples // exemples de modèles</summary>
+	<li data-lang>
+		<a lang=en href="./#en/1wCX!-FSg45'SghgncJgx8/'/u9+NqYVx:kYYf14AlrAG+lw/@&ljlzatb(dB1.KS9KOn~$LHDuu..8,H,@qt8;*'Z?i3C?w!$n;flmrK=PB(,.uh3-4aYo.5#jAn1cy1;TA6=I&OI/)~MCC(#=qCrUkfG_&_GLC2VsP#z&f.#;*ffKI7TwJm_jvsW4:BfoD,WS">
+		sum of variable costs
+		</a>
+		<a lang=fr href="./#en/1wCX!-FSg45'SghgncJgx8/'/u9+NqYVx:kYYf14AlrAG+lw/@&ljlzatb(dB1.KS9KOn~$LHDuu..8,H,@qt8;*'Z?i3C?w!$n;flmrK=PB(,.uh3-4aYo.5#jAn1cy1;TA6=I&OI/)~MCC(#=qCrUkfG_&_GLC2VsP#z&f.#;*ffKI7TwJm_jvsW4:BfoD,WS">
+		somme de coûts variables
+	</a></li>
+</details>
+
+<pre><code><var>function({N, L, D, U, W, G}, //normal, lognormal, dagum, uniform, weibull, gumbell</var>
+<span id=initA placeholder="//init argument expressions code here patate"></span>
+<var>) {</var>
+<span id=initB placeholder="//init code block here"></span>
+<var>return function(</var>
+<span id=eachA placeholder="//sim argument expressions code here"></span>
+<var>){</var>
+<span id=eachB placeholder="//sim code block here"></span>
+<var>return {</var>
+<span id=stats placeholder="//sim outputs here"></span>
+<var>}}}</var></code></pre>
+
+<button id=run1e4>N = 1e4</button>
+<button id=run1e5>N = 1e5</button>
+<button id=run1e6>N = 1e6</button>
+
+<pre id=show></pre>
+<table>
+	<thead>
+		<tr><th>id</th><th>Q25</th><th>Q50</th><th>Q75</th><th>E</th><th>S</th></tr>
+	</thead>
+	<tbody>
+		<tr><td id=id></td><td id=Q25></td><td id=Q50></td><td id=Q75></td><td id=E></td><td id=S></td></tr>
+	</tbody>
+</table>
+<canvas height=300></canvas>
+
+<script type=module>
+import {$, $$, cast} from '/_npm/@hugov/inhtml.js'
+import hashData from '../_src/hash-data.js'
+import SIM from '/_npm/@hugov/correl-range.js'
+import editable from '../_src/editable.js'
+
+const els = [ $('#initA'), $('#initB'), $('#eachA'), $('#eachB'), $`#stats` ].map( editable )
+
+// row factory
+const makeRow = cast('tbody>tr', ({id, Q25, Q50, Q75, E, S}, stat, name) => {
+	id.textContent = name
+	Q25.textContent = stat.Q(.25).toPrecision(3)
+	Q50.textContent = stat.Q(.50).toPrecision(3)
+	Q75.textContent = stat.Q(.75).toPrecision(3)
+	E.textContent = stat.E.toPrecision(3)
+	S.textContent = stat.S.toPrecision(3)
+})
+
+$`#initA`.focus()
+
+// save|load
+const onhash = hashData( ({data}) => {if (data.length) {
+	const txts = data.split('\v')
+	els.forEach( (j,i) => {
+		j.textContent = txts[i]
+	})
+	$`tbody`.textContent=''
+}})
+
+//const clearResults = () => $`#show`.textContent = ''
+const onCodeUpdate = () => {
+	onhash({ data: els.join('\v') }) //.replace(/\n*$/,'')
+	$`tbody`.textContent=''
+}
+els.forEach( el => el.oninput = onCodeUpdate )
+
+$('#run1e4').onclick = runSim.bind(null,1e4)
+$('#run1e5').onclick = runSim.bind(null,1e5)
+$('#run1e6').onclick = runSim.bind(null,1e6)
+
+const ctx = $('canvas').getContext('2d')
+ctx.strokeStyle = 'silver'
+
+async function runSim(N) {
+	$`#show`.textContent = ''
+	$`tbody`.textContent=''
+	// look up the size the canvas is being displayed
+	const width = ctx.canvas.clientWidth
+	// If it's resolution does not match change it
+	if (ctx.canvas.width !== width) {
+		ctx.canvas.width = width
+		ctx.strokeStyle = 'silver'
+	}
+	else ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+	const args = `{N, L, D, U, W, G},\n${ els[0].textContent.replace(/\n*$/, '') }`,
+				// ) {
+				body = `${ els[1] }`
+				+ `return function(\n${ els[2] }) {\n`
+				+ `${ els[3] }return {`
+				+ `\n${ els[4] }}}`
+				// }
+	//console.log(args)
+	//console.log(body)
+	await nextFrame()
+	const	ms0 = await nextFrame()
+	let res, fcn
+	//console.log(args)
+	//console.log(body)
+	try {
+		fcn = new Function( args, body )
+		//console.log(fcn)
+	} catch (e) {
+		//console.log(e)
+		//console.log( e.stack )//.match(/(?<=anonymous>:)(?<r>\d*):(?<c>\d*)/).groups )
+		//const {r,c} = e.stack.match(/(?<=anonymous>:)(?<r>\d*):(?<c>\d*)/).groups,
+		//			line = lines.flat()[r-1]
+		return $`#show`.textContent = `Error: ${e.message}` //\n("${ line.slice(c-1) }" at line ${r})`
+	}
+	try {
+		res = SIM(fcn, {resolution:128}).run(N).stats//,	ms1 = await nextFrame()
+	} catch (e) {
+		console.log(e)
+		//console.log( e.stack )//.match(/(?<=anonymous>:)(?<r>\d*):(?<c>\d*)/).groups )
+		return $`#show`.textContent = `Error: ${e.message}`
+	}
+	console.log(res)
+	$`#show`.innerHTML = `${ (performance.now()-ms0).toFixed(0) } ms`
+	const xMin = Math.min( ...Object.keys(res).map( k => res[k].Q(.05) ) ),
+				xMax = Math.max( ...Object.keys(res).map( k => res[k].Q(.95) ) )
+
+	Object.keys(res).forEach( k => {
+		$`tbody`.appendChild(makeRow(res[k], k))
+		ctx.globalCompositeOperation = 'copy'
+		ctx.drawImage(ctx.canvas, 0, -15)
+		ctx.globalCompositeOperation = 'source-over'
+		plot2D(ctx, res[k], xMin, xMax)
+	})
+}
+
+function nextFrame() {
+	return new Promise(r => requestAnimationFrame(r))
+}
+
+function plot2D(ctx, stat, xMin, xMax) {
+	ctx.save()
+	stat.plotf(ctx, xMin, xMax)
+	ctx.globalCompositeOperation = 'destination-out'
+	ctx.fill()
+	ctx.restore()
+	ctx.stroke()
+}
+</script>
+</body>

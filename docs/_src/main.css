@@ -1,5 +1,56 @@
 @import '../_lib/water-dark2.css';
 
+/* custom elements */
+no-wrap {
+	white-space:nowrap;
+}
+help-text {
+	display:inline-block;
+	width:1.5em;
+	height:1.5em;
+	text-align:center;
+	line-height:1.5em;
+	border-radius:50%;
+	background:lightblue;
+	font-weight:bold;
+	cursor:pointer;
+	position:relative;
+}
+help-text:hover:after,
+help-text:active:after {
+	content:attr(txt);
+	display:block;
+	width:8em;
+	background:#ff9;
+	padding:1rem;
+	box-shadow:0 8px 16px -8px rgb(0 0 0 / 30%);
+	text-align:left;
+	position:absolute;
+	top:2em;
+	left:1em;
+}
+two-col,
+three-col,
+four-col {
+    width:100%;
+    display:flex;
+    gap:2rem;
+    flex-wrap:wrap;
+    margin:1rem 0;
+}
+two-col > * {
+    width:calc((100% - 2rem) / 2);
+    background:#eee; /* optional */
+}
+three-col > * {
+    width:calc((100% - 4rem) / 3);
+    background:#eee; /* optional */
+}
+four-col > * {
+    width:calc((100% - 6rem) / 4);
+    background:#eee; /* optional */
+}
+
 body {
 	max-width: initial;
 }

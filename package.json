@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "schem.ist",
   "scripts": {
-    "build": "cd ./docs & unnode _npm"
+    "dependencies": "cd ./docs & unnode _npm"
   },
   "repository": {
     "type": "git",
@@ -17,19 +17,17 @@
   },
   "homepage": "https://github.com/hville/hville.github.io#readme",
   "dependencies": {
-    "@googlemaps/js-api-loader": "^1.14.1",
     "@hugov/bench": "^1.0.2",
-    "@hugov/correl-range": "^0.4.0",
-    "@hugov/inhtml": "^0.8.0",
-    "@hugov/shorter-string": "^4.0.1",
+    "@hugov/correl-range": "^0.5.0",
+    "@hugov/inhtml": "^0.10.3",
+    "@hugov/shorter-string": "^5.0.0",
     "array-order": "^2.2.0",
-    "codejar": "^3.6.0",
+    "codejar": "^3.7.0",
     "grosso-modo": "^4.3.0",
     "lazy-stats": "^3.1.1",
     "norm-dist": "^3.0.1",
-    "ol": "^6.14.1",
-    "prismjs": "^1.27.0",
-    "sample-distribution": "^1.5.0"
+    "ol": "^7.3.0",
+    "sample-distribution": "^1.6.0"
   },
   "devDependencies": {
     "@hugov/unnode": "^0.0.4"

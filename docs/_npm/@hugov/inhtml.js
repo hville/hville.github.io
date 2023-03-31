@@ -47,9 +47,10 @@ function $$(selector, parent = document) {
   return parent.querySelectorAll(Array.isArray(selector) ? tag.apply(null, arguments) : selector);
 }
 function html(txt) {
-  const T = document.createElement("template");
-  T.innerHTML = Array.isArray(txt) ? tag.apply(null, arguments) : txt;
-  return T.content;
+  return document.createRange().createContextualFragment(Array.isArray(txt) ? tag.apply(null, arguments) : txt);
+}
+function load(path) {
+  return fetch(path).then((res) => res.text().then((txt) => html(txt)));
 }
 function getNode(selection) {
   const node = selection.nodeName ? selection : selection[0] === "<" ? html(selection) : $(selection);
@@ -117,5 +118,6 @@ export {
   frame,
   html,
   list,
+  load,
   tag
 };

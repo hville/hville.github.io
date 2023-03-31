@@ -42,3 +42,53 @@ export default function(code) {
 		keep
 	)
 }
+/*
+
+///159+34+16=209
+({N,L,W,U},   // initiation ran once
+	fixed$ = L(500_000, 650_000, 'demand', 0.5, 'price'),
+	month$ = L(5_000, 7_000, 'demand', 0.5, 'season', 0.5),
+	months = L(6, 9, 'season', 0.5, 'price', -0.5)
+)=>(          // calculations on every iterations
+	total$ = fixed$ + month$ * months
+)=>({         // exported results
+	months,
+	total$
+})
+
+///159+42=201
+({N,L,W,U},   // initiation ran once
+	fixed$ = L(500_000, 650_000, 'demand', 0.5, 'price'),
+	month$ = L(5_000, 7_000, 'demand', 0.5, 'season', 0.5),
+	months = L(6, 9, 'season', 0.5, 'price', -0.5)
+)=>(          // calculations on every iterations
+)=>({         // exported results
+	months,
+	total$: fixed$ + month$ * months
+})
+
+///179+56=235
+({N,L,W,U},   // initiation ran once
+	fixed$ = L(500_000, 650_000, 'demand', 0.5, 'price'),
+	month$ = L(5_000, 7_000, 'demand', 0.5, 'season', 0.5),
+	months = L(6, 9, 'season', 0.5, 'price', -0.5),
+	result = {months}
+)=>(          // calculations on every iterations
+)=>{          // exported results
+	result.total$ = fixed$ + month$ * months
+	return result
+}
+
+//168+56=224
+({N,L,W,U})=>{   // initiation ran once
+const fixed$ = L(500_000, 650_000, 'demand', 0.5, 'price'),
+			month$ = L(5_000, 7_000, 'demand', 0.5, 'season', 0.5),
+			months = L(6, 9, 'season', 0.5, 'price', -0.5)
+return ()=>{          // calculations on every iterations
+	result.total$ = fixed$ + month$ * months
+	return result
+}}
+
+new Function('{N,L,W,U}', A+'return ()=>{'+B+'}')
+
+*/

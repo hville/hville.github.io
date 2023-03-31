@@ -130,7 +130,7 @@ const saveData = hashData( ({data, lang}) => {
 	if (rows.length) tbody.textContent = '' //reset rows
 	if (data) {
 		const itms = data.split('\v') //vertial tab as seperator
-		init.value = itms.shift()
+		init.textContent = itms.shift()
 		itms.forEach( code => { if (code) tbody.append(makeRow(code)) } )
 	}
 	// one last empty line to allow adding new lines
@@ -139,9 +139,9 @@ const saveData = hashData( ({data, lang}) => {
 
 function save() {
 	//TODO might be easier to to all rows and replace last with init
-	const values = [init.value]
+	const values = [init.textContent]
 	//get all rows but the last
-	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.value)
+	for (let i=0; i<rows.length-1; ++i) values.push(rows[i].$ids.code.textContent)
 	saveData( {data: values.join('\v')} )
 }
 editable(init)
