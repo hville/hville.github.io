@@ -31,16 +31,11 @@
 </details>
 
 <pre><code><var>function({N, L, D, U, W, G}, //normal, lognormal, dagum, uniform, weibull, gumbell</var>
-<span id=initA placeholder="//init argument expressions code here patate"></span>
-<var>) {</var>
-<span id=initB placeholder="//init code block here"></span>
-<var>return function(</var>
-<span id=eachA placeholder="//sim argument expressions code here"></span>
-<var>){</var>
-<span id=eachB placeholder="//sim code block here"></span>
-<var>return {</var>
-<span id=stats placeholder="//sim outputs here"></span>
-<var>}}}</var></code></pre>
+<div id=initA placeholder="//init argument expressions code here patate"></div><var>) {</var>
+<div id=initB placeholder="//init code block here"></div><var>return function(</var>
+<div id=eachA placeholder="//sim argument expressions code here"></div><var>){</var>
+<div id=eachB placeholder="//sim code block here"></div><var>return {</var>
+<div id=stats placeholder="//sim outputs here"></div><var>}}}</var></code></pre>
 
 <button id=run1e4>N = 1e4</button>
 <button id=run1e5>N = 1e5</button>
@@ -58,7 +53,7 @@
 <canvas height=300></canvas>
 
 <script type=module>
-import {$, $$, cast} from '/_npm/@hugov/inhtml.js'
+import {$, $$, cast, frame} from '/_npm/@hugov/inhtml.js'
 import hashData from '../_src/hash-data.js'
 import SIM from '/_npm/@hugov/correl-range.js'
 import editable from '../_src/editable.js'
@@ -87,11 +82,11 @@ const onhash = hashData( ({data}) => {if (data.length) {
 }})
 
 //const clearResults = () => $`#show`.textContent = ''
-const onCodeUpdate = () => {
+const oninput = () => {
 	onhash({ data: els.join('\v') }) //.replace(/\n*$/,'')
 	$`tbody`.textContent=''
 }
-els.forEach( el => el.oninput = onCodeUpdate )
+els.forEach( el => el.addEventListener('input', oninput ) )
 
 $('#run1e4').onclick = runSim.bind(null,1e4)
 $('#run1e5').onclick = runSim.bind(null,1e5)

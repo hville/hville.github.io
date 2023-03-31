@@ -1,19 +1,19 @@
 const hasEOL = /\n$/,
 			changed = new WeakSet
 
-const style = document.createElement('style')
-document.head.appendChild(style)
+document.head
+.appendChild(document.createElement('style'))
+.sheet.insertRule(/* css */`[contentEditable][placeholder]:empty::before {
+	content: attr(placeholder);
+	opacity: 0.5;
+}`)
 
 export default function(selection) {
 	const el = selection.nodeName ? selection : document.querySelector(selection)
-	el.contentEditable = true
+	el.setAttribute('contentEditable', 'true')
+	if (el.getAttribute('spellcheck') === null) el.spellcheck = false
 	el.addEventListener('input', oninput)
 	el.addEventListener('blur', onblur)
-	if (el.getAttribute('spellcheck') === null) el.spellcheck = false
-	if (el.id && el.getAttribute('placeholder')) style.sheet.insertRule(/* css */`#${el.id}[placeholder]:empty::before {
-		content: attr(placeholder);
-		opacity: 0.5;
-	}`, 0)
 	el.toString = () => el.textContent
 	return el
 }
