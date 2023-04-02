@@ -252,12 +252,12 @@ var D = class {
   constructor(size = 32) {
     const buffer = size.buffer || (size.byteLength ? size : new ArrayBuffer(size << 4)), offset = size.byteOffset || 0, byteLn = (size.byteLength || buffer.byteLength) >> 1, length = byteLn >> 3;
     Object.defineProperties(this, {
-      vs: { value: new Float64Array(buffer, offset, length) },
-      rs: { value: new Float64Array(buffer, offset + byteLn, length) }
+      vs: { value: new Float64Array(buffer, offset, byteLn >> 2) },
+      rs: { value: new Float64Array(buffer, offset + byteLn, byteLn >> 3) }
     });
   }
   get data() {
-    return new DataView(this.vs.buffer, this.vs.byteOffset, this.vs.byteLength << 1);
+    return this.vs;
   }
   get N() {
     return this.rs[this.rs.length - 1];

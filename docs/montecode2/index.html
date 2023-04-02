@@ -51,12 +51,12 @@
 	</tbody>
 </table>
 <canvas height=300></canvas>
-
 <script type=module>
-import {$, $$, cast, frame} from '/_npm/@hugov/inhtml.js'
+import {$, $$, cast} from '/_npm/@hugov/inhtml.js'
+import Rec from '/_npm/sample-distribution.js'
 import hashData from '../_src/hash-data.js'
-import SIM from '/_npm/@hugov/correl-range.js'
 import editable from '../_src/editable.js'
+import framed from './framed.js'
 
 const els = [ $('#initA'), $('#initB'), $('#eachA'), $('#eachB'), $`#stats` ].map( editable )
 
@@ -95,7 +95,7 @@ $('#run1e6').onclick = runSim.bind(null,1e6)
 const ctx = $('canvas').getContext('2d')
 ctx.strokeStyle = 'silver'
 
-async function runSim(N) {
+const beforeSim = () => {
 	$`#show`.textContent = ''
 	$`tbody`.textContent=''
 	// look up the size the canvas is being displayed
@@ -106,39 +106,8 @@ async function runSim(N) {
 		ctx.strokeStyle = 'silver'
 	}
 	else ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-	const args = `{N, L, D, U, W, G},\n${ els[0].textContent.replace(/\n*$/, '') }`,
-				// ) {
-				body = `${ els[1] }`
-				+ `return function(\n${ els[2] }) {\n`
-				+ `${ els[3] }return {`
-				+ `\n${ els[4] }}}`
-				// }
-	//console.log(args)
-	//console.log(body)
-	await nextFrame()
-	const	ms0 = await nextFrame()
-	let res, fcn
-	//console.log(args)
-	//console.log(body)
-	try {
-		fcn = new Function( args, body )
-		//console.log(fcn)
-	} catch (e) {
-		//console.log(e)
-		//console.log( e.stack )//.match(/(?<=anonymous>:)(?<r>\d*):(?<c>\d*)/).groups )
-		//const {r,c} = e.stack.match(/(?<=anonymous>:)(?<r>\d*):(?<c>\d*)/).groups,
-		//			line = lines.flat()[r-1]
-		return $`#show`.textContent = `Error: ${e.message}` //\n("${ line.slice(c-1) }" at line ${r})`
-	}
-	try {
-		res = SIM(fcn, {resolution:128}).run(N).stats//,	ms1 = await nextFrame()
-	} catch (e) {
-		console.log(e)
-		//console.log( e.stack )//.match(/(?<=anonymous>:)(?<r>\d*):(?<c>\d*)/).groups )
-		return $`#show`.textContent = `Error: ${e.message}`
-	}
-	console.log(res)
-	$`#show`.innerHTML = `${ (performance.now()-ms0).toFixed(0) } ms`
+}
+const afterSim = res => {
 	const xMin = Math.min( ...Object.keys(res).map( k => res[k].Q(.05) ) ),
 				xMax = Math.max( ...Object.keys(res).map( k => res[k].Q(.95) ) )
 
@@ -149,6 +118,26 @@ async function runSim(N) {
 		ctx.globalCompositeOperation = 'source-over'
 		plot2D(ctx, res[k], xMin, xMax)
 	})
+}
+//const inFrame = frame(``, "import SIM from '/_npm/@hugov/correl-range.js'")
+async function runSim(N) {
+	beforeSim()
+	const args = `{N, L, D, U, W, G},\n${ els[0].textContent.replace(/\n*$/, '') }`,
+				// ) {
+				body = `${ els[1] }`
+				+ `return function(\n${ els[2] }) {\n`
+				+ `${ els[3] }return {`
+				+ `\n${ els[4] }}}`
+				// }
+	await nextFrame()
+	const	ms0 = await nextFrame()
+	const res = Object.fromEntries( (await framed( args, body, N )).map( ([n,d]) => [n,new Rec(d)] ) )
+	console.log(res)
+	if (res.message) {
+		return $`#show`.textContent = `Error: ${e.message}` //\n("${ line.slice(c-1) }" at line ${r})`
+	}
+	$`#show`.innerHTML = `${ (performance.now()-ms0).toFixed(0) } ms`
+	afterSim(res)
 }
 
 function nextFrame() {
