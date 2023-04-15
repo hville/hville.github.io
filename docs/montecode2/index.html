@@ -132,7 +132,6 @@ async function runSim(N) {
 	await nextFrame()
 	const	ms0 = await nextFrame()
 	const res = Object.fromEntries( (await framed( args, body, N )).map( ([n,d]) => [n,new Rec(d)] ) )
-	console.log(res)
 	if (res.message) {
 		return $`#show`.textContent = `Error: ${e.message}` //\n("${ line.slice(c-1) }" at line ${r})`
 	}

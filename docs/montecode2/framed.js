@@ -1,7 +1,6 @@
 import {frame} from '../_npm/@hugov/inhtml.js'
 
 export default await frame(/*javascript*/`function(init, body, N) {
-	console.log('inFrame')
 	if(init || body) {
 		try {
 			const fcn = new Function( init, body )

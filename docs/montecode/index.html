@@ -98,7 +98,6 @@ async function runSim(N) {
 				xMax = Math.max( ...Object.keys(res).map( k => res[k].Q(.95) ) )
 
 	Object.keys(res).forEach( k => {
-		console.log(res[k].Q(.09))
 		htm += `${k}  ( ${res[k].Q(.25).toPrecision(3)}  ${res[k].Q(.75).toPrecision(3)} )\n`
 		ctx.globalCompositeOperation = 'copy'
 		ctx.drawImage(ctx.canvas, 0, -15)

@@ -87,7 +87,6 @@ const dohash = hashData( ({lang, data}) => {
 })
 
 regexpEl.oninput = actionEl.oninput = stringEl.oninput = () => {
-	console.log('oninput', regexp, action, string)
 	dohash({data: [regexpEl.textContent, actionEl.textContent, stringEl.textContent].join('\v')})
 }
 

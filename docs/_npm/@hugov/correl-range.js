@@ -274,7 +274,7 @@ var D = class {
     return v < 0 ? 0 : Math.sqrt(v);
   }
   \u03A3(pow) {
-    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), Mm = M - 1, Op = pow + 1;
+    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), Mm = M2 - 1, Op = pow + 1;
     if (pow === 0)
       return rs[Mm];
     if (pow === 1) {
@@ -284,7 +284,7 @@ var D = class {
       return sum2 / Op;
     }
     let sum = vs[0] ** pow;
-    for (let i = 1; i < M; ++i) {
+    for (let i = 1; i < M2; ++i) {
       sum += vs[i] ** pow + (rs[i] - rs[i - 1] - 1) * (vs[i] ** Op - vs[i - 1] ** Op) / (vs[i] - vs[i - 1]) / Op;
     }
     return sum;
@@ -293,19 +293,19 @@ var D = class {
     return this.\u03A3(order) / this.N;
   }
   Q(prob) {
-    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), h = rs[M - 1] * prob + 0.5, j = topIndex(rs, h, M), i = j - 1;
-    return j === 0 ? vs[0] : j === M ? vs[M - 1] : vs[i] + (vs[j] - vs[i]) * (h - rs[i]) / (rs[j] - rs[i]);
+    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), h = rs[M2 - 1] * prob + 0.5, j = topIndex(rs, h, M2), i = j - 1;
+    return j === 0 ? vs[0] : j === M2 ? vs[M2 - 1] : vs[i] + (vs[j] - vs[i]) * (h - rs[i]) / (rs[j] - rs[i]);
   }
   F(x) {
-    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), N = rs[M - 1], j = topIndex(vs, x, M), i = j - 1;
-    return (j === 0 ? 0.5 : j === M ? N - 0.5 : rs[i] - 0.5 + (rs[j] - rs[i]) * (x - vs[i]) / (vs[j] - vs[i])) / N;
+    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), N = rs[M2 - 1], j = topIndex(vs, x, M2), i = j - 1;
+    return (j === 0 ? 0.5 : j === M2 ? N - 0.5 : rs[i] - 0.5 + (rs[j] - rs[i]) * (x - vs[i]) / (vs[j] - vs[i])) / N;
   }
   f(x) {
-    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), N = rs[M - 1];
-    if (x === vs[0] || x === vs[M - 1])
+    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), N = rs[M2 - 1];
+    if (x === vs[0] || x === vs[M2 - 1])
       return 0.5 / N;
-    const j = topIndex(vs, x, M);
-    return j === 0 || j === M ? 0 : (rs[j] - rs[j - 1]) / (vs[j] - vs[j - 1]) / N;
+    const j = topIndex(vs, x, M2);
+    return j === 0 || j === M2 ? 0 : (rs[j] - rs[j - 1]) / (vs[j] - vs[j - 1]) / N;
   }
   plotF(ctx, vMin = this.vs[0], vMax = this.vs[this.rs.length - 1]) {
     const rs = this.rs, vs = this.vs, xScale = (ctx.canvas.width - 1) / (vMax - vMin), yScale = (ctx.canvas.height - 1) / rs[rs.length - 1], H = ctx.canvas.height, getX = (v) => 0.5 + Math.round((v - vMin) * xScale), getY = (r) => H - 0.5 - Math.round(r * yScale);
@@ -331,18 +331,18 @@ var D = class {
     ctx.lineTo(getX(Math.max(vs[rs.length - 1], vMax)), H - 0.5);
   }
   push(x) {
-    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]);
-    let j = topIndex(this.vs, x, M);
-    if (M < rs.length) {
-      for (let ir = M; ir > j; --ir) {
+    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]);
+    let j = topIndex(this.vs, x, M2);
+    if (M2 < rs.length) {
+      for (let ir = M2; ir > j; --ir) {
         rs[ir] = ir + 1;
         vs[ir] = vs[ir - 1];
       }
       rs[j] = j ? rs[j - 1] + 1 : 1;
       vs[j] = x;
-      if (M !== rs.length - 1)
+      if (M2 !== rs.length - 1)
         ++rs[rs.length - 1];
-    } else if (j === M) {
+    } else if (j === M2) {
       --j;
       const i = j - 1, h = i - 1, \u0394wv = vs[j] - vs[i], \u0394xu = x - vs[h], rjh = rs[i] * (vs[j] - vs[h]);
       if (\u0394xu !== 0) {
@@ -368,7 +368,7 @@ var D = class {
       }
       for (let ir = 2; ir < rs.length; ++ir)
         ++rs[ir];
-    } else if (j !== 1 && (j === M - 1 || 2 * x < vs[j + 1] + vs[j - 2])) {
+    } else if (j !== 1 && (j === M2 - 1 || 2 * x < vs[j + 1] + vs[j - 2])) {
       --j;
       let k = j + 1, i = j - 1;
       const w = vs[k], v = vs[j], \u0394wu = w - vs[i];
@@ -414,45 +414,55 @@ function topIndex(arr, v, max) {
 
 // ../node_modules/lazy-stats/index.js
 var LazyStats = class {
-  constructor(dim = 1) {
-    this.dim = dim;
-    this.N = 0;
-    this._mi = Array(dim);
-    this._mij = Array(dim);
-    this.reset();
+  constructor(memory = 1) {
+    const buffer = memory.buffer || (memory.byteLength ? M : new ArrayBuffer(4 * (memory + 1) * (memory + 2)));
+    let offset = memory.byteOffset || 0;
+    this.M = Math.floor((Math.sqrt((memory.byteLength || buffer.byteLength) + 1) - 3) / 2);
+    Object.defineProperties(this, {
+      _mi: { value: new Float64Array(buffer, offset, (this.M + 1) * (this.M + 2) / 2) },
+      _mij: { value: Array(this.M) }
+    });
+    offset += 8 * this.M;
+    for (let i = 0; i < this.M; ++i) {
+      this._mij[i] = new Float64Array(buffer, offset, i + 1);
+      offset += this._mij[i].byteLength;
+    }
+  }
+  get N() {
+    return this._mi[this._mi.length - 1];
+  }
+  set N(count) {
+    return this._mi[this._mi.length - 1] = count;
   }
   reset() {
-    for (let i = 0; i < this.dim; ++i) {
-      this._mi[i] = 0;
-      this._mij[i] = [];
-      for (let j = 0; j <= i; ++j) {
-        this._mij[i][j] = 0;
-      }
-    }
+    this._mi.fill(0);
     return this;
+  }
+  get data() {
+    return this._mi;
   }
   push(values) {
     const args = Array.isArray(values) ? values : arguments;
-    if (args.length !== this.dim)
-      throw Error(`Expected ${this.dim} value(s)`);
-    const delta = [];
-    this.N++;
-    for (let i = 0; i < this.dim; ++i) {
-      delta[i] = (args[i] - this._mi[i]) / this.N;
+    if (args.length !== this.M)
+      throw Error(`Expected ${this.M} value(s)`);
+    const delta = [], N = ++this.N;
+    for (let i = 0; i < this.M; ++i) {
+      delta[i] = (args[i] - this._mi[i]) / N;
       this._mi[i] += delta[i];
       for (let j = 0; j <= i; ++j) {
-        this._mij[i][j] += (this.N - 1) * delta[i] * delta[j] - this._mij[i][j] / this.N;
+        this._mij[i][j] += (N - 1) * delta[i] * delta[j] - this._mij[i][j] / N;
       }
     }
-    return this.N;
+    return N;
   }
   ave(a = 0) {
     return this._mi[a];
   }
   cov(a, b) {
-    if (this.N < 2)
+    const N = this.N;
+    if (N < 2)
       return NaN;
-    return this.N / (this.N - 1) * (a < b ? this._mij[b][a] : this._mij[a][b]);
+    return N / (N - 1) * (a < b ? this._mij[b][a] : this._mij[a][b]);
   }
   var(a = 0) {
     return this.cov(a, a);
@@ -462,6 +472,12 @@ var LazyStats = class {
   }
   cor(a, b) {
     return this.cov(a, b) / Math.sqrt(this.cov(a, a) * this.cov(b, b));
+  }
+  slope(y, x) {
+    return this.cov(y, x) / this.cov(x, x);
+  }
+  intercept(y, x) {
+    return this.ave(y) - this.slope(y, x) * this.ave(x);
   }
 };
 

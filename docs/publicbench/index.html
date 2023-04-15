@@ -98,12 +98,10 @@ const init = $('#init'),
 const makeRow = cast('template', ({row, code, time}, codeVal='') => {
 	editable(code).textContent = codeVal
 	time.update = res => time.textContent = !res ? '' : res.map( v => v.toPrecision(3) ).join('  ')
-	code.oninput = () => console.log('patate')
 	code.onchange = () => {
 		time.textContent = ''
 		if (!code.textContent) row.remove()
 		else if (!row.nextSibling) row.after(makeRow())
-		console.log(code)
 		save()
 	}
 	row.$ids = {code, time}
