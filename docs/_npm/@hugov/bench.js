@@ -1,5 +1,5 @@
-// ../node_modules/@hugov/bench/browser.js
-async function browser_default(tests, POOL_MS = getMinMS() * 50, Q1_PAD = 3) {
+// ../node_modules/@hugov/bench/index.js
+async function bench_default(tests, POOL_MS = getMinMS() * 50, Q1_PAD = 3) {
   const testNames = Object.keys(tests), POOLQTY = 4 * Q1_PAD + 1, testdata = {};
   for (const k of testNames) {
     const sample_ = tests[k]();
@@ -37,7 +37,7 @@ async function run(data, POOL_MS) {
     else if (ms > 0) {
       data.means.push(1e3 * data.pool / ms);
       data.pool = Math.ceil(data.pool * POOL_MS / ms);
-    } else if (data.pool *= 2 >= Number.MAX_SAFE_INTEGER)
+    } else if ((data.pool *= 2) >= Number.MAX_SAFE_INTEGER)
       data.error = "test function too fast";
     else
       run(data, POOL_MS);
@@ -63,5 +63,5 @@ async function get_ms_async(fcn, n, type) {
   return performance.now() - t0;
 }
 export {
-  browser_default as default
+  bench_default as default
 };

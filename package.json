@@ -17,17 +17,17 @@
   },
   "homepage": "https://github.com/hville/hville.github.io#readme",
   "dependencies": {
-    "@hugov/bench": "^1.1.0",
-    "@hugov/correl-range": "^0.5.0",
-    "@hugov/inhtml": "^0.10.3",
+    "@hugov/bench": "^1.2.0",
+    "@hugov/correl-range": "^0.11.0",
+    "@hugov/inhtml": "^1.0.0",
     "@hugov/shorter-string": "^5.0.0",
     "array-order": "^2.2.0",
     "codejar": "^3.7.0",
     "grosso-modo": "^4.3.0",
-    "lazy-stats": "^4.0.0",
+    "lazy-stats": "^4.3.0",
     "norm-dist": "^3.0.1",
     "ol": "^7.3.0",
-    "sample-distribution": "^1.7.0"
+    "sample-distribution": "^1.7.1"
   },
   "devDependencies": {
     "@hugov/unnode": "^0.0.4"

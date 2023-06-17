@@ -149,7 +149,7 @@ var RandomNumber = class {
     while (i < m) {
       ks[ks.length] = riskIndex(risks, links[i++]);
       const w = links[i++];
-      \u0394 -= (ws[ws.length] = w < 1 ? w : 100 * w) ** 2;
+      \u0394 -= (ws[ws.length] = w) ** 2;
       if (\u0394 < -Number.EPSILON)
         throw Error("sum of squared weights > 1");
     }
@@ -165,96 +165,11 @@ function riskIndex(risks, itm) {
   return idx !== -1 ? idx : risks.push(itm ?? "") - 1;
 }
 
-// ../node_modules/@hugov/correl-range/src/utils.js
-function fillZ(arr) {
-  for (let i = 0; i < arr.length; ++i)
-    arr[i] = icdf_voutier_default((i + 0.5) / arr.length);
-  return arr;
-}
-
-// ../node_modules/array-order/swap.js
-function swap_default(a, i, j) {
-  if (i !== j) {
-    let t = a[i];
-    a[i] = a[j];
-    a[j] = t;
-  }
-  return a;
-}
-
-// ../node_modules/array-order/permute.js
-function permute_default(a, n = a.length) {
-  const c = new Uint16Array(n);
-  let i = 0;
-  while (i < n)
-    c[i++] = 0;
-  return function() {
-    i = 0;
-    while (c[i] >= i) {
-      c[i] = 0;
-      if (++i === n) {
-        if (!(n & 1)) {
-          swap_default(a, 0, n - 2);
-          left(a, 1, n - 2);
-        }
-        swap_default(a, 0, n - 1);
-        return a;
-      }
-    }
-    swap_default(a, i, i & 1 ? c[i] : 0);
-    ++c[i];
-    return a;
-  };
-}
-function left(a, i = 0, j = a.length - 1) {
-  if (j > i) {
-    const t = a[i];
-    while (i < j)
-      a[i] = a[++i];
-    a[j] = t;
-  }
-}
-
-// ../node_modules/array-order/shuffle.js
-function shuffle_default(src, tgt) {
-  if (tgt) {
-    tgt[0] = src[0];
-    for (let j = 1; j < src.length; ++j) {
-      let i = Math.floor(Math.random() * (j + 1));
-      if (i !== j)
-        tgt[j] = tgt[i];
-      tgt[i] = src[j];
-    }
-    return tgt;
-  }
-  let n = src.length;
-  while (n)
-    swap_default(src, Math.floor(Math.random() * n), --n);
-  return src;
-}
-
-// ../node_modules/@hugov/correl-range/samplers.js
-function random(dim) {
-  const zs = dim.length ? dim : new Float64Array(dim);
-  return function() {
-    for (let i = 0; i < zs.length; ++i)
-      zs[i] = icdf_voutier_default(Math.random());
-    return zs;
-  };
-}
-function permute(dim) {
-  const zs = dim.length ? dim : shuffle_default(fillZ(Array(dim)));
-  return permute_default(zs);
-}
-
 // ../node_modules/sample-distribution/index.js
 var D = class {
   constructor(size = 32) {
-    const buffer = size.buffer || (size.byteLength ? size : new ArrayBuffer(size << 4)), offset = size.byteOffset || 0, byteLn = (size.byteLength || buffer.byteLength) >> 1, length = byteLn >> 3;
-    Object.defineProperties(this, {
-      vs: { value: new Float64Array(buffer, offset, byteLn >> 2) },
-      rs: { value: new Float64Array(buffer, offset + byteLn, byteLn >> 3) }
-    });
+    const vs = size.buffer ? new Float64Array(size.buffer, size.byteOffset, size.length) : new Float64Array(size * 2), rs = new Float64Array(vs.buffer, vs.byteOffset + (vs.byteLength >> 1), vs.length >> 1);
+    Object.defineProperties(this, { vs: { value: vs }, rs: { value: rs } });
   }
   get data() {
     return this.vs;
@@ -274,7 +189,7 @@ var D = class {
     return v < 0 ? 0 : Math.sqrt(v);
   }
   \u03A3(pow) {
-    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), Mm = M2 - 1, Op = pow + 1;
+    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), Mm = M - 1, Op = pow + 1;
     if (pow === 0)
       return rs[Mm];
     if (pow === 1) {
@@ -284,7 +199,7 @@ var D = class {
       return sum2 / Op;
     }
     let sum = vs[0] ** pow;
-    for (let i = 1; i < M2; ++i) {
+    for (let i = 1; i < M; ++i) {
       sum += vs[i] ** pow + (rs[i] - rs[i - 1] - 1) * (vs[i] ** Op - vs[i - 1] ** Op) / (vs[i] - vs[i - 1]) / Op;
     }
     return sum;
@@ -293,19 +208,19 @@ var D = class {
     return this.\u03A3(order) / this.N;
   }
   Q(prob) {
-    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), h = rs[M2 - 1] * prob + 0.5, j = topIndex(rs, h, M2), i = j - 1;
-    return j === 0 ? vs[0] : j === M2 ? vs[M2 - 1] : vs[i] + (vs[j] - vs[i]) * (h - rs[i]) / (rs[j] - rs[i]);
+    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), h = rs[M - 1] * prob + 0.5, j = topIndex(rs, h, M), i = j - 1;
+    return j === 0 ? vs[0] : j === M ? vs[M - 1] : vs[i] + (vs[j] - vs[i]) * (h - rs[i]) / (rs[j] - rs[i]);
   }
   F(x) {
-    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), N = rs[M2 - 1], j = topIndex(vs, x, M2), i = j - 1;
-    return (j === 0 ? 0.5 : j === M2 ? N - 0.5 : rs[i] - 0.5 + (rs[j] - rs[i]) * (x - vs[i]) / (vs[j] - vs[i])) / N;
+    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), N = rs[M - 1], j = topIndex(vs, x, M), i = j - 1;
+    return (j === 0 ? 0.5 : j === M ? N - 0.5 : rs[i] - 0.5 + (rs[j] - rs[i]) * (x - vs[i]) / (vs[j] - vs[i])) / N;
   }
   f(x) {
-    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]), N = rs[M2 - 1];
-    if (x === vs[0] || x === vs[M2 - 1])
+    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), N = rs[M - 1];
+    if (x === vs[0] || x === vs[M - 1])
       return 0.5 / N;
-    const j = topIndex(vs, x, M2);
-    return j === 0 || j === M2 ? 0 : (rs[j] - rs[j - 1]) / (vs[j] - vs[j - 1]) / N;
+    const j = topIndex(vs, x, M);
+    return j === 0 || j === M ? 0 : (rs[j] - rs[j - 1]) / (vs[j] - vs[j - 1]) / N;
   }
   plotF(ctx, vMin = this.vs[0], vMax = this.vs[this.rs.length - 1]) {
     const rs = this.rs, vs = this.vs, xScale = (ctx.canvas.width - 1) / (vMax - vMin), yScale = (ctx.canvas.height - 1) / rs[rs.length - 1], H = ctx.canvas.height, getX = (v) => 0.5 + Math.round((v - vMin) * xScale), getY = (r) => H - 0.5 - Math.round(r * yScale);
@@ -331,18 +246,18 @@ var D = class {
     ctx.lineTo(getX(Math.max(vs[rs.length - 1], vMax)), H - 0.5);
   }
   push(x) {
-    const vs = this.vs, rs = this.rs, M2 = Math.min(rs.length, rs[rs.length - 1]);
-    let j = topIndex(this.vs, x, M2);
-    if (M2 < rs.length) {
-      for (let ir = M2; ir > j; --ir) {
+    const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]);
+    let j = topIndex(this.vs, x, M);
+    if (M < rs.length) {
+      for (let ir = M; ir > j; --ir) {
         rs[ir] = ir + 1;
         vs[ir] = vs[ir - 1];
       }
       rs[j] = j ? rs[j - 1] + 1 : 1;
       vs[j] = x;
-      if (M2 !== rs.length - 1)
+      if (M !== rs.length - 1)
         ++rs[rs.length - 1];
-    } else if (j === M2) {
+    } else if (j === M) {
       --j;
       const i = j - 1, h = i - 1, \u0394wv = vs[j] - vs[i], \u0394xu = x - vs[h], rjh = rs[i] * (vs[j] - vs[h]);
       if (\u0394xu !== 0) {
@@ -368,7 +283,7 @@ var D = class {
       }
       for (let ir = 2; ir < rs.length; ++ir)
         ++rs[ir];
-    } else if (j !== 1 && (j === M2 - 1 || 2 * x < vs[j + 1] + vs[j - 2])) {
+    } else if (j !== 1 && (j === M - 1 || 2 * x < vs[j + 1] + vs[j - 2])) {
       --j;
       let k = j + 1, i = j - 1;
       const w = vs[k], v = vs[j], \u0394wu = w - vs[i];
@@ -412,21 +327,24 @@ function topIndex(arr, v, max) {
   return max;
 }
 
+// ../node_modules/@hugov/byte-views/byte-views.js
+function byte_views_default({ buffer, constructor, byteLength, byteOffset }, View = constructor, length) {
+  return new View(buffer ?? arguments[0], buffer ? byteOffset + byteLength : 0, length);
+}
+
 // ../node_modules/lazy-stats/index.js
 var LazyStats = class {
-  constructor(memory = 1) {
-    const buffer = memory.buffer || (memory.byteLength ? M : new ArrayBuffer(4 * (memory + 1) * (memory + 2)));
-    let offset = memory.byteOffset || 0;
-    this.M = Math.floor((Math.sqrt((memory.byteLength || buffer.byteLength) + 1) - 3) / 2);
+  constructor(size = 1) {
+    this.M = size.buffer ? Math.floor((Math.sqrt(size.byteLength + 1) - 3) / 2) : size;
+    const N = (this.M + 1) * (this.M + 2) / 2;
+    const memory = size.buffer ? new Float64Array(size.buffer, size.offset, N) : new Float64Array(N);
     Object.defineProperties(this, {
-      _mi: { value: new Float64Array(buffer, offset, (this.M + 1) * (this.M + 2) / 2) },
+      _mi: { value: memory },
       _mij: { value: Array(this.M) }
     });
-    offset += 8 * this.M;
-    for (let i = 0; i < this.M; ++i) {
-      this._mij[i] = new Float64Array(buffer, offset, i + 1);
-      offset += this._mij[i].byteLength;
-    }
+    this._mij[0] = new Float64Array(memory.buffer, memory.byteOffset + memory.BYTES_PER_ELEMENT * this.M, 1);
+    for (let i = 1; i < this.M; ++i)
+      this._mij[i] = byte_views_default(this._mij[i - 1], Float64Array, i + 1);
   }
   get N() {
     return this._mi[this._mi.length - 1];
@@ -447,7 +365,7 @@ var LazyStats = class {
       throw Error(`Expected ${this.M} value(s)`);
     const delta = [], N = ++this.N;
     for (let i = 0; i < this.M; ++i) {
-      delta[i] = (args[i] - this._mi[i]) / N;
+      delta[i] = (+args[i] - this._mi[i]) / N;
       this._mi[i] += delta[i];
       for (let j = 0; j <= i; ++j) {
         this._mij[i][j] += (N - 1) * delta[i] * delta[j] - this._mij[i][j] / N;
@@ -481,33 +399,66 @@ var LazyStats = class {
   }
 };
 
+// ../node_modules/@hugov/correl-range/src/_stats.js
+var Stats = class {
+  static bufferOf(instance) {
+    return instance[Symbol.for("buffer")];
+  }
+  static momentsOf(instance) {
+    return instance[Symbol.for("moments")];
+  }
+  constructor(names, resolution) {
+    const dim = names.length, lazyLength = (dim + 1) * (dim + 2) / 2, indexOf = Object.fromEntries(names.map((n, i) => [n, i])), buffer = resolution instanceof ArrayBuffer ? resolution : new ArrayBuffer((lazyLength + dim * resolution * 2) * 64), res2 = Math.floor((buffer.byteLength / 64 - lazyLength) / dim);
+    let view = byte_views_default(buffer, Float64Array, lazyLength);
+    const moments = new LazyStats(view);
+    for (let i = 0; i < dim; ++i) {
+      view = byte_views_default(view, Float64Array, res2);
+      const stat = this[names[i]] = new D(view);
+      stat.ave = () => moments.ave(i);
+      stat.dev = () => moments.dev(i);
+      stat.var = () => moments.var(i);
+      stat.cov = (b) => moments.cov(i, indexOf[b]);
+      stat.cor = (b) => moments.cor(i, indexOf[b]);
+      stat.slope = (b) => moments.slope(i, indexOf[b]);
+      stat.intercept = (b) => moments.intercept(i, indexOf[b]);
+    }
+    this[Symbol.for("buffer")] = buffer;
+    this[Symbol.for("moments")] = moments;
+  }
+  push(sample) {
+    this[Symbol.for("moments")].push(Object.values(sample));
+    for (const n of Object.keys(this))
+      this[n].push(sample[n]);
+    return this;
+  }
+};
+
 // ../node_modules/@hugov/correl-range/src/_sim.js
+function random(dim) {
+  const zs = dim.length ? dim : new Float64Array(dim);
+  return function() {
+    for (let i = 0; i < zs.length; ++i)
+      zs[i] = icdf_voutier_default(Math.random());
+    return zs;
+  };
+}
 var Sim = class {
   constructor(rndNs, risks, model, resolution) {
-    const point = model();
+    const point = model(), names = Object.keys(point);
+    this.names = names;
     this.risks = risks;
     this.rndNs = rndNs;
     this.model = model;
-    const names = this.names = Object.keys(point);
-    this._moments = new LazyStats(names.length);
-    this.stats = {};
-    for (let i = 0; i < this.names.length; ++i) {
-      const stat = this.stats[names[i]] = new D(resolution);
-      stat.ave = () => this._moments.ave(i);
-      stat.dev = () => this._moments.dev(i);
-      stat.var = () => this._moments.var(i);
-      stat.cov = (name) => this._moments.cov(i, names.indexOf(name));
-      stat.cor = (name) => this._moments.cor(i, names.indexOf(name));
-    }
+    this.stats = new Stats(names, resolution);
     this.one = Function("zs", `for (const rn of this.rndNs) rn.update(zs);const o=this.model();${names.filter((n) => typeof point[n] !== "number").map((n) => `o['${n}']=o['${n}'].value`).join(";")};return o`);
-    this.run = Function("random", "N=25000", "sampler=random(this.risks.length)", "dim", `const stats = this.stats;
+    this.run = Function("random", "moments", "N=25000", "sampler=random(this.risks.length)", "dim", `const stats = this.stats;
 			for (let i=0; i<N; ++i) {
 				const zs = sampler();
 				for (const rn of this.rndNs) rn.update(zs);
 				const o=this.model();
-				this._moments.push(${names.map((n, i) => typeof point[n] === "number" ? `o['${n}']` : `o['${n}'].value`).join(",")});${names.map((n) => typeof point[n] === "number" ? `stats['${n}'].push(o['${n}'])` : `stats['${n}'].push(o['${n}'].value)`).join(";")}
+				moments.push(${this.names.map((n, i) => typeof point[n] === "number" ? `o['${n}']` : `o['${n}'].value`).join(",")});${this.names.map((n) => typeof point[n] === "number" ? `stats['${n}'].push(o['${n}'])` : `stats['${n}'].push(o['${n}'].value)`).join(";")}
 			}
-			return this`).bind(this, random);
+			return this`).bind(this, random, Stats.momentsOf(this.stats));
   }
   all(iterations, sampler = random(this.risks.length)) {
     const TypedArray = Float32Array, BYTES_PER_SET = TypedArray.BYTES_PER_ELEMENT * this.names.length, buffer = typeof iterations === "number" ? new ArrayBuffer(BYTES_PER_SET * iterations) : iterations.buffer || iterations;
@@ -527,53 +478,8 @@ var Sim = class {
     }
     return results;
   }
-  oat() {
-    const zs = new Float64Array(this.risks.length), z = 0.67448, dyzs = {}, data0 = this.one(zs);
-    for (const n of this.names)
-      dyzs[n] = [];
-    for (let i = 0; i < this.risks.length; ++i) {
-      zs[i] = z;
-      for (const [n, v] of Object.entries(this.one(zs)))
-        dyzs[n][i] = [+v, 0];
-      zs[i] = -z;
-      for (const [n, v] of Object.entries(this.one(zs))) {
-        const dyp = dyzs[n][i][0] - data0[n], dym = data0[n] - v;
-        dyzs[n][i][0] = (dyp + dym) / z / 2;
-        dyzs[n][i][1] = (Math.abs(dyp) + Math.abs(dym)) / z / 2;
-      }
-      zs[i] = 0;
-    }
-    return dyzs;
-  }
-  ee(hp = 2) {
-    const p = 2 * hp, ps = fillZ(Array(p)), \u0394a = ps[hp] - ps[0], k = this.risks.length, zs = Array(k + p - k % p).fill(0), r = Math.min(Math.floor(p ** k / (k + 1)), 60), ee = {};
-    for (let i = 0; i < zs.length; ++i)
-      zs[i] = ps[i % p];
-    const sampler = permute(shuffle_default(zs));
-    for (const n of this.names)
-      ee[n] = this.risks.map(() => [0, 0]);
-    for (let i = 0; i < r; ++i) {
-      let point0 = this.one(sampler());
-      for (let j = 0; j < k; ++j) {
-        const \u0394 = zs[j] < 0.5 ? \u0394a : -\u0394a;
-        zs[j] += \u0394;
-        let point1 = this.one(zs);
-        for (const n of this.names) {
-          const dy = (point1[n] - point0[n]) / \u0394;
-          ee[n][j][0] += dy;
-          ee[n][j][1] += Math.abs(dy);
-        }
-        point0 = point1;
-      }
-      for (let j = k; j < zs.length; ++j)
-        zs[j] += zs[j] < 0.5 ? \u0394a : -\u0394a;
-    }
-    for (const n of this.names)
-      for (const sum of ee[n]) {
-        sum[0] /= r;
-        sum[1] /= r;
-      }
-    return ee;
+  get buffer() {
+    return Stats.bufferOf(this.stats);
   }
 };
 
@@ -593,5 +499,6 @@ function sim_default(factory, { confidence = 0.5, resolution = 128 } = {}) {
   return new Sim(rndNs, risks, model, resolution);
 }
 export {
+  Stats,
   sim_default as default
 };

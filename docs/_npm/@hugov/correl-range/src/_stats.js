@@ -159,6 +159,112 @@ function topIndex(arr, v, max) {
   }
   return max;
 }
+
+// ../node_modules/@hugov/byte-views/byte-views.js
+function byte_views_default({ buffer, constructor, byteLength, byteOffset }, View = constructor, length) {
+  return new View(buffer ?? arguments[0], buffer ? byteOffset + byteLength : 0, length);
+}
+
+// ../node_modules/lazy-stats/index.js
+var LazyStats = class {
+  constructor(size = 1) {
+    this.M = size.buffer ? Math.floor((Math.sqrt(size.byteLength + 1) - 3) / 2) : size;
+    const N = (this.M + 1) * (this.M + 2) / 2;
+    const memory = size.buffer ? new Float64Array(size.buffer, size.offset, N) : new Float64Array(N);
+    Object.defineProperties(this, {
+      _mi: { value: memory },
+      _mij: { value: Array(this.M) }
+    });
+    this._mij[0] = new Float64Array(memory.buffer, memory.byteOffset + memory.BYTES_PER_ELEMENT * this.M, 1);
+    for (let i = 1; i < this.M; ++i)
+      this._mij[i] = byte_views_default(this._mij[i - 1], Float64Array, i + 1);
+  }
+  get N() {
+    return this._mi[this._mi.length - 1];
+  }
+  set N(count) {
+    return this._mi[this._mi.length - 1] = count;
+  }
+  reset() {
+    this._mi.fill(0);
+    return this;
+  }
+  get data() {
+    return this._mi;
+  }
+  push(values) {
+    const args = Array.isArray(values) ? values : arguments;
+    if (args.length !== this.M)
+      throw Error(`Expected ${this.M} value(s)`);
+    const delta = [], N = ++this.N;
+    for (let i = 0; i < this.M; ++i) {
+      delta[i] = (+args[i] - this._mi[i]) / N;
+      this._mi[i] += delta[i];
+      for (let j = 0; j <= i; ++j) {
+        this._mij[i][j] += (N - 1) * delta[i] * delta[j] - this._mij[i][j] / N;
+      }
+    }
+    return N;
+  }
+  ave(a = 0) {
+    return this._mi[a];
+  }
+  cov(a, b) {
+    const N = this.N;
+    if (N < 2)
+      return NaN;
+    return N / (N - 1) * (a < b ? this._mij[b][a] : this._mij[a][b]);
+  }
+  var(a = 0) {
+    return this.cov(a, a);
+  }
+  dev(a = 0) {
+    return Math.sqrt(this.cov(a, a));
+  }
+  cor(a, b) {
+    return this.cov(a, b) / Math.sqrt(this.cov(a, a) * this.cov(b, b));
+  }
+  slope(y, x) {
+    return this.cov(y, x) / this.cov(x, x);
+  }
+  intercept(y, x) {
+    return this.ave(y) - this.slope(y, x) * this.ave(x);
+  }
+};
+
+// ../node_modules/@hugov/correl-range/src/_stats.js
+var Stats = class {
+  static bufferOf(instance) {
+    return instance[Symbol.for("buffer")];
+  }
+  static momentsOf(instance) {
+    return instance[Symbol.for("moments")];
+  }
+  constructor(names, resolution) {
+    const dim = names.length, lazyLength = (dim + 1) * (dim + 2) / 2, indexOf = Object.fromEntries(names.map((n, i) => [n, i])), buffer = resolution instanceof ArrayBuffer ? resolution : new ArrayBuffer((lazyLength + dim * resolution * 2) * 64), res2 = Math.floor((buffer.byteLength / 64 - lazyLength) / dim);
+    let view = byte_views_default(buffer, Float64Array, lazyLength);
+    const moments = new LazyStats(view);
+    for (let i = 0; i < dim; ++i) {
+      view = byte_views_default(view, Float64Array, res2);
+      const stat = this[names[i]] = new D(view);
+      stat.ave = () => moments.ave(i);
+      stat.dev = () => moments.dev(i);
+      stat.var = () => moments.var(i);
+      stat.cov = (b) => moments.cov(i, indexOf[b]);
+      stat.cor = (b) => moments.cor(i, indexOf[b]);
+      stat.slope = (b) => moments.slope(i, indexOf[b]);
+      stat.intercept = (b) => moments.intercept(i, indexOf[b]);
+    }
+    this[Symbol.for("buffer")] = buffer;
+    this[Symbol.for("moments")] = moments;
+  }
+  push(sample) {
+    this[Symbol.for("moments")].push(Object.values(sample));
+    for (const n of Object.keys(this))
+      this[n].push(sample[n]);
+    return this;
+  }
+};
 export {
-  D as default
+  Stats as default
 };

@@ -45,6 +45,7 @@ const dohash = hashData( ({lang, code}) => {
 	else expEl.value = code
 	rootEl.textContent = '...'
 	try {
+		//TODO in Frame + limit time for infinite loop (eg cos(x)+1)
 		const f = Function('x', `return ${code.replace(/[a-zA-Z$_][a-zA-Z$_0-9]*/, replacer)}`)
 		rootEl.textContent = typeof f(0) === 'number' ? solve(f).toPrecision(8) : '...'
 	} catch {

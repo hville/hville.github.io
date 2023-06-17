@@ -56,7 +56,8 @@ import {$, $$, cast} from '/_npm/@hugov/inhtml.js'
 import Rec from '/_npm/sample-distribution.js'
 import hashData from '../_src/hash-data.js'
 import editable from '../_src/editable.js'
-import framed from './framed.js'
+import {frame} from '../_npm/@hugov/inhtml.js'
+import Stats from '../_npm/@hugov/correl-range/src/_stats.js'
 
 const els = [ $('#initA'), $('#initB'), $('#eachA'), $('#eachB'), $`#stats` ].map( editable )
 
@@ -107,36 +108,39 @@ const beforeSim = () => {
 	}
 	else ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 }
-const afterSim = res => {
-	const xMin = Math.min( ...Object.keys(res).map( k => res[k].Q(.05) ) ),
-				xMax = Math.max( ...Object.keys(res).map( k => res[k].Q(.95) ) )
+const afterSim = stats => {
+	const xMin = Math.min( ...Object.keys(stats).map( k => stats[k].Q(.05) ) ),
+				xMax = Math.max( ...Object.keys(stats).map( k => stats[k].Q(.95) ) )
 
-	Object.keys(res).forEach( k => {
-		$`tbody`.appendChild(makeRow(res[k], k))
+	Object.keys(stats).forEach( k => {
+		$`tbody`.appendChild(makeRow(stats[k], k))
 		ctx.globalCompositeOperation = 'copy'
 		ctx.drawImage(ctx.canvas, 0, -15)
 		ctx.globalCompositeOperation = 'source-over'
-		plot2D(ctx, res[k], xMin, xMax)
+		plot2D(ctx, stats[k], xMin, xMax)
 	})
 }
-//const inFrame = frame(``, "import SIM from '/_npm/@hugov/correl-range.js'")
+
 async function runSim(N) {
 	beforeSim()
-	const args = `{N, L, D, U, W, G},\n${ els[0].textContent.replace(/\n*$/, '') }`,
-				// ) {
-				body = `${ els[1] }`
-				+ `return function(\n${ els[2] }) {\n`
-				+ `${ els[3] }return {`
-				+ `\n${ els[4] }}}`
-				// }
-	await nextFrame()
+	const simCode = `function({N, L, D, U, W, G},\n${ els[0].textContent
+	}\n){\n${ els[1]
+	};\nreturn function(\n${ els[2]
+	}\n){\n${ els[3]
+	};\nreturn {\n${ els[4]
+	}}}}`
+	const context = `import SIM from '../_npm/@hugov/correl-range.js';const sim=SIM(${ simCode }, {resolution:128});`
+	const framedFunction = `function(N) {const res = sim.run(N);return {names: res.names, buffer: res.buffer}}`
 	const	ms0 = await nextFrame()
-	const res = Object.fromEntries( (await framed( args, body, N )).map( ([n,d]) => [n,new Rec(d)] ) )
-	if (res.message) {
-		return $`#show`.textContent = `Error: ${e.message}` //\n("${ line.slice(c-1) }" at line ${r})`
-	}
-	$`#show`.innerHTML = `${ (performance.now()-ms0).toFixed(0) } ms`
-	afterSim(res)
+
+	frame( framedFunction, { context, transfer2: ({buffer}) => [buffer]})(N)
+	.then( xfer => {
+		const stats = new Stats(xfer.names, xfer.buffer) ////TODO [sim.names, sim.data]
+		console.log( stats )
+		$`#show`.innerHTML = `${ (performance.now()-ms0).toFixed(0) } ms`
+		afterSim(stats)
+	})
+	.catch( e => {console.log(e); $`#show`.textContent = `Error: ${e.message}`} ) //\n("${ line.slice(c-1) }" at line ${r})`
 }
 
 function nextFrame() {

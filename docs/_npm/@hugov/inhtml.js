@@ -1,38 +1,3 @@
-// ../node_modules/@hugov/inhtml/in-frame.js
-var ISMOD = /^[\s]*import[\s'"`*{;]/;
-function frame(code, init = "", attributes = ISMOD.test(init) ? "type=module" : "") {
-  const uid = "$" + Math.floor(Math.random() * 2 ** (5 * 6)).toString(32).padStart(6, 0), iframeEl = document.createElement("iframe"), { port1, port2 } = new MessageChannel();
-  iframeEl.style.display = "none";
-  iframeEl.sandbox = "allow-scripts";
-  iframeEl.srcdoc = `<script ${attributes}>${init}; onmessage = ({ports:[port2]}) => {
-		port2.onmessage = async evt => port2.postMessage(await window.${uid}(...evt.data))
-};
-window.${uid}=${code};
-<\/script>`;
-  return new Promise((pass, fail) => {
-    iframeEl.onerror = (e) => {
-      fail(e);
-      iframeEl.remove();
-    };
-    iframeEl.onload = () => {
-      let ret, err;
-      iframeEl.contentWindow.postMessage("", "*", [port2]);
-      port1.onmessage = (evt) => ret(evt.data);
-      port1.onerror = (evt) => err(evt);
-      function framedFunction(...args) {
-        return new Promise((p, f) => {
-          ret = p;
-          err = f;
-          port1.postMessage(args);
-        });
-      }
-      framedFunction.remove = iframeEl.remove.bind(iframeEl);
-      pass(framedFunction);
-    };
-    document.body.appendChild(iframeEl);
-  });
-}
-
 // ../node_modules/@hugov/inhtml/in-html.js
 function tag(strings) {
   let t = strings[0];
@@ -111,6 +76,36 @@ function list(parent, factory, { getKey, after = null, before = null } = {}) {
   }
   return kin;
 }
+
+// ../node_modules/@hugov/inhtml/frame.js
+function frame(lambda, { context = "", transfer1, transfer2, scriptAttributes = "type=module" } = {}) {
+  const uid = "$" + Math.floor(Math.random() * 2 ** (5 * 6)).toString(32).padStart(6, 0), iframeEl = document.createElement("iframe"), { port1, port2 } = new MessageChannel();
+  iframeEl.style.display = "none";
+  iframeEl.sandbox = "allow-scripts";
+  iframeEl.srcdoc = `<script ${scriptAttributes}>${context}; const ${uid}={ f:${lambda.toString()}, t:${transfer2?.toString()} }; onmessage = ({ports:[port2]}) => { port2.onmessage = async evt => { const result = await ${uid}.f(...evt.data); port2.postMessage( result${transfer2 ? `, ${uid}.t(result)` : ""} ) } }<\/script>`;
+  const framed = new Promise((p, f) => {
+    iframeEl.onload = p;
+    iframeEl.onerror = f;
+  }).then(() => {
+    iframeEl.contentWindow.postMessage("", "*", [port2]);
+  });
+  async function framedFunction(...args) {
+    await framed;
+    return new Promise((p, f) => {
+      port1.onmessage = (evt) => p(evt.data);
+      port1.onerror = f;
+      port1.postMessage(args, transfer1?.(...args) || []);
+    });
+  }
+  framedFunction.remove = iframeEl.remove.bind(iframeEl);
+  document.body.appendChild(iframeEl);
+  return framedFunction;
+}
+
+// ../node_modules/@hugov/inhtml/worker.js
+function worker(code, options = { type: "module" }) {
+  return new Worker(URL.createObjectURL(new Blob([code], { type: "text/javascript" })), options);
+}
 export {
   $,
   $$,
@@ -119,5 +114,6 @@ export {
   html,
   list,
   load,
-  tag
+  tag,
+  worker
 };
