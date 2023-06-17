@@ -10,6 +10,7 @@ const H = document.documentElement,
 			hashRE = /^#(?<lang>[^/]*)(?:\/(?<data>[^]*))?$/,
 			{lang, data} = getHash()
 
+// CONNECTING VIEW <=> HASH/LANG
 // on page load, the hash if specified sets the language else default to the page language
 if (lang) H.lang = lang
 else location.hash = `#${ H.lang }/${ data }`
@@ -33,7 +34,3 @@ export default function(/* {lang:string, lang:string} => void */onhash, enc=enco
 		location.hash = `#${ lang }/${ enc?.( data ) ?? data }`
 	}
 }
-
-//const setHash1 = ({data='', lang=H.lang}) => location.hash = data ? `#${ lang }/${ enc ? enc(data) : data }` : `#${ lang }`
-//const setHash2 = ({data='', lang=H.lang}) => location.hash = data ? `#${ lang }/${ enc?.(data) ?? data }` : `#${ lang }`
-//const setHash3 = ({data='', lang=H.lang}) => location.hash = `#${ lang }/` + data ? `/${ enc?.(data) ?? data }` : `#${ lang }`

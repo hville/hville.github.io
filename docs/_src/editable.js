@@ -22,6 +22,7 @@ function oninput(evt) {
 	changed.add(el)
 	//firefox inserts BR tags and struggles with the first empty lines - can't fix
 	//while(el.children.length) el.children[0].outerHTML = '\n'
+	// TODO?? // Handle final newlines if (value[value.length - 1] == "\n") value += " "
 }
 function onblur(evt) {
 	const el = evt.currentTarget
