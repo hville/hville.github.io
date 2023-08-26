@@ -1,13 +1,14 @@
-// ../node_modules/@hugov/bench/index.js
-async function bench_default(tests, POOL_MS = getMinMS() * 50, Q1_PAD = 3) {
+// ../node_modules/@hugov/bench/main.js
+async function main_default(tests, POOL_MS = getMinMS() * 50, Q1_PAD = 3) {
   const testNames = Object.keys(tests), POOLQTY = 4 * Q1_PAD + 1, testdata = {};
   for (const k of testNames) {
-    const sample_ = tests[k]();
+    const sample_ = tests[k](0);
     testdata[k] = {
       test: tests[k],
       type: typeof await sample_,
       pool: 1,
       means: [],
+      runs: 0,
       get_ms: sample_?.then ? get_ms_async : get_ms_sync
     };
     await run(testdata[k], POOL_MS);
@@ -31,7 +32,7 @@ async function bench_default(tests, POOL_MS = getMinMS() * 50, Q1_PAD = 3) {
 }
 async function run(data, POOL_MS) {
   if (!data.error) {
-    const ms = await data.get_ms(data.test, data.pool, data.type);
+    const ms = await data.get_ms(data.test, data.type, data.runs, data.runs += data.pool);
     if (ms === Infinity)
       data.error = "inconsistent return type";
     else if (ms > 0) {
@@ -48,20 +49,22 @@ function getMinMS(r = performance.now(), t = r) {
     t = performance.now();
   return t - r;
 }
-function get_ms_sync(fcn, n, type) {
+function get_ms_sync(fcn, type, i, j) {
+  if (j == null)
+    throw Error;
   const t0 = performance.now();
-  while (n--)
-    if (typeof fcn() !== type)
+  while (i < j)
+    if (typeof fcn(i++) !== type)
       return Infinity;
   return Promise.resolve(performance.now() - t0);
 }
-async function get_ms_async(fcn, n, type) {
+async function get_ms_async(fcn, type, i, j) {
   const t0 = performance.now();
-  while (n--)
-    if (typeof await fcn() !== type)
+  while (i < j)
+    if (typeof await fcn(i++) !== type)
       return Infinity;
   return performance.now() - t0;
 }
 export {
-  bench_default as default
+  main_default as default
 };
