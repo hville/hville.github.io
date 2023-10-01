@@ -21,13 +21,17 @@
 
 <details>
 	<summary data-lang>templates and examples // exemples de modèles</summary>
-	<li data-lang>
-		<a lang=en href="./#en/1wCX!-FSg45'SghgncJgx8/'/u9+NqYVx:kYYf14AlrAG+lw/@&ljlzatb(dB1.KS9KOn~$LHDuu..8,H,@qt8;*'Z?i3C?w!$n;flmrK=PB(,.uh3-4aYo.5#jAn1cy1;TA6=I&OI/)~MCC(#=qCrUkfG_&_GLC2VsP#z&f.#;*ffKI7TwJm_jvsW4:BfoD,WS">
-		sum of variable costs
-		</a>
-		<a lang=fr href="./#en/1wCX!-FSg45'SghgncJgx8/'/u9+NqYVx:kYYf14AlrAG+lw/@&ljlzatb(dB1.KS9KOn~$LHDuu..8,H,@qt8;*'Z?i3C?w!$n;flmrK=PB(,.uh3-4aYo.5#jAn1cy1;TA6=I&OI/)~MCC(#=qCrUkfG_&_GLC2VsP#z&f.#;*ffKI7TwJm_jvsW4:BfoD,WS">
-		somme de coûts variables
-	</a></li>
+	<li data-lang data-hash="1ph&#aU7R$uk4wjSZ?|mZ38'U.51[f[M.,F5aHQUrQm}(xm:&4ZILZ35{~^^7[8_i61K;;wIXgzKQ}hUL5FQd_](._sv&?Wo:5+P7Mccz[{eas*Ff@8![.0n=y'YMa]m0l^lO0!c!/G8qeHK{Dc8zLfjFARvhe)hqgE3AHG=U(IGHLi0;fE}eB.?)yiN[;f!">
+		<a lang=en> sum of variable costs </a>
+		<a lang=fr> somme de coûts variables</a>
+	</li>
+	<li data-lang data-hash="7ETy:ek)]a3[NrX~K[FFQLA]!yE|t?9'u=|pK~_|7|yx2PD(CvcX/l81J\tsONAe&elS]N">
+		<a lang=en> "unknown-pleasure" </a>
+		<a lang=fr> "unknown-pleasure" </a>
+	</li>
+	<script>
+		document.querySelectorAll('details a').forEach( a=>a.href=`./#${ a.lang }/${ a.parentElement.dataset.hash }` )
+	</script>
 </details>
 
 <pre><code><var>function({N, L, D, U, W, G}, //normal, lognormal, dagum, uniform, weibull, gumbell</var>
@@ -83,11 +87,11 @@ const onhash = hashData( ({data}) => {if (data.length) {
 }})
 
 //const clearResults = () => $`#show`.textContent = ''
-const oninput = () => {
+const onchange = () => {
 	onhash({ data: els.join('\v') }) //.replace(/\n*$/,'')
 	$`tbody`.textContent=''
 }
-els.forEach( el => el.addEventListener('input', oninput ) )
+els.forEach( el => el.addEventListener('change', onchange ) )
 
 $('#run1e4').onclick = runSim.bind(null,1e4)
 $('#run1e5').onclick = runSim.bind(null,1e5)
@@ -155,5 +159,6 @@ function plot2D(ctx, stat, xMin, xMax) {
 	ctx.restore()
 	ctx.stroke()
 }
+
 </script>
 </body>

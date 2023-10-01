@@ -39,9 +39,9 @@
 		</span>
 	</li>
 	<li><time>2022-02-20</time>
-		<span data-lang>
-			<span lang=en><a href="./bwt/index.html#en/exi_hL?ZiKNQ$_GjNm7p@).PdmyIa1Up%T%(+'K_jiUzi!=LTIkOd,C;">Burrows–Wheeler transform (BWT)</a></span>
-			<span lang=fr><a href="./bwt/index.html#fr/exi_hL?ZiKNQ$_GjNm7p@).PdmyIa1Up%T%(+'K_jiUzi!=LTIkOd,C;">Transformée de Burrows-Wheeler (BWT)</a></span>
+		<span data-lang data-hash="=}#oAbR~og0s4m^-U&CPxFYwx*8WszObN\MyEicEeg&y@z*q@94JzH{">
+			<a lang=en href="./bwt/index.html#en/">Burrows–Wheeler transform (BWT)</a>
+			<a lang=fr href="./bwt/index.html#fr/">Transformée de Burrows-Wheeler (BWT)</a>
 		</span>
 	</li>
 	<li><time>2022-02-01</time>
@@ -51,9 +51,9 @@
 		</span>
 	</li>
 	<li><time>2022-01-09</time>
-		<span data-lang>
-			<span lang=en><a href="./regexp/index.html#en/QdxgRPH.!tiXdzt">word list</a> with regexp filter</span>
-			<span lang=fr><a href="./regexp/index.html#fr/QdxgRPH.!tiXdzt">list de mots</a> avec filtre regexp</span>
+		<span data-lang data-hash="S^hw?PUTA=.J)/zHGC.O1Qni.r">
+			<span lang=en><a href="./regexp/index.html#en/">word list</a> with regexp filter</span>
+			<span lang=fr><a href="./regexp/index.html#fr/">list de mots</a> avec filtre regexp</span>
 		</span>
 	</li>
 	<li><time>2021-05-16</time>
@@ -71,10 +71,13 @@
 	<li><time>2021-05-08</time> <span data-lang>language selector // interface multilingue avec selecteur</span></li>
 	<li><time>2021-05-05</time>
 		<span data-lang>
-			<span lang=en>a no frills <a href="./publicbench/index.html#en">benchmark</a> app with in-URL saving and loading <i>(new version above)</i></span>
-			<span lang=fr><a href="./publicbench/index.html#fr">banc d'essais</a> avec chargement et sauvegarde par signet <abbr>URI</abbr> <i>(nouvelle version ci-dessus)</i></span>
+			<span lang=en>a no frills benchmark app with in-URL saving and loading <i>(new version above)</i></span>
+			<span lang=fr>banc d'essais avec chargement et sauvegarde par signet <abbr>URI</abbr> <i>(nouvelle version ci-dessus)</i></span>
 		</span>
 	</li>
+	<script>
+		document.querySelectorAll('[data-hash]').forEach( p=>p.querySelectorAll('a').forEach(a=>a.href+=p.dataset.hash ))
+	</script>
 </ul>
 
 

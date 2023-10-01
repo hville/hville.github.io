@@ -23,26 +23,20 @@
 
 <h3 data-lang>
 	<span lang=en>
-		<a href="https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform">
-		Burrows–Wheeler transform (BWT)</a>
+		Burrows–Wheeler transform (<a href="https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform">BWT</a>)
 	</span>
 	<span lang=fr>
-		<a href="https://fr.wikipedia.org/wiki/Transform%C3%A9e_de_Burrows-Wheeler">
-		Transformée de Burrows-Wheeler (BWT)</a>
+		Transformée de Burrows-Wheeler (<a href="https://fr.wikipedia.org/wiki/Transform%C3%A9e_de_Burrows-Wheeler">BWT</a>)
 	</span>
 </h3>
 <pre id=bwt style="white-space: pre-wrap;"></pre>
 
 <h3 data-lang>
 	<span lang=en>
-		<a href="https://en.wikipedia.org/wiki/Move-to-front_transform">
-		Move-to-front transform</a>
-		<small>with [ a-z,.'":;\-?()[]{}\n!0-9+/*=_~&lt&ampgt^`#%\t$&@|\\A-Z]</small>
+		Move-to-front transform (<a href="https://en.wikipedia.org/wiki/Move-to-front_transform">MTF</a>)
 	</span>
 	<span lang=fr>
-		<a href="https://fr.wikipedia.org/wiki/Move-to-front">
-		Transformée Move-to-front</a>
-		<small>avec [ a-z,.'":;\-?()[]{}\n!0-9+/*=_~&lt&ampgt^`#%\t$&@|\\A-Z]</small>
+		Transformée Move-to-front (<a href="https://fr.wikipedia.org/wiki/Move-to-front">MTF</a>)
 	</span>
 </h3>
 
@@ -50,30 +44,23 @@
 
 <h3 data-lang>
 	<span lang=en>
-		<a href="https://en.wikipedia.org/wiki/Elias_gamma_coding">
-		Elias gamma coding
-		</a>
+		Elias gamma coding (<a href="https://en.wikipedia.org/wiki/Elias_gamma_coding">Elias ɣ</a>)
 	</span>
 	<span lang=fr>
-		<a href="https://fr.wikipedia.org/wiki/Codage_gamma">
-		codage gamma d'Elias
-		</a>
+		codage gamma d'Elias (<a href="https://fr.wikipedia.org/wiki/Codage_gamma">Elias ɣ</a>)
 	</span>
 </h3>
 <pre id=egc style="white-space: pre-wrap;"></pre>
 
 <h3 data-lang>
 	<span lang=en>
-		<a href="https://en.wikipedia.org/wiki/Base64">
-		Base80 binary-to-text encoding</a>
-		<small>with [0-9A-Za-z.\-_~,?!():;+/*=$&@]</small>
+		Binary-to-text encoding (<a href="https://en.wikipedia.org/wiki/Base64">Base89</a>)
 	</span>
 	<span lang=fr>
-		<a href="https://fr.wikipedia.org/wiki/Base64">
-		Codage Base85</a>
-		<small>avec [0-9A-Za-z.\-_~,?!():;+/*=$&@]</small>
+		Codage (<a href="https://fr.wikipedia.org/wiki/Base64">Base89</a>)
 	</a>
 	</span>
+	<span id=tot></span>
 </h3>
 <pre id=enc style="white-space: pre-wrap;"></pre>
 
@@ -89,15 +76,14 @@ import {encodeEGC} from '/_npm/@hugov/shorter-string/src/egc.js'
 import {encodeBTT} from '/_npm/@hugov/shorter-string/src/btt.js'
 import {LOWER, DIGIT, UPPER, HASH} from '/_npm/@hugov/shorter-string/src/charset.js'
 import {decode} from '/_npm/@hugov/shorter-string.js'
-//TODO add char length for each section; use string 32 for MTF
 
 const $src = $('#src'),
 			$bwt = $('#bwt'),
 			$mtf = $('#mtf'),
 			$egc = $('#egc'),
 			$enc = $('#enc'),
-			$dec = $('#dec')
-
+			$dec = $('#dec'),
+			$tot = $('#tot')
 const dohash = hashData( ({data, lang}) => {
 	const b = encodeBWT(data),
 				m = encodeMTF(b),
@@ -105,9 +91,10 @@ const dohash = hashData( ({data, lang}) => {
 				c = encodeBTT(g)
 	$src.textContent = data
 	$bwt.textContent = b
-	$mtf.textContent = m.map( n=> n ? n.toString() : '').join(' ')
+	$mtf.textContent = m.map( n=> n.toString(16).toUpperCase() ).join(' ')
 	$egc.textContent = g
 	$enc.textContent = c
+	$tot.textContent = `${ c.length } / ${ b.length } = ${ (100*c.length/b.length).toFixed(1) }%`
 	$dec.textContent = decode(c)
 })
 

@@ -8,7 +8,7 @@ customElements.define('data-lang', class extends HTMLElement {
     super()
 		const langs = this.textContent.split(/\s+/),
 					setRadio = lang => this.querySelector(`[value=${lang}]`).checked = true,
-					setPage  = lang => langswap(lang, langs)
+					setPage  = () => langswap(langs)
 
 		this.innerHTML = langs.map(
 			l => `<label><input type=radio name=datalang value=${l}><span>${l}</span></label>`
