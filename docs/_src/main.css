@@ -81,9 +81,15 @@ input[type="radio"][name=datalang]:checked+span {
 	-webkit-user-modify: read-write-plaintext-only;
 }
 
-canvas {
+canvas, iframe {
   width: 100%;
 }
+
+canvas, iframe {
+  width: 100%;
+	border: none;
+}
+
 /*
 https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css
 https://cdn.jsdelivr.net/npm/water.css@2/out/water.css

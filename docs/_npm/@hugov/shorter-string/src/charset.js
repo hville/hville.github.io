@@ -5,8 +5,8 @@ var DIGIT = "0123456789";
 var BASE62 = DIGIT + UPPER + LOWER;
 var BASE64 = BASE62 + "-_";
 var UNRESERVED = BASE62 + "-._~";
-var QUERY = UNRESERVED + "%!$&()*+,;=:@";
-var HASH = BASE62 + `!#$&'()*+,-./:;=?@[\\]^_{|}~`;
+var QUERY = UNRESERVED + "!$&()*+,;=:@";
+var HASH = QUERY + "#'/?";
 var MTF = ` ${LOWER},.'":;-?()[]{}
 !${DIGIT}+/*=_~<>^\`#%	$&@|\\${UPPER}\v\f\r${chars(0, 8) + chars(14, 31)}\x7F`;
 function chars(i, j, s = "") {
