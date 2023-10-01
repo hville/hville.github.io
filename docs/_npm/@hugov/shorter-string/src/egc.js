@@ -1,8 +1,8 @@
 // ../node_modules/@hugov/shorter-string/src/egc.js
-function encodeEGC(arr) {
+function encodeEGC(arr, min = 0) {
   let res = 0n, j = arr.length;
   while (j--) {
-    let v = arr[j] + 1, n = -1;
+    let v = arr[j] + 1 - min, n = -1;
     while (v) {
       res = v & 1 ? res << 1n | 1n : res << 1n;
       v >>>= 1;
@@ -12,7 +12,7 @@ function encodeEGC(arr) {
   }
   return res;
 }
-function decodeEGC(big) {
+function decodeEGC(big, min = 0) {
   let res = [];
   while (big) {
     let v = 0, n = 1;
@@ -24,7 +24,7 @@ function decodeEGC(big) {
       v = big & 1n ? v << 1 | 1 : v << 1;
       big >>= 1n;
     }
-    res.push(v - 1);
+    res.push(v - 1 + min);
   }
   return res;
 }
