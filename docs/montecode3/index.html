@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>monte carlo</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="in browser benchmarking">
+	<link rel="stylesheet" href="../_src/main.css">
+	<link href="https://unpkg.com/prismjs@1.24.1/themes/prism.css" rel="stylesheet" />
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2>Monte Carlo</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<details>
+	<summary data-lang>templates and examples // exemples de modèles</summary>
+	<li data-lang data-hash="D!ZiTsPl~?6DCy_G">
+		<a lang=en> a test </a>
+		<a lang=fr> un test </a>
+	</li>
+	<li data-lang data-hash="O+c?.-jMBX;ph:T+.zvAVpmarOjKCeQbS.0gPlVY=/X_7o+g9(ROfpVj!&y)h0k+A2)2nP#">
+		<a lang=en> "unknown-pleasure" </a>
+		<a lang=fr> "unknown-pleasure" </a>
+	</li>
+	<script>
+		document.querySelectorAll('details a').forEach( a=>a.href=`./#${ a.lang }/${ a.parentElement.dataset.hash }` )
+	</script>
+</details>
+
+<pre><code><var>function(_, //metanormal</var>
+<div id=initA placeholder="//init argument expressions code"></div><var>) {</var>
+<div id=initB placeholder="//init code block"></div><var>return function(</var>
+<div id=eachA placeholder="//sim argument expressions code"></div><var>){</var>
+<div id=eachB placeholder="//sim code block"></div><var>return {</var>
+<div id=stats placeholder="//sim outputs"></div><var>}}}</var></code></pre>
+
+<button id=run1e4>N = 1e4</button>
+<button id=run1e5>N = 1e5</button>
+<button id=run1e6>N = 1e6</button>
+
+<pre id=show></pre>
+<table>
+	<thead>
+		<tr><th>id</th><th>Q10</th><th>Q50</th><th>Q90</th><th>E</th><th>S</th></tr>
+	</thead>
+	<tbody>
+		<tr><td id=id></td><td id=Q10></td><td id=Q50></td><td id=Q90></td><td id=E></td><td id=S></td></tr>
+	</tbody>
+</table>
+<canvas height=300></canvas>
+<script type=module>
+import {$, $$, cast} from '/_npm/@hugov/inhtml.js'
+import Rec from '/_npm/sample-distribution.js'
+import hashData from '../_src/hash-data.js'
+import editable from '../_src/editable.js'
+import {frame} from '../_npm/@hugov/inhtml.js'
+import Stats from '../_npm/@hugov/correl-range2/src/_stats.js'
+
+const els = [ $('#initA'), $('#initB'), $('#eachA'), $('#eachB'), $`#stats` ].map( editable )
+
+// row factory
+const makeRow = cast('tbody>tr', ({id, Q10, Q50, Q90, E, S}, stat, name) => {
+	id.textContent = name
+	Q10.textContent = stat.Q(.10).toPrecision(3)
+	Q50.textContent = stat.Q(.50).toPrecision(3)
+	Q90.textContent = stat.Q(.90).toPrecision(3)
+	E.textContent = stat.E.toPrecision(3)
+	S.textContent = stat.S.toPrecision(3)
+})
+
+$`#initA`.focus()
+
+// save|load
+const onhash = hashData( ({data}) => {if (data.length) {
+	const txts = data.split('\v')
+	els.forEach( (j,i) => {
+		j.textContent = txts[i]
+	})
+	$`tbody`.textContent=''
+}})
+
+//const clearResults = () => $`#show`.textContent = ''
+const onchange = () => {
+	onhash({ data: els.join('\v') }) //.replace(/\n*$/,'')
+	$`tbody`.textContent=''
+}
+els.forEach( el => el.addEventListener('change', onchange ) )
+
+$('#run1e4').onclick = runSim.bind(null,1e4)
+$('#run1e5').onclick = runSim.bind(null,1e5)
+$('#run1e6').onclick = runSim.bind(null,1e6)
+
+const ctx = $('canvas').getContext('2d')
+ctx.strokeStyle = 'silver'
+
+const beforeSim = () => {
+	$`#show`.textContent = ''
+	$`tbody`.textContent=''
+	// look up the size the canvas is being displayed
+	const width = ctx.canvas.clientWidth
+	// If it's resolution does not match change it
+	if (ctx.canvas.width !== width) {
+		ctx.canvas.width = width
+		ctx.strokeStyle = 'silver'
+	}
+	else ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+}
+const afterSim = stats => {
+	Object.keys(stats).forEach( k => {
+		console.log( 'stats', k, stats[k], stats[k].Q(.05), stats[k].Q(.95) )
+		$`tbody`.appendChild(makeRow(stats[k], k))
+		ctx.globalCompositeOperation = 'copy'
+		ctx.drawImage(ctx.canvas, 0, -15)
+		ctx.globalCompositeOperation = 'source-over'
+		plot2D(ctx, stats[k])
+	})
+}
+
+async function runSim(N) {
+	beforeSim()
+	const simCode = `function(_,\n${ els[0].textContent
+	}\n){\n${ els[1]
+	};\nreturn function(\n${ els[2]
+	}\n){\n${ els[3]
+	};\nreturn {\n${ els[4]
+	}}}}`
+	const context = `import SIM from '../_npm/@hugov/correl-range2.js';const sim=SIM(${ simCode }, {resolution:128});`
+	const framedFunction = `function(N) {const res = sim.run(N);return {names: res.names, buffer: res.buffer}}`
+	const	ms0 = await nextFrame()
+
+	frame( framedFunction, { context, transfer2: ({buffer}) => [buffer]})(N)
+	.then( xfer => {
+		const stats = new Stats(xfer.names, xfer.buffer) ////TODO [sim.names, sim.data]
+		$`#show`.innerHTML = `${ (performance.now()-ms0).toFixed(0) } ms`
+		afterSim(stats)
+	})
+	.catch( e => {console.log(e); $`#show`.textContent = `Error: ${e.message}`} ) //\n("${ line.slice(c-1) }" at line ${r})`
+}
+
+function nextFrame() {
+	return new Promise(r => requestAnimationFrame(r))
+}
+
+function plot2D(ctx, stat) {
+	ctx.save()
+	stat.plotf(ctx)
+	ctx.globalCompositeOperation = 'destination-out'
+	ctx.fill()
+	ctx.restore()
+	ctx.stroke()
+}
+
+</script>
+</body>

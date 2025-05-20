@@ -1,6 +1,16 @@
 // ../node_modules/ol/events/EventType.js
 var EventType_default = {
+  /**
+   * Generic change event. Triggered when the revision counter is increased.
+   * @event module:ol/events/Event~BaseEvent#change
+   * @api
+   */
   CHANGE: "change",
+  /**
+   * Generic error event. Triggered when an error occurs.
+   * @event module:ol/events/Event~BaseEvent#error
+   * @api
+   */
   ERROR: "error",
   BLUR: "blur",
   CLEAR: "clear",
@@ -24,12 +34,19 @@ var Disposable = class {
   constructor() {
     this.disposed = false;
   }
+  /**
+   * Clean up.
+   */
   dispose() {
     if (!this.disposed) {
       this.disposed = true;
       this.disposeInternal();
     }
   }
+  /**
+   * Extension point for disposable objects.
+   * @protected
+   */
   disposeInternal() {
   }
 };
@@ -37,15 +54,27 @@ var Disposable_default = Disposable;
 
 // ../node_modules/ol/events/Event.js
 var BaseEvent = class {
+  /**
+   * @param {string} type Type.
+   */
   constructor(type) {
     this.propagationStopped;
     this.defaultPrevented;
     this.type = type;
     this.target = null;
   }
+  /**
+   * Prevent default. This means that no emulated `click`, `singleclick` or `doubleclick` events
+   * will be fired.
+   * @api
+   */
   preventDefault() {
     this.defaultPrevented = true;
   }
+  /**
+   * Stop event propagation.
+   * @api
+   */
   stopPropagation() {
     this.propagationStopped = true;
   }
@@ -126,6 +155,9 @@ function isEmpty(object) {
 
 // ../node_modules/ol/events/Target.js
 var Target = class extends Disposable_default {
+  /**
+   * @param {*} [target] Default event target for dispatched events.
+   */
   constructor(target) {
     super();
     this.eventTarget_ = target;
@@ -133,6 +165,10 @@ var Target = class extends Disposable_default {
     this.dispatching_ = null;
     this.listeners_ = null;
   }
+  /**
+   * @param {string} type Type.
+   * @param {import("../events.js").Listener} listener Listener.
+   */
   addEventListener(type, listener) {
     if (!type || !listener) {
       return;
@@ -143,6 +179,16 @@ var Target = class extends Disposable_default {
       listenersForType.push(listener);
     }
   }
+  /**
+   * Dispatches an event and calls all listeners listening for events
+   * of this type. The event parameter can either be a string or an
+   * Object with a `type` property.
+   *
+   * @param {import("./Event.js").default|string} event Event object.
+   * @return {boolean|undefined} `false` if anyone called preventDefault on the
+   *     event object or if any of the listeners returned false.
+   * @api
+   */
   dispatchEvent(event) {
     const isString = typeof event === "string";
     const type = isString ? event : event.type;
@@ -150,7 +196,10 @@ var Target = class extends Disposable_default {
     if (!listeners) {
       return;
     }
-    const evt = isString ? new Event_default(event) : event;
+    const evt = isString ? new Event_default(event) : (
+      /** @type {Event} */
+      event
+    );
     if (!evt.target) {
       evt.target = this.eventTarget_ || this;
     }
@@ -164,9 +213,11 @@ var Target = class extends Disposable_default {
     let propagate;
     for (let i = 0, ii = listeners.length; i < ii; ++i) {
       if ("handleEvent" in listeners[i]) {
-        propagate = listeners[i].handleEvent(evt);
+        propagate = /** @type {import("../events.js").ListenerObject} */
+        listeners[i].handleEvent(evt);
       } else {
-        propagate = listeners[i].call(this, evt);
+        propagate = /** @type {import("../events.js").ListenerFunction} */
+        listeners[i].call(this, evt);
       }
       if (propagate === false || evt.propagationStopped) {
         propagate = false;
@@ -183,18 +234,37 @@ var Target = class extends Disposable_default {
     }
     return propagate;
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     this.listeners_ && clear(this.listeners_);
   }
+  /**
+   * Get the listeners for a specified event type. Listeners are returned in the
+   * order that they will be called in.
+   *
+   * @param {string} type Type.
+   * @return {Array<import("../events.js").Listener>|undefined} Listeners.
+   */
   getListeners(type) {
     return this.listeners_ && this.listeners_[type] || void 0;
   }
+  /**
+   * @param {string} [type] Type. If not provided,
+   *     `true` will be returned if this event target has any listeners.
+   * @return {boolean} Has listeners.
+   */
   hasListener(type) {
     if (!this.listeners_) {
       return false;
     }
     return type ? type in this.listeners_ : Object.keys(this.listeners_).length > 0;
   }
+  /**
+   * @param {string} type Type.
+   * @param {import("../events.js").Listener} listener Listener.
+   */
   removeEventListener(type, listener) {
     const listeners = this.listeners_ && this.listeners_[type];
     if (listeners) {
@@ -220,6 +290,10 @@ var TileState_default = {
   IDLE: 0,
   LOADING: 1,
   LOADED: 2,
+  /**
+   * Indicates that tile loading failed
+   * @type {number}
+   */
   ERROR: 3,
   EMPTY: 4
 };
@@ -240,6 +314,11 @@ function easeIn(t) {
 
 // ../node_modules/ol/Tile.js
 var Tile = class extends Target_default {
+  /**
+   * @param {import("./tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {import("./TileState.js").default} state State.
+   * @param {Options} [options] Tile options.
+   */
   constructor(tileCoord, state, options) {
     super();
     options = options ? options : {};
@@ -251,17 +330,32 @@ var Tile = class extends Target_default {
     this.transitionStarts_ = {};
     this.interpolate = !!options.interpolate;
   }
+  /**
+   * @protected
+   */
   changed() {
     this.dispatchEvent(EventType_default.CHANGE);
   }
+  /**
+   * Called by the tile cache when the tile is removed from the cache due to expiry
+   */
   release() {
     if (this.state === TileState_default.ERROR) {
       this.setState(TileState_default.EMPTY);
     }
   }
+  /**
+   * @return {string} Key.
+   */
   getKey() {
     return this.key + "/" + this.tileCoord;
   }
+  /**
+   * Get the interim tile most suitable for rendering using the chain of interim
+   * tiles. This corresponds to the  most recent tile that has been loaded, if no
+   * such tile exists, the original tile is returned.
+   * @return {!Tile} Best tile for rendering.
+   */
   getInterimTile() {
     if (!this.interimTile) {
       return this;
@@ -276,6 +370,10 @@ var Tile = class extends Target_default {
     } while (tile);
     return this;
   }
+  /**
+   * Goes through the chain of interim tiles and discards sections of the chain
+   * that are no longer relevant.
+   */
   refreshInterimChain() {
     if (!this.interimTile) {
       return;
@@ -296,12 +394,28 @@ var Tile = class extends Target_default {
       tile = prev.interimTile;
     } while (tile);
   }
+  /**
+   * Get the tile coordinate for this tile.
+   * @return {import("./tilecoord.js").TileCoord} The tile coordinate.
+   * @api
+   */
   getTileCoord() {
     return this.tileCoord;
   }
+  /**
+   * @return {import("./TileState.js").default} State.
+   */
   getState() {
     return this.state;
   }
+  /**
+   * Sets the state of this tile. If you write your own {@link module:ol/Tile~LoadFunction tileLoadFunction} ,
+   * it is important to set the state correctly to {@link module:ol/TileState~ERROR}
+   * when the tile cannot be loaded. Otherwise the tile cannot be removed from
+   * the tile queue and will block other requests.
+   * @param {import("./TileState.js").default} state State.
+   * @api
+   */
   setState(state) {
     if (this.state !== TileState_default.ERROR && this.state > state) {
       throw new Error("Tile load sequence violation");
@@ -309,9 +423,22 @@ var Tile = class extends Target_default {
     this.state = state;
     this.changed();
   }
+  /**
+   * Load the image or retry if loading previously failed.
+   * Loading is taken care of by the tile queue, and calling this method is
+   * only needed for preloading or for reloading in case of an error.
+   * @abstract
+   * @api
+   */
   load() {
     abstract();
   }
+  /**
+   * Get the alpha value for rendering.
+   * @param {string} id An id for the renderer.
+   * @param {number} time The render frame time.
+   * @return {number} A number between 0 and 1.
+   */
   getAlpha(id, time) {
     if (!this.transition_) {
       return 1;
@@ -329,12 +456,23 @@ var Tile = class extends Target_default {
     }
     return easeIn(delta / this.transition_);
   }
+  /**
+   * Determine if a tile is in an alpha transition.  A tile is considered in
+   * transition if tile.getAlpha() has not yet been called or has been called
+   * and returned 1.
+   * @param {string} id An id for the renderer.
+   * @return {boolean} The tile is in transition.
+   */
   inTransition(id) {
     if (!this.transition_) {
       return false;
     }
     return this.transitionStarts_[id] !== -1;
   }
+  /**
+   * Mark a transition as complete.
+   * @param {string} id An id for the renderer.
+   */
   endTransition(id) {
     if (this.transition_) {
       this.transitionStarts_[id] = -1;
@@ -383,7 +521,10 @@ function createCanvasContext2D(width, height, canvasPool2, settings) {
   if (height) {
     canvas.height = height;
   }
-  return canvas.getContext("2d", settings);
+  return (
+    /** @type {CanvasRenderingContext2D} */
+    canvas.getContext("2d", settings)
+  );
 }
 function releaseCanvas(context) {
   const canvas = context.canvas;
@@ -463,6 +604,9 @@ var messages = {
   69: "`width` or `height` cannot be provided together with `scale`"
 };
 var AssertionError = class extends Error {
+  /**
+   * @param {number} code Error code.
+   */
   constructor(code) {
     const message = messages[code];
     super(message);
@@ -743,7 +887,10 @@ function unlistenByKey(key) {
 
 // ../node_modules/ol/Image.js
 function listenImage(image, loadHandler, errorHandler) {
-  const img = image;
+  const img = (
+    /** @type {HTMLImageElement} */
+    image
+  );
   let listening = true;
   let decoding = false;
   let loaded = false;
@@ -781,6 +928,14 @@ function listenImage(image, loadHandler, errorHandler) {
 
 // ../node_modules/ol/ImageTile.js
 var ImageTile = class extends Tile_default {
+  /**
+   * @param {import("./tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {import("./TileState.js").default} state State.
+   * @param {string} src Image source URI.
+   * @param {?string} crossOrigin Cross origin.
+   * @param {import("./Tile.js").LoadFunction} tileLoadFunction Tile load function.
+   * @param {import("./Tile.js").Options} [options] Tile options.
+   */
   constructor(tileCoord, state, src, crossOrigin, tileLoadFunction, options) {
     super(tileCoord, state, options);
     this.crossOrigin_ = crossOrigin;
@@ -793,23 +948,45 @@ var ImageTile = class extends Tile_default {
     this.unlisten_ = null;
     this.tileLoadFunction_ = tileLoadFunction;
   }
+  /**
+   * Get the HTML image element for this tile (may be a Canvas, Image, or Video).
+   * @return {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} Image.
+   * @api
+   */
   getImage() {
     return this.image_;
   }
+  /**
+   * Sets an HTML image element for this tile (may be a Canvas or preloaded Image).
+   * @param {HTMLCanvasElement|HTMLImageElement} element Element.
+   */
   setImage(element) {
     this.image_ = element;
     this.state = TileState_default.LOADED;
     this.unlistenImage_();
     this.changed();
   }
+  /**
+   * Tracks loading or read errors.
+   *
+   * @private
+   */
   handleImageError_() {
     this.state = TileState_default.ERROR;
     this.unlistenImage_();
     this.image_ = getBlankImage();
     this.changed();
   }
+  /**
+   * Tracks successful image load.
+   *
+   * @private
+   */
   handleImageLoad_() {
-    const image = this.image_;
+    const image = (
+      /** @type {HTMLImageElement} */
+      this.image_
+    );
     if (image.naturalWidth && image.naturalHeight) {
       this.state = TileState_default.LOADED;
     } else {
@@ -818,6 +995,43 @@ var ImageTile = class extends Tile_default {
     this.unlistenImage_();
     this.changed();
   }
+  /**
+   * Load the image or retry if loading previously failed.
+   * Loading is taken care of by the tile queue, and calling this method is
+   * only needed for preloading or for reloading in case of an error.
+   *
+   * To retry loading tiles on failed requests, use a custom `tileLoadFunction`
+   * that checks for error status codes and reloads only when the status code is
+   * 408, 429, 500, 502, 503 and 504, and only when not too many retries have been
+   * made already:
+   *
+   * ```js
+   * const retryCodes = [408, 429, 500, 502, 503, 504];
+   * const retries = {};
+   * source.setTileLoadFunction((tile, src) => {
+   *   const image = tile.getImage();
+   *   fetch(src)
+   *     .then((response) => {
+   *       if (retryCodes.includes(response.status)) {
+   *         retries[src] = (retries[src] || 0) + 1;
+   *         if (retries[src] <= 3) {
+   *           setTimeout(() => tile.load(), retries[src] * 1000);
+   *         }
+   *         return Promise.reject();
+   *       }
+   *       return response.blob();
+   *     })
+   *     .then((blob) => {
+   *       const imageUrl = URL.createObjectURL(blob);
+   *       image.src = imageUrl;
+   *       setTimeout(() => URL.revokeObjectURL(imageUrl), 5000);
+   *     })
+   *     .catch(() => tile.setState(3)); // error
+   * });
+   * ```
+   *
+   * @api
+   */
   load() {
     if (this.state == TileState_default.ERROR) {
       this.state = TileState_default.IDLE;
@@ -830,9 +1044,18 @@ var ImageTile = class extends Tile_default {
       this.state = TileState_default.LOADING;
       this.changed();
       this.tileLoadFunction_(this, this.src_);
-      this.unlisten_ = listenImage(this.image_, this.handleImageLoad_.bind(this), this.handleImageError_.bind(this));
+      this.unlisten_ = listenImage(
+        this.image_,
+        this.handleImageLoad_.bind(this),
+        this.handleImageError_.bind(this)
+      );
     }
   }
+  /**
+   * Discards event handlers which listen for load completion or errors.
+   *
+   * @private
+   */
   unlistenImage_() {
     if (this.unlisten_) {
       this.unlisten_();
@@ -853,6 +1076,7 @@ var ERROR_THRESHOLD = 0.5;
 
 // ../node_modules/ol/proj/Units.js
 var METERS_PER_UNIT = {
+  // use the radius of the Normal sphere
   "radians": 6370997 / (2 * Math.PI),
   "degrees": 2 * Math.PI * 6370997 / 360,
   "ft": 0.3048,
@@ -862,9 +1086,13 @@ var METERS_PER_UNIT = {
 
 // ../node_modules/ol/proj/Projection.js
 var Projection = class {
+  /**
+   * @param {Options} options Projection options.
+   */
   constructor(options) {
     this.code_ = options.code;
-    this.units_ = options.units;
+    this.units_ = /** @type {import("./Units.js").Units} */
+    options.units;
     this.extent_ = options.extent !== void 0 ? options.extent : null;
     this.worldExtent_ = options.worldExtent !== void 0 ? options.worldExtent : null;
     this.axisOrientation_ = options.axisOrientation !== void 0 ? options.axisOrientation : "enu";
@@ -874,50 +1102,129 @@ var Projection = class {
     this.defaultTileGrid_ = null;
     this.metersPerUnit_ = options.metersPerUnit;
   }
+  /**
+   * @return {boolean} The projection is suitable for wrapping the x-axis
+   */
   canWrapX() {
     return this.canWrapX_;
   }
+  /**
+   * Get the code for this projection, e.g. 'EPSG:4326'.
+   * @return {string} Code.
+   * @api
+   */
   getCode() {
     return this.code_;
   }
+  /**
+   * Get the validity extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getExtent() {
     return this.extent_;
   }
+  /**
+   * Get the units of this projection.
+   * @return {import("./Units.js").Units} Units.
+   * @api
+   */
   getUnits() {
     return this.units_;
   }
+  /**
+   * Get the amount of meters per unit of this projection.  If the projection is
+   * not configured with `metersPerUnit` or a units identifier, the return is
+   * `undefined`.
+   * @return {number|undefined} Meters.
+   * @api
+   */
   getMetersPerUnit() {
     return this.metersPerUnit_ || METERS_PER_UNIT[this.units_];
   }
+  /**
+   * Get the world extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getWorldExtent() {
     return this.worldExtent_;
   }
+  /**
+   * Get the axis orientation of this projection.
+   * Example values are:
+   * enu - the default easting, northing, elevation.
+   * neu - northing, easting, up - useful for "lat/long" geographic coordinates,
+   *     or south orientated transverse mercator.
+   * wnu - westing, northing, up - some planetary coordinate systems have
+   *     "west positive" coordinate systems
+   * @return {string} Axis orientation.
+   * @api
+   */
   getAxisOrientation() {
     return this.axisOrientation_;
   }
+  /**
+   * Is this projection a global projection which spans the whole world?
+   * @return {boolean} Whether the projection is global.
+   * @api
+   */
   isGlobal() {
     return this.global_;
   }
+  /**
+   * Set if the projection is a global projection which spans the whole world
+   * @param {boolean} global Whether the projection is global.
+   * @api
+   */
   setGlobal(global) {
     this.global_ = global;
     this.canWrapX_ = !!(global && this.extent_);
   }
+  /**
+   * @return {import("../tilegrid/TileGrid.js").default} The default tile grid.
+   */
   getDefaultTileGrid() {
     return this.defaultTileGrid_;
   }
+  /**
+   * @param {import("../tilegrid/TileGrid.js").default} tileGrid The default tile grid.
+   */
   setDefaultTileGrid(tileGrid) {
     this.defaultTileGrid_ = tileGrid;
   }
+  /**
+   * Set the validity extent for this projection.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @api
+   */
   setExtent(extent) {
     this.extent_ = extent;
     this.canWrapX_ = !!(this.global_ && extent);
   }
+  /**
+   * Set the world extent for this projection.
+   * @param {import("../extent.js").Extent} worldExtent World extent
+   *     [minlon, minlat, maxlon, maxlat].
+   * @api
+   */
   setWorldExtent(worldExtent) {
     this.worldExtent_ = worldExtent;
   }
+  /**
+   * Set the getPointResolution function (see {@link module:ol/proj.getPointResolution}
+   * for this projection.
+   * @param {function(number, import("../coordinate.js").Coordinate):number} func Function
+   * @api
+   */
   setGetPointResolution(func) {
     this.getPointResolutionFunc_ = func;
   }
+  /**
+   * Get the custom point resolution function for this projection (if set).
+   * @return {function(number, import("../coordinate.js").Coordinate):number|undefined} The custom point
+   * resolution function (if set).
+   */
   getPointResolutionFunc() {
     return this.getPointResolutionFunc_;
   }
@@ -931,6 +1238,9 @@ var EXTENT = [-HALF_SIZE, -HALF_SIZE, HALF_SIZE, HALF_SIZE];
 var WORLD_EXTENT = [-180, -85, 180, 85];
 var MAX_SAFE_Y = RADIUS * Math.log(Math.tan(Math.PI / 2));
 var EPSG3857Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   */
   constructor(code) {
     super({
       code,
@@ -996,6 +1306,10 @@ var RADIUS2 = 6378137;
 var EXTENT2 = [-180, -90, 180, 90];
 var METERS_PER_UNIT2 = Math.PI * RADIUS2 / 180;
 var EPSG4326Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   * @param {string} [axisOrientation] Axis orientation.
+   */
   constructor(code, axisOrientation) {
     super({
       code,
@@ -1146,7 +1460,13 @@ function addProjections(projections) {
   projections.forEach(addProjection);
 }
 function get3(projectionLike) {
-  return typeof projectionLike === "string" ? get(projectionLike) : projectionLike || null;
+  return typeof projectionLike === "string" ? get(
+    /** @type {string} */
+    projectionLike
+  ) : (
+    /** @type {Projection} */
+    projectionLike || null
+  );
 }
 function getPointResolution(projection, resolution, point, units) {
   projection = get3(projection);
@@ -1165,7 +1485,10 @@ function getPointResolution(projection, resolution, point, units) {
     if (projUnits == "degrees" && !units || units == "degrees") {
       pointResolution = resolution;
     } else {
-      const toEPSG43262 = getTransformFromProjections(projection, get3("EPSG:4326"));
+      const toEPSG43262 = getTransformFromProjections(
+        projection,
+        get3("EPSG:4326")
+      );
       if (toEPSG43262 === identityTransform && projUnits !== "degrees") {
         pointResolution = resolution * projection.getMetersPerUnit();
       } else {
@@ -1242,7 +1565,12 @@ function transform(coordinate, source, destination) {
 function addCommon() {
   addEquivalentProjections(PROJECTIONS);
   addEquivalentProjections(PROJECTIONS2);
-  addEquivalentTransforms(PROJECTIONS2, PROJECTIONS, fromEPSG4326, toEPSG4326);
+  addEquivalentTransforms(
+    PROJECTIONS2,
+    PROJECTIONS,
+    fromEPSG4326,
+    toEPSG4326
+  );
 }
 addCommon();
 
@@ -1250,6 +1578,14 @@ addCommon();
 var MAX_SUBDIVISION = 10;
 var MAX_TRIANGLE_WIDTH = 0.25;
 var Triangulation = class {
+  /**
+   * @param {import("../proj/Projection.js").default} sourceProj Source projection.
+   * @param {import("../proj/Projection.js").default} targetProj Target projection.
+   * @param {import("../extent.js").Extent} targetExtent Target extent to triangulate.
+   * @param {import("../extent.js").Extent} maxSourceExtent Maximal source extent that can be used.
+   * @param {number} errorThreshold Acceptable error (in source units).
+   * @param {?number} destinationResolution The (optional) resolution of the destination.
+   */
   constructor(sourceProj, targetProj, targetExtent, maxSourceExtent, errorThreshold, destinationResolution) {
     this.sourceProj_ = sourceProj;
     this.targetProj_ = targetProj;
@@ -1277,15 +1613,41 @@ var Triangulation = class {
     const sourceTopRight = this.transformInv_(destinationTopRight);
     const sourceBottomRight = this.transformInv_(destinationBottomRight);
     const sourceBottomLeft = this.transformInv_(destinationBottomLeft);
-    const maxSubdivision = MAX_SUBDIVISION + (destinationResolution ? Math.max(0, Math.ceil(Math.log2(getArea(targetExtent) / (destinationResolution * destinationResolution * 256 * 256)))) : 0);
-    this.addQuad_(destinationTopLeft, destinationTopRight, destinationBottomRight, destinationBottomLeft, sourceTopLeft, sourceTopRight, sourceBottomRight, sourceBottomLeft, maxSubdivision);
+    const maxSubdivision = MAX_SUBDIVISION + (destinationResolution ? Math.max(
+      0,
+      Math.ceil(
+        Math.log2(
+          getArea(targetExtent) / (destinationResolution * destinationResolution * 256 * 256)
+        )
+      )
+    ) : 0);
+    this.addQuad_(
+      destinationTopLeft,
+      destinationTopRight,
+      destinationBottomRight,
+      destinationBottomLeft,
+      sourceTopLeft,
+      sourceTopRight,
+      sourceBottomRight,
+      sourceBottomLeft,
+      maxSubdivision
+    );
     if (this.wrapsXInSource_) {
       let leftBound = Infinity;
       this.triangles_.forEach(function(triangle, i, arr) {
-        leftBound = Math.min(leftBound, triangle.source[0][0], triangle.source[1][0], triangle.source[2][0]);
+        leftBound = Math.min(
+          leftBound,
+          triangle.source[0][0],
+          triangle.source[1][0],
+          triangle.source[2][0]
+        );
       });
       this.triangles_.forEach((triangle) => {
-        if (Math.max(triangle.source[0][0], triangle.source[1][0], triangle.source[2][0]) - leftBound > this.sourceWorldWidth_ / 2) {
+        if (Math.max(
+          triangle.source[0][0],
+          triangle.source[1][0],
+          triangle.source[2][0]
+        ) - leftBound > this.sourceWorldWidth_ / 2) {
           const newTriangle = [
             [triangle.source[0][0], triangle.source[0][1]],
             [triangle.source[1][0], triangle.source[1][1]],
@@ -1300,8 +1662,16 @@ var Triangulation = class {
           if (newTriangle[2][0] - leftBound > this.sourceWorldWidth_ / 2) {
             newTriangle[2][0] -= this.sourceWorldWidth_;
           }
-          const minX = Math.min(newTriangle[0][0], newTriangle[1][0], newTriangle[2][0]);
-          const maxX = Math.max(newTriangle[0][0], newTriangle[1][0], newTriangle[2][0]);
+          const minX = Math.min(
+            newTriangle[0][0],
+            newTriangle[1][0],
+            newTriangle[2][0]
+          );
+          const maxX = Math.max(
+            newTriangle[0][0],
+            newTriangle[1][0],
+            newTriangle[2][0]
+          );
           if (maxX - minX < this.sourceWorldWidth_ / 2) {
             triangle.source = newTriangle;
           }
@@ -1310,16 +1680,45 @@ var Triangulation = class {
     }
     transformInvCache = {};
   }
+  /**
+   * Adds triangle to the triangulation.
+   * @param {import("../coordinate.js").Coordinate} a The target a coordinate.
+   * @param {import("../coordinate.js").Coordinate} b The target b coordinate.
+   * @param {import("../coordinate.js").Coordinate} c The target c coordinate.
+   * @param {import("../coordinate.js").Coordinate} aSrc The source a coordinate.
+   * @param {import("../coordinate.js").Coordinate} bSrc The source b coordinate.
+   * @param {import("../coordinate.js").Coordinate} cSrc The source c coordinate.
+   * @private
+   */
   addTriangle_(a, b, c, aSrc, bSrc, cSrc) {
     this.triangles_.push({
       source: [aSrc, bSrc, cSrc],
       target: [a, b, c]
     });
   }
+  /**
+   * Adds quad (points in clock-wise order) to the triangulation
+   * (and reprojects the vertices) if valid.
+   * Performs quad subdivision if needed to increase precision.
+   *
+   * @param {import("../coordinate.js").Coordinate} a The target a coordinate.
+   * @param {import("../coordinate.js").Coordinate} b The target b coordinate.
+   * @param {import("../coordinate.js").Coordinate} c The target c coordinate.
+   * @param {import("../coordinate.js").Coordinate} d The target d coordinate.
+   * @param {import("../coordinate.js").Coordinate} aSrc The source a coordinate.
+   * @param {import("../coordinate.js").Coordinate} bSrc The source b coordinate.
+   * @param {import("../coordinate.js").Coordinate} cSrc The source c coordinate.
+   * @param {import("../coordinate.js").Coordinate} dSrc The source d coordinate.
+   * @param {number} maxSubdivision Maximal allowed subdivision of the quad.
+   * @private
+   */
   addQuad_(a, b, c, d, aSrc, bSrc, cSrc, dSrc, maxSubdivision) {
     const sourceQuadExtent = boundingExtent([aSrc, bSrc, cSrc, dSrc]);
     const sourceCoverageX = this.sourceWorldWidth_ ? getWidth(sourceQuadExtent) / this.sourceWorldWidth_ : null;
-    const sourceWorldWidth = this.sourceWorldWidth_;
+    const sourceWorldWidth = (
+      /** @type {number} */
+      this.sourceWorldWidth_
+    );
     const wrapsX = this.sourceProj_.canWrapX() && sourceCoverageX > 0.5 && sourceCoverageX < 1;
     let needsSubdivision = false;
     if (maxSubdivision > 0) {
@@ -1373,15 +1772,55 @@ var Triangulation = class {
           const bcSrc = this.transformInv_(bc);
           const da = [(d[0] + a[0]) / 2, (d[1] + a[1]) / 2];
           const daSrc = this.transformInv_(da);
-          this.addQuad_(a, b, bc, da, aSrc, bSrc, bcSrc, daSrc, maxSubdivision - 1);
-          this.addQuad_(da, bc, c, d, daSrc, bcSrc, cSrc, dSrc, maxSubdivision - 1);
+          this.addQuad_(
+            a,
+            b,
+            bc,
+            da,
+            aSrc,
+            bSrc,
+            bcSrc,
+            daSrc,
+            maxSubdivision - 1
+          );
+          this.addQuad_(
+            da,
+            bc,
+            c,
+            d,
+            daSrc,
+            bcSrc,
+            cSrc,
+            dSrc,
+            maxSubdivision - 1
+          );
         } else {
           const ab = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
           const abSrc = this.transformInv_(ab);
           const cd = [(c[0] + d[0]) / 2, (c[1] + d[1]) / 2];
           const cdSrc = this.transformInv_(cd);
-          this.addQuad_(a, ab, cd, d, aSrc, abSrc, cdSrc, dSrc, maxSubdivision - 1);
-          this.addQuad_(ab, b, c, cd, abSrc, bSrc, cSrc, cdSrc, maxSubdivision - 1);
+          this.addQuad_(
+            a,
+            ab,
+            cd,
+            d,
+            aSrc,
+            abSrc,
+            cdSrc,
+            dSrc,
+            maxSubdivision - 1
+          );
+          this.addQuad_(
+            ab,
+            b,
+            c,
+            cd,
+            abSrc,
+            bSrc,
+            cSrc,
+            cdSrc,
+            maxSubdivision - 1
+          );
         }
         return;
       }
@@ -1407,6 +1846,11 @@ var Triangulation = class {
       }
     }
   }
+  /**
+   * Calculates extent of the `source` coordinates from all the triangles.
+   *
+   * @return {import("../extent.js").Extent} Calculated extent.
+   */
   calculateSourceExtent() {
     const extent = createEmpty();
     this.triangles_.forEach(function(triangle, i, arr) {
@@ -1417,6 +1861,9 @@ var Triangulation = class {
     });
     return extent;
   }
+  /**
+   * @return {Array<Triangle>} Array of the calculated triangles.
+   */
   getTriangles() {
     return this.triangles_;
   }
@@ -1456,7 +1903,11 @@ function isBrokenDiagonalRendering() {
 }
 function calculateSourceResolution(sourceProj, targetProj, targetCenter, targetResolution) {
   const sourceCenter = transform(targetCenter, targetProj, sourceProj);
-  let sourceResolution = getPointResolution(targetProj, targetResolution, targetCenter);
+  let sourceResolution = getPointResolution(
+    targetProj,
+    targetResolution,
+    targetCenter
+  );
   const targetMetersPerUnit = targetProj.getMetersPerUnit();
   if (targetMetersPerUnit !== void 0) {
     sourceResolution *= targetMetersPerUnit;
@@ -1476,17 +1927,31 @@ function calculateSourceResolution(sourceProj, targetProj, targetCenter, targetR
 }
 function calculateSourceExtentResolution(sourceProj, targetProj, targetExtent, targetResolution) {
   const targetCenter = getCenter(targetExtent);
-  let sourceResolution = calculateSourceResolution(sourceProj, targetProj, targetCenter, targetResolution);
+  let sourceResolution = calculateSourceResolution(
+    sourceProj,
+    targetProj,
+    targetCenter,
+    targetResolution
+  );
   if (!isFinite(sourceResolution) || sourceResolution <= 0) {
     forEachCorner(targetExtent, function(corner) {
-      sourceResolution = calculateSourceResolution(sourceProj, targetProj, corner, targetResolution);
+      sourceResolution = calculateSourceResolution(
+        sourceProj,
+        targetProj,
+        corner,
+        targetResolution
+      );
       return isFinite(sourceResolution) && sourceResolution > 0;
     });
   }
   return sourceResolution;
 }
 function render(width, height, pixelRatio, sourceResolution, sourceExtent, targetResolution, targetExtent, triangulation, sources, gutter, renderEdges, interpolate) {
-  const context = createCanvasContext2D(Math.round(pixelRatio * width), Math.round(pixelRatio * height), canvasPool);
+  const context = createCanvasContext2D(
+    Math.round(pixelRatio * width),
+    Math.round(pixelRatio * height),
+    canvasPool
+  );
   if (!interpolate) {
     context.imageSmoothingEnabled = false;
   }
@@ -1504,7 +1969,11 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
   });
   const canvasWidthInUnits = getWidth(sourceDataExtent);
   const canvasHeightInUnits = getHeight(sourceDataExtent);
-  const stitchContext = createCanvasContext2D(Math.round(pixelRatio * canvasWidthInUnits / sourceResolution), Math.round(pixelRatio * canvasHeightInUnits / sourceResolution), canvasPool);
+  const stitchContext = createCanvasContext2D(
+    Math.round(pixelRatio * canvasWidthInUnits / sourceResolution),
+    Math.round(pixelRatio * canvasHeightInUnits / sourceResolution),
+    canvasPool
+  );
   if (!interpolate) {
     stitchContext.imageSmoothingEnabled = false;
   }
@@ -1515,7 +1984,17 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
     const srcWidth = getWidth(src.extent);
     const srcHeight = getHeight(src.extent);
     if (src.image.width > 0 && src.image.height > 0) {
-      stitchContext.drawImage(src.image, gutter, gutter, src.image.width - 2 * gutter, src.image.height - 2 * gutter, xPos * stitchScale, yPos * stitchScale, srcWidth * stitchScale, srcHeight * stitchScale);
+      stitchContext.drawImage(
+        src.image,
+        gutter,
+        gutter,
+        src.image.width - 2 * gutter,
+        src.image.height - 2 * gutter,
+        xPos * stitchScale,
+        yPos * stitchScale,
+        srcWidth * stitchScale,
+        srcHeight * stitchScale
+      );
     }
   });
   const targetTopLeft = getTopLeft(targetExtent);
@@ -1526,11 +2005,17 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
     let x1 = source[1][0], y1 = source[1][1];
     let x2 = source[2][0], y2 = source[2][1];
     const u0 = pixelRound((target[0][0] - targetTopLeft[0]) / targetResolution);
-    const v0 = pixelRound(-(target[0][1] - targetTopLeft[1]) / targetResolution);
+    const v0 = pixelRound(
+      -(target[0][1] - targetTopLeft[1]) / targetResolution
+    );
     const u1 = pixelRound((target[1][0] - targetTopLeft[0]) / targetResolution);
-    const v1 = pixelRound(-(target[1][1] - targetTopLeft[1]) / targetResolution);
+    const v1 = pixelRound(
+      -(target[1][1] - targetTopLeft[1]) / targetResolution
+    );
     const u2 = pixelRound((target[2][0] - targetTopLeft[0]) / targetResolution);
-    const v2 = pixelRound(-(target[2][1] - targetTopLeft[1]) / targetResolution);
+    const v2 = pixelRound(
+      -(target[2][1] - targetTopLeft[1]) / targetResolution
+    );
     const sourceNumericalShiftX = x0;
     const sourceNumericalShiftY = y0;
     x0 = 0;
@@ -1557,9 +2042,15 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
       const ud = u0 - u1;
       const vd = v0 - v1;
       for (let step = 0; step < steps; step++) {
-        context.lineTo(u1 + pixelRound((step + 1) * ud / steps), v1 + pixelRound(step * vd / (steps - 1)));
+        context.lineTo(
+          u1 + pixelRound((step + 1) * ud / steps),
+          v1 + pixelRound(step * vd / (steps - 1))
+        );
         if (step != steps - 1) {
-          context.lineTo(u1 + pixelRound((step + 1) * ud / steps), v1 + pixelRound((step + 1) * vd / (steps - 1)));
+          context.lineTo(
+            u1 + pixelRound((step + 1) * ud / steps),
+            v1 + pixelRound((step + 1) * vd / (steps - 1))
+          );
         }
       }
       context.lineTo(u2, v2);
@@ -1569,9 +2060,22 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
       context.lineTo(u2, v2);
     }
     context.clip();
-    context.transform(affineCoefs[0], affineCoefs[2], affineCoefs[1], affineCoefs[3], u0, v0);
-    context.translate(sourceDataExtent[0] - sourceNumericalShiftX, sourceDataExtent[3] - sourceNumericalShiftY);
-    context.scale(sourceResolution / pixelRatio, -sourceResolution / pixelRatio);
+    context.transform(
+      affineCoefs[0],
+      affineCoefs[2],
+      affineCoefs[1],
+      affineCoefs[3],
+      u0,
+      v0
+    );
+    context.translate(
+      sourceDataExtent[0] - sourceNumericalShiftX,
+      sourceDataExtent[3] - sourceNumericalShiftY
+    );
+    context.scale(
+      sourceResolution / pixelRatio,
+      -sourceResolution / pixelRatio
+    );
     context.drawImage(stitchContext.canvas, 0, 0);
     context.restore();
   });
@@ -1604,6 +2108,21 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
 
 // ../node_modules/ol/reproj/Tile.js
 var ReprojTile = class extends Tile_default {
+  /**
+   * @param {import("../proj/Projection.js").default} sourceProj Source projection.
+   * @param {import("../tilegrid/TileGrid.js").default} sourceTileGrid Source tile grid.
+   * @param {import("../proj/Projection.js").default} targetProj Target projection.
+   * @param {import("../tilegrid/TileGrid.js").default} targetTileGrid Target tile grid.
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Coordinate of the tile.
+   * @param {import("../tilecoord.js").TileCoord} wrappedTileCoord Coordinate of the tile wrapped in X.
+   * @param {number} pixelRatio Pixel ratio.
+   * @param {number} gutter Gutter of the source tiles.
+   * @param {FunctionType} getTileFunction
+   *     Function returning source tiles (z, x, y, pixelRatio).
+   * @param {number} [errorThreshold] Acceptable reprojection error (in px).
+   * @param {boolean} [renderEdges] Render reprojection edges.
+   * @param {boolean} [interpolate] Use linear interpolation when resampling.
+   */
   constructor(sourceProj, sourceTileGrid, targetProj, targetTileGrid, tileCoord, wrappedTileCoord, pixelRatio, gutter, getTileFunction, errorThreshold, renderEdges, interpolate) {
     super(tileCoord, TileState_default.IDLE, { interpolate: !!interpolate });
     this.renderEdges_ = renderEdges !== void 0 ? renderEdges : false;
@@ -1616,7 +2135,9 @@ var ReprojTile = class extends Tile_default {
     this.sourceTiles_ = [];
     this.sourcesListenerKeys_ = null;
     this.sourceZ_ = 0;
-    const targetExtent = targetTileGrid.getTileCoordExtent(this.wrappedTileCoord_);
+    const targetExtent = targetTileGrid.getTileCoordExtent(
+      this.wrappedTileCoord_
+    );
     const maxTargetExtent = this.targetTileGrid_.getExtent();
     let maxSourceExtent = this.sourceTileGrid_.getExtent();
     const limitedTargetExtent = maxTargetExtent ? getIntersection(targetExtent, maxTargetExtent) : targetExtent;
@@ -1632,14 +2153,28 @@ var ReprojTile = class extends Tile_default {
         maxSourceExtent = getIntersection(maxSourceExtent, sourceProjExtent);
       }
     }
-    const targetResolution = targetTileGrid.getResolution(this.wrappedTileCoord_[0]);
-    const sourceResolution = calculateSourceExtentResolution(sourceProj, targetProj, limitedTargetExtent, targetResolution);
+    const targetResolution = targetTileGrid.getResolution(
+      this.wrappedTileCoord_[0]
+    );
+    const sourceResolution = calculateSourceExtentResolution(
+      sourceProj,
+      targetProj,
+      limitedTargetExtent,
+      targetResolution
+    );
     if (!isFinite(sourceResolution) || sourceResolution <= 0) {
       this.state = TileState_default.EMPTY;
       return;
     }
     const errorThresholdInPixels = errorThreshold !== void 0 ? errorThreshold : ERROR_THRESHOLD;
-    this.triangulation_ = new Triangulation_default(sourceProj, targetProj, limitedTargetExtent, maxSourceExtent, sourceResolution * errorThresholdInPixels, targetResolution);
+    this.triangulation_ = new Triangulation_default(
+      sourceProj,
+      targetProj,
+      limitedTargetExtent,
+      maxSourceExtent,
+      sourceResolution * errorThresholdInPixels,
+      targetResolution
+    );
     if (this.triangulation_.getTriangles().length === 0) {
       this.state = TileState_default.EMPTY;
       return;
@@ -1648,8 +2183,16 @@ var ReprojTile = class extends Tile_default {
     let sourceExtent = this.triangulation_.calculateSourceExtent();
     if (maxSourceExtent) {
       if (sourceProj.canWrapX()) {
-        sourceExtent[1] = clamp(sourceExtent[1], maxSourceExtent[1], maxSourceExtent[3]);
-        sourceExtent[3] = clamp(sourceExtent[3], maxSourceExtent[1], maxSourceExtent[3]);
+        sourceExtent[1] = clamp(
+          sourceExtent[1],
+          maxSourceExtent[1],
+          maxSourceExtent[3]
+        );
+        sourceExtent[3] = clamp(
+          sourceExtent[3],
+          maxSourceExtent[1],
+          maxSourceExtent[3]
+        );
       } else {
         sourceExtent = getIntersection(sourceExtent, maxSourceExtent);
       }
@@ -1657,7 +2200,10 @@ var ReprojTile = class extends Tile_default {
     if (!getArea(sourceExtent)) {
       this.state = TileState_default.EMPTY;
     } else {
-      const sourceRange = sourceTileGrid.getTileRangeForExtentAndZ(sourceExtent, this.sourceZ_);
+      const sourceRange = sourceTileGrid.getTileRangeForExtentAndZ(
+        sourceExtent,
+        this.sourceZ_
+      );
       for (let srcX = sourceRange.minX; srcX <= sourceRange.maxX; srcX++) {
         for (let srcY = sourceRange.minY; srcY <= sourceRange.maxY; srcY++) {
           const tile = getTileFunction(this.sourceZ_, srcX, srcY, pixelRatio);
@@ -1671,9 +2217,16 @@ var ReprojTile = class extends Tile_default {
       }
     }
   }
+  /**
+   * Get the HTML Canvas element for this tile.
+   * @return {HTMLCanvasElement} Canvas.
+   */
   getImage() {
     return this.canvas_;
   }
+  /**
+   * @private
+   */
   reproject_() {
     const sources = [];
     this.sourceTiles_.forEach((tile) => {
@@ -1693,13 +2246,33 @@ var ReprojTile = class extends Tile_default {
       const width = typeof size === "number" ? size : size[0];
       const height = typeof size === "number" ? size : size[1];
       const targetResolution = this.targetTileGrid_.getResolution(z);
-      const sourceResolution = this.sourceTileGrid_.getResolution(this.sourceZ_);
-      const targetExtent = this.targetTileGrid_.getTileCoordExtent(this.wrappedTileCoord_);
-      this.canvas_ = render(width, height, this.pixelRatio_, sourceResolution, this.sourceTileGrid_.getExtent(), targetResolution, targetExtent, this.triangulation_, sources, this.gutter_, this.renderEdges_, this.interpolate);
+      const sourceResolution = this.sourceTileGrid_.getResolution(
+        this.sourceZ_
+      );
+      const targetExtent = this.targetTileGrid_.getTileCoordExtent(
+        this.wrappedTileCoord_
+      );
+      this.canvas_ = render(
+        width,
+        height,
+        this.pixelRatio_,
+        sourceResolution,
+        this.sourceTileGrid_.getExtent(),
+        targetResolution,
+        targetExtent,
+        this.triangulation_,
+        sources,
+        this.gutter_,
+        this.renderEdges_,
+        this.interpolate
+      );
       this.state = TileState_default.LOADED;
     }
     this.changed();
   }
+  /**
+   * Load not yet loaded URI.
+   */
   load() {
     if (this.state == TileState_default.IDLE) {
       this.state = TileState_default.LOADING;
@@ -1710,17 +2283,22 @@ var ReprojTile = class extends Tile_default {
         const state = tile.getState();
         if (state == TileState_default.IDLE || state == TileState_default.LOADING) {
           leftToLoad++;
-          const sourceListenKey = listen(tile, EventType_default.CHANGE, function(e) {
-            const state2 = tile.getState();
-            if (state2 == TileState_default.LOADED || state2 == TileState_default.ERROR || state2 == TileState_default.EMPTY) {
-              unlistenByKey(sourceListenKey);
-              leftToLoad--;
-              if (leftToLoad === 0) {
-                this.unlistenSources_();
-                this.reproject_();
+          const sourceListenKey = listen(
+            tile,
+            EventType_default.CHANGE,
+            function(e) {
+              const state2 = tile.getState();
+              if (state2 == TileState_default.LOADED || state2 == TileState_default.ERROR || state2 == TileState_default.EMPTY) {
+                unlistenByKey(sourceListenKey);
+                leftToLoad--;
+                if (leftToLoad === 0) {
+                  this.unlistenSources_();
+                  this.reproject_();
+                }
               }
-            }
-          }, this);
+            },
+            this
+          );
           this.sourcesListenerKeys_.push(sourceListenKey);
         }
       });
@@ -1736,10 +2314,16 @@ var ReprojTile = class extends Tile_default {
       }
     }
   }
+  /**
+   * @private
+   */
   unlistenSources_() {
     this.sourcesListenerKeys_.forEach(unlistenByKey);
     this.sourcesListenerKeys_ = null;
   }
+  /**
+   * Remove from the cache due to expiry
+   */
   release() {
     if (this.canvas_) {
       releaseCanvas(this.canvas_.getContext("2d"));
@@ -1753,6 +2337,9 @@ var Tile_default2 = ReprojTile;
 
 // ../node_modules/ol/structs/LRUCache.js
 var LRUCache = class {
+  /**
+   * @param {number} [highWaterMark] High water mark.
+   */
   constructor(highWaterMark) {
     this.highWaterMark = highWaterMark !== void 0 ? highWaterMark : 2048;
     this.count_ = 0;
@@ -1760,23 +2347,43 @@ var LRUCache = class {
     this.oldest_ = null;
     this.newest_ = null;
   }
+  /**
+   * @return {boolean} Can expire cache.
+   */
   canExpireCache() {
     return this.highWaterMark > 0 && this.getCount() > this.highWaterMark;
   }
+  /**
+   * Expire the cache.
+   * @param {!Object<string, boolean>} [keep] Keys to keep. To be implemented by subclasses.
+   */
   expireCache(keep) {
     while (this.canExpireCache()) {
       this.pop();
     }
   }
+  /**
+   * FIXME empty description for jsdoc
+   */
   clear() {
     this.count_ = 0;
     this.entries_ = {};
     this.oldest_ = null;
     this.newest_ = null;
   }
+  /**
+   * @param {string} key Key.
+   * @return {boolean} Contains key.
+   */
   containsKey(key) {
     return this.entries_.hasOwnProperty(key);
   }
+  /**
+   * @param {function(T, string, LRUCache<T>): ?} f The function
+   *     to call for every entry from the oldest to the newer. This function takes
+   *     3 arguments (the entry value, the entry key and the LRUCache object).
+   *     The return value is ignored.
+   */
   forEach(f) {
     let entry = this.oldest_;
     while (entry) {
@@ -1784,13 +2391,19 @@ var LRUCache = class {
       entry = entry.newer;
     }
   }
+  /**
+   * @param {string} key Key.
+   * @param {*} [options] Options (reserved for subclasses).
+   * @return {T} Value.
+   */
   get(key, options) {
     const entry = this.entries_[key];
     assert(entry !== void 0, 15);
     if (entry === this.newest_) {
       return entry.value_;
     } else if (entry === this.oldest_) {
-      this.oldest_ = this.oldest_.newer;
+      this.oldest_ = /** @type {Entry} */
+      this.oldest_.newer;
       this.oldest_.older = null;
     } else {
       entry.newer.older = entry.older;
@@ -1802,16 +2415,23 @@ var LRUCache = class {
     this.newest_ = entry;
     return entry.value_;
   }
+  /**
+   * Remove an entry from the cache.
+   * @param {string} key The entry key.
+   * @return {T} The removed entry.
+   */
   remove(key) {
     const entry = this.entries_[key];
     assert(entry !== void 0, 15);
     if (entry === this.newest_) {
-      this.newest_ = entry.older;
+      this.newest_ = /** @type {Entry} */
+      entry.older;
       if (this.newest_) {
         this.newest_.newer = null;
       }
     } else if (entry === this.oldest_) {
-      this.oldest_ = entry.newer;
+      this.oldest_ = /** @type {Entry} */
+      entry.newer;
       if (this.oldest_) {
         this.oldest_.older = null;
       }
@@ -1823,9 +2443,15 @@ var LRUCache = class {
     --this.count_;
     return entry.value_;
   }
+  /**
+   * @return {number} Count.
+   */
   getCount() {
     return this.count_;
   }
+  /**
+   * @return {Array<string>} Keys.
+   */
   getKeys() {
     const keys = new Array(this.count_);
     let i = 0;
@@ -1835,6 +2461,9 @@ var LRUCache = class {
     }
     return keys;
   }
+  /**
+   * @return {Array<T>} Values.
+   */
   getValues() {
     const values = new Array(this.count_);
     let i = 0;
@@ -1844,38 +2473,65 @@ var LRUCache = class {
     }
     return values;
   }
+  /**
+   * @return {T} Last value.
+   */
   peekLast() {
     return this.oldest_.value_;
   }
+  /**
+   * @return {string} Last key.
+   */
   peekLastKey() {
     return this.oldest_.key_;
   }
+  /**
+   * Get the key of the newest item in the cache.  Throws if the cache is empty.
+   * @return {string} The newest key.
+   */
   peekFirstKey() {
     return this.newest_.key_;
   }
+  /**
+   * Return an entry without updating least recently used time.
+   * @param {string} key Key.
+   * @return {T} Value.
+   */
   peek(key) {
     if (!this.containsKey(key)) {
       return void 0;
     }
     return this.entries_[key].value_;
   }
+  /**
+   * @return {T} value Value.
+   */
   pop() {
     const entry = this.oldest_;
     delete this.entries_[entry.key_];
     if (entry.newer) {
       entry.newer.older = null;
     }
-    this.oldest_ = entry.newer;
+    this.oldest_ = /** @type {Entry} */
+    entry.newer;
     if (!this.oldest_) {
       this.newest_ = null;
     }
     --this.count_;
     return entry.value_;
   }
+  /**
+   * @param {string} key Key.
+   * @param {T} value Value.
+   */
   replace(key, value) {
     this.get(key);
     this.entries_[key].value_ = value;
   }
+  /**
+   * @param {string} key Key.
+   * @param {T} value Value.
+   */
   set(key, value) {
     assert(!(key in this.entries_), 16);
     const entry = {
@@ -1893,6 +2549,11 @@ var LRUCache = class {
     this.entries_[key] = entry;
     ++this.count_;
   }
+  /**
+   * Set a maximum number of entries for the cache.
+   * @param {number} size Cache size.
+   * @api
+   */
   setSize(size) {
     this.highWaterMark = size;
   }
@@ -1943,6 +2604,9 @@ var TileCache = class extends LRUCache_default {
     }
     super.clear();
   }
+  /**
+   * @param {!Object<string, boolean>} usedTiles Used tiles.
+   */
   expireCache(usedTiles) {
     while (this.canExpireCache()) {
       const tile = this.peekLast();
@@ -1953,6 +2617,9 @@ var TileCache = class extends LRUCache_default {
       }
     }
   }
+  /**
+   * Prune all tiles from the cache that don't have the same z as the newest tile.
+   */
   pruneExceptNewestZ() {
     if (this.getCount() === 0) {
       return;
@@ -1972,13 +2639,36 @@ var TileCache_default = TileCache;
 
 // ../node_modules/ol/source/TileEventType.js
 var TileEventType_default = {
+  /**
+   * Triggered when a tile starts loading.
+   * @event module:ol/source/Tile.TileSourceEvent#tileloadstart
+   * @api
+   */
   TILELOADSTART: "tileloadstart",
+  /**
+   * Triggered when a tile finishes loading, either when its data is loaded,
+   * or when loading was aborted because the tile is no longer needed.
+   * @event module:ol/source/Tile.TileSourceEvent#tileloadend
+   * @api
+   */
   TILELOADEND: "tileloadend",
+  /**
+   * Triggered if tile loading results in an error. Note that this is not the
+   * right place to re-fetch tiles. See {@link module:ol/ImageTile~ImageTile#load}
+   * for details.
+   * @event module:ol/source/Tile.TileSourceEvent#tileloaderror
+   * @api
+   */
   TILELOADERROR: "tileloaderror"
 };
 
 // ../node_modules/ol/ObjectEventType.js
 var ObjectEventType_default = {
+  /**
+   * Triggered when a property is changed.
+   * @event module:ol/Object.ObjectEvent#propertychange
+   * @api
+   */
   PROPERTYCHANGE: "propertychange"
 };
 
@@ -1986,18 +2676,37 @@ var ObjectEventType_default = {
 var Observable = class extends Target_default {
   constructor() {
     super();
-    this.on = this.onInternal;
-    this.once = this.onceInternal;
-    this.un = this.unInternal;
+    this.on = /** @type {ObservableOnSignature<import("./events").EventsKey>} */
+    this.onInternal;
+    this.once = /** @type {ObservableOnSignature<import("./events").EventsKey>} */
+    this.onceInternal;
+    this.un = /** @type {ObservableOnSignature<void>} */
+    this.unInternal;
     this.revision_ = 0;
   }
+  /**
+   * Increases the revision counter and dispatches a 'change' event.
+   * @api
+   */
   changed() {
     ++this.revision_;
     this.dispatchEvent(EventType_default.CHANGE);
   }
+  /**
+   * Get the version number for this object.  Each time the object is modified,
+   * its version number will be incremented.
+   * @return {number} Revision.
+   * @api
+   */
   getRevision() {
     return this.revision_;
   }
+  /**
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @return {import("./events.js").EventsKey|Array<import("./events.js").EventsKey>} Event key.
+   * @protected
+   */
   onInternal(type, listener) {
     if (Array.isArray(type)) {
       const len = type.length;
@@ -2007,8 +2716,19 @@ var Observable = class extends Target_default {
       }
       return keys;
     }
-    return listen(this, type, listener);
+    return listen(
+      this,
+      /** @type {string} */
+      type,
+      listener
+    );
   }
+  /**
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @return {import("./events.js").EventsKey|Array<import("./events.js").EventsKey>} Event key.
+   * @protected
+   */
   onceInternal(type, listener) {
     let key;
     if (Array.isArray(type)) {
@@ -2018,13 +2738,27 @@ var Observable = class extends Target_default {
         key[i] = listenOnce(this, type[i], listener);
       }
     } else {
-      key = listenOnce(this, type, listener);
+      key = listenOnce(
+        this,
+        /** @type {string} */
+        type,
+        listener
+      );
     }
     listener.ol_key = key;
     return key;
   }
+  /**
+   * Unlisten for a certain type of event.
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @protected
+   */
   unInternal(type, listener) {
-    const key = listener.ol_key;
+    const key = (
+      /** @type {Object} */
+      listener.ol_key
+    );
     if (key) {
       unByKey(key);
     } else if (Array.isArray(type)) {
@@ -2045,13 +2779,21 @@ function unByKey(key) {
       unlistenByKey(key[i]);
     }
   } else {
-    unlistenByKey(key);
+    unlistenByKey(
+      /** @type {import("./events.js").EventsKey} */
+      key
+    );
   }
 }
 var Observable_default = Observable;
 
 // ../node_modules/ol/Object.js
 var ObjectEvent = class extends Event_default {
+  /**
+   * @param {string} type The event type.
+   * @param {string} key The property name.
+   * @param {*} oldValue The old value for `key`.
+   */
   constructor(type, key, oldValue) {
     super(type);
     this.key = key;
@@ -2059,6 +2801,9 @@ var ObjectEvent = class extends Event_default {
   }
 };
 var BaseObject = class extends Observable_default {
+  /**
+   * @param {Object<string, *>} [values] An object with key-value pairs.
+   */
   constructor(values) {
     super();
     this.on;
@@ -2070,6 +2815,12 @@ var BaseObject = class extends Observable_default {
       this.setProperties(values);
     }
   }
+  /**
+   * Gets a value.
+   * @param {string} key Key name.
+   * @return {*} Value.
+   * @api
+   */
   get(key) {
     let value;
     if (this.values_ && this.values_.hasOwnProperty(key)) {
@@ -2077,15 +2828,32 @@ var BaseObject = class extends Observable_default {
     }
     return value;
   }
+  /**
+   * Get a list of object property names.
+   * @return {Array<string>} List of property names.
+   * @api
+   */
   getKeys() {
     return this.values_ && Object.keys(this.values_) || [];
   }
+  /**
+   * Get an object of all property names and values.
+   * @return {Object<string, *>} Object.
+   * @api
+   */
   getProperties() {
     return this.values_ && Object.assign({}, this.values_) || {};
   }
+  /**
+   * @return {boolean} The object has properties.
+   */
   hasProperties() {
     return !!this.values_;
   }
+  /**
+   * @param {string} key Key name.
+   * @param {*} oldValue Old value.
+   */
   notify(key, oldValue) {
     let eventType;
     eventType = `change:${key}`;
@@ -2097,12 +2865,27 @@ var BaseObject = class extends Observable_default {
       this.dispatchEvent(new ObjectEvent(eventType, key, oldValue));
     }
   }
+  /**
+   * @param {string} key Key name.
+   * @param {import("./events.js").Listener} listener Listener.
+   */
   addChangeListener(key, listener) {
     this.addEventListener(`change:${key}`, listener);
   }
+  /**
+   * @param {string} key Key name.
+   * @param {import("./events.js").Listener} listener Listener.
+   */
   removeChangeListener(key, listener) {
     this.removeEventListener(`change:${key}`, listener);
   }
+  /**
+   * Sets a value.
+   * @param {string} key Key name.
+   * @param {*} value Value.
+   * @param {boolean} [silent] Update without triggering an event.
+   * @api
+   */
   set(key, value, silent) {
     const values = this.values_ || (this.values_ = {});
     if (silent) {
@@ -2115,17 +2898,35 @@ var BaseObject = class extends Observable_default {
       }
     }
   }
+  /**
+   * Sets a collection of key-value pairs.  Note that this changes any existing
+   * properties and adds new ones (it does not remove any existing properties).
+   * @param {Object<string, *>} values Values.
+   * @param {boolean} [silent] Update without triggering an event.
+   * @api
+   */
   setProperties(values, silent) {
     for (const key in values) {
       this.set(key, values[key], silent);
     }
   }
+  /**
+   * Apply any properties from another object without triggering events.
+   * @param {BaseObject} source The source object.
+   * @protected
+   */
   applyProperties(source) {
     if (!source.values_) {
       return;
     }
     Object.assign(this.values_ || (this.values_ = {}), source.values_);
   }
+  /**
+   * Unsets a property.
+   * @param {string} key Key name.
+   * @param {boolean} [silent] Unset without triggering an event.
+   * @api
+   */
   unset(key, silent) {
     if (this.values_ && key in this.values_) {
       const oldValue = this.values_[key];
@@ -2143,6 +2944,9 @@ var Object_default = BaseObject;
 
 // ../node_modules/ol/source/Source.js
 var Source = class extends Object_default {
+  /**
+   * @param {Options} options Source options.
+   */
   constructor(options) {
     super();
     this.projection = get3(options.projection);
@@ -2160,37 +2964,84 @@ var Source = class extends Object_default {
       self2.viewRejector = reject;
     });
   }
+  /**
+   * Get the attribution function for the source.
+   * @return {?Attribution} Attribution function.
+   * @api
+   */
   getAttributions() {
     return this.attributions_;
   }
+  /**
+   * @return {boolean} Attributions are collapsible.
+   * @api
+   */
   getAttributionsCollapsible() {
     return this.attributionsCollapsible_;
   }
+  /**
+   * Get the projection of the source.
+   * @return {import("../proj/Projection.js").default|null} Projection.
+   * @api
+   */
   getProjection() {
     return this.projection;
   }
+  /**
+   * @param {import("../proj/Projection").default} [projection] Projection.
+   * @return {Array<number>|null} Resolutions.
+   */
   getResolutions(projection) {
     return null;
   }
+  /**
+   * @return {Promise<import("../View.js").ViewOptions>} A promise for view-related properties.
+   */
   getView() {
     return this.viewPromise_;
   }
+  /**
+   * Get the state of the source, see {@link import("./Source.js").State} for possible states.
+   * @return {import("./Source.js").State} State.
+   * @api
+   */
   getState() {
     return this.state_;
   }
+  /**
+   * @return {boolean|undefined} Wrap X.
+   */
   getWrapX() {
     return this.wrapX_;
   }
+  /**
+   * @return {boolean} Use linear interpolation when resampling.
+   */
   getInterpolate() {
     return this.interpolate_;
   }
+  /**
+   * Refreshes the source. The source will be cleared, and data from the server will be reloaded.
+   * @api
+   */
   refresh() {
     this.changed();
   }
+  /**
+   * Set the attributions of the source.
+   * @param {AttributionLike|undefined} attributions Attributions.
+   *     Can be passed as `string`, `Array<string>`, {@link module:ol/source/Source~Attribution},
+   *     or `undefined`.
+   * @api
+   */
   setAttributions(attributions) {
     this.attributions_ = adaptAttributions(attributions);
     this.changed();
   }
+  /**
+   * Set the state of the source.
+   * @param {import("./Source.js").State} state State.
+   */
   setState(state) {
     this.state_ = state;
     this.changed();
@@ -2216,24 +3067,50 @@ var Source_default = Source;
 
 // ../node_modules/ol/TileRange.js
 var TileRange = class {
+  /**
+   * @param {number} minX Minimum X.
+   * @param {number} maxX Maximum X.
+   * @param {number} minY Minimum Y.
+   * @param {number} maxY Maximum Y.
+   */
   constructor(minX, maxX, minY, maxY) {
     this.minX = minX;
     this.maxX = maxX;
     this.minY = minY;
     this.maxY = maxY;
   }
+  /**
+   * @param {import("./tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @return {boolean} Contains tile coordinate.
+   */
   contains(tileCoord) {
     return this.containsXY(tileCoord[1], tileCoord[2]);
   }
+  /**
+   * @param {TileRange} tileRange Tile range.
+   * @return {boolean} Contains.
+   */
   containsTileRange(tileRange) {
     return this.minX <= tileRange.minX && tileRange.maxX <= this.maxX && this.minY <= tileRange.minY && tileRange.maxY <= this.maxY;
   }
+  /**
+   * @param {number} x Tile coordinate x.
+   * @param {number} y Tile coordinate y.
+   * @return {boolean} Contains coordinate.
+   */
   containsXY(x, y) {
     return this.minX <= x && x <= this.maxX && this.minY <= y && y <= this.maxY;
   }
+  /**
+   * @param {TileRange} tileRange Tile range.
+   * @return {boolean} Equals.
+   */
   equals(tileRange) {
     return this.minX == tileRange.minX && this.minY == tileRange.minY && this.maxX == tileRange.maxX && this.maxY == tileRange.maxY;
   }
+  /**
+   * @param {TileRange} tileRange Tile range.
+   */
   extend(tileRange) {
     if (tileRange.minX < this.minX) {
       this.minX = tileRange.minX;
@@ -2248,15 +3125,28 @@ var TileRange = class {
       this.maxY = tileRange.maxY;
     }
   }
+  /**
+   * @return {number} Height.
+   */
   getHeight() {
     return this.maxY - this.minY + 1;
   }
+  /**
+   * @return {import("./size.js").Size} Size.
+   */
   getSize() {
     return [this.getWidth(), this.getHeight()];
   }
+  /**
+   * @return {number} Width.
+   */
   getWidth() {
     return this.maxX - this.minX + 1;
   }
+  /**
+   * @param {TileRange} tileRange Tile range.
+   * @return {boolean} Intersects.
+   */
   intersects(tileRange) {
     return this.minX <= tileRange.maxX && this.maxX >= tileRange.minX && this.minY <= tileRange.maxY && this.maxY >= tileRange.minY;
   }
@@ -2282,7 +3172,10 @@ function forEach(flatCoordinates, offset, end, stride, callback) {
   let ret;
   offset += stride;
   for (; offset < end; offset += stride) {
-    ret = callback(flatCoordinates.slice(offset - stride, offset), flatCoordinates.slice(offset, offset + stride));
+    ret = callback(
+      flatCoordinates.slice(offset - stride, offset),
+      flatCoordinates.slice(offset, offset + stride)
+    );
     if (ret) {
       return ret;
     }
@@ -2313,7 +3206,13 @@ function linearRingContainsXY(flatCoordinates, offset, end, stride, x, y) {
 
 // ../node_modules/ol/geom/flat/intersectsextent.js
 function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
-  const coordinatesExtent = extendFlatCoordinates(createEmpty(), flatCoordinates, offset, end, stride);
+  const coordinatesExtent = extendFlatCoordinates(
+    createEmpty(),
+    flatCoordinates,
+    offset,
+    end,
+    stride
+  );
   if (!intersects(extent, coordinatesExtent)) {
     return false;
   }
@@ -2326,24 +3225,64 @@ function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
   if (coordinatesExtent[1] >= extent[1] && coordinatesExtent[3] <= extent[3]) {
     return true;
   }
-  return forEach(flatCoordinates, offset, end, stride, function(point1, point2) {
-    return intersectsSegment(extent, point1, point2);
-  });
+  return forEach(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    /**
+     * @param {import("../../coordinate.js").Coordinate} point1 Start point.
+     * @param {import("../../coordinate.js").Coordinate} point2 End point.
+     * @return {boolean} `true` if the segment and the extent intersect,
+     *     `false` otherwise.
+     */
+    function(point1, point2) {
+      return intersectsSegment(extent, point1, point2);
+    }
+  );
 }
 function intersectsLinearRing(flatCoordinates, offset, end, stride, extent) {
   if (intersectsLineString(flatCoordinates, offset, end, stride, extent)) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[0], extent[1])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[0],
+    extent[1]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[0], extent[3])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[0],
+    extent[3]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[2], extent[1])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[2],
+    extent[1]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[2], extent[3])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[2],
+    extent[3]
+  )) {
     return true;
   }
   return false;
@@ -2375,12 +3314,22 @@ function toSize(size, dest) {
 var tmpTileCoord = [0, 0, 0];
 var DECIMALS = 5;
 var TileGrid = class {
+  /**
+   * @param {Options} options Tile grid options.
+   */
   constructor(options) {
     this.minZoom = options.minZoom !== void 0 ? options.minZoom : 0;
     this.resolutions_ = options.resolutions;
-    assert(isSorted(this.resolutions_, function(a, b) {
-      return b - a;
-    }, true), 17);
+    assert(
+      isSorted(
+        this.resolutions_,
+        function(a, b) {
+          return b - a;
+        },
+        true
+      ),
+      17
+    );
     let zoomFactor;
     if (!options.origins) {
       for (let i = 0, ii = this.resolutions_.length - 1; i < ii; ++i) {
@@ -2406,21 +3355,32 @@ var TileGrid = class {
     if (extent !== void 0 && !this.origin_ && !this.origins_) {
       this.origin_ = getTopLeft(extent);
     }
-    assert(!this.origin_ && this.origins_ || this.origin_ && !this.origins_, 18);
+    assert(
+      !this.origin_ && this.origins_ || this.origin_ && !this.origins_,
+      18
+    );
     this.tileSizes_ = null;
     if (options.tileSizes !== void 0) {
       this.tileSizes_ = options.tileSizes;
       assert(this.tileSizes_.length == this.resolutions_.length, 19);
     }
     this.tileSize_ = options.tileSize !== void 0 ? options.tileSize : !this.tileSizes_ ? DEFAULT_TILE_SIZE : null;
-    assert(!this.tileSize_ && this.tileSizes_ || this.tileSize_ && !this.tileSizes_, 22);
+    assert(
+      !this.tileSize_ && this.tileSizes_ || this.tileSize_ && !this.tileSizes_,
+      22
+    );
     this.extent_ = extent !== void 0 ? extent : null;
     this.fullTileRanges_ = null;
     this.tmpSize_ = [0, 0];
     this.tmpExtent_ = [0, 0, 0, 0];
     if (options.sizes !== void 0) {
       this.fullTileRanges_ = options.sizes.map(function(size, z) {
-        const tileRange = new TileRange_default(Math.min(0, size[0]), Math.max(size[0] - 1, -1), Math.min(0, size[1]), Math.max(size[1] - 1, -1));
+        const tileRange = new TileRange_default(
+          Math.min(0, size[0]),
+          Math.max(size[0] - 1, -1),
+          Math.min(0, size[1]),
+          Math.max(size[1] - 1, -1)
+        );
         if (extent) {
           const restrictedTileRange = this.getTileRangeForExtentAndZ(extent, z);
           tileRange.minX = Math.max(restrictedTileRange.minX, tileRange.minX);
@@ -2434,6 +3394,14 @@ var TileGrid = class {
       this.calculateTileRanges_(extent);
     }
   }
+  /**
+   * Call a function with each tile coordinate for a given extent and zoom level.
+   *
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @param {number} zoom Integer zoom level.
+   * @param {function(import("../tilecoord.js").TileCoord): void} callback Function called with each tile coordinate.
+   * @api
+   */
   forEachTileCoord(extent, zoom, callback) {
     const tileRange = this.getTileRangeForExtentAndZ(extent, zoom);
     for (let i = tileRange.minX, ii = tileRange.maxX; i <= ii; ++i) {
@@ -2442,6 +3410,13 @@ var TileGrid = class {
       }
     }
   }
+  /**
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {function(number, import("../TileRange.js").default): boolean} callback Callback.
+   * @param {import("../TileRange.js").default} [tempTileRange] Temporary import("../TileRange.js").default object.
+   * @param {import("../extent.js").Extent} [tempExtent] Temporary import("../extent.js").Extent object.
+   * @return {boolean} Callback succeeded.
+   */
   forEachTileCoordParentTileRange(tileCoord, callback, tempTileRange, tempExtent) {
     let tileRange, x, y;
     let tileCoordExtent = null;
@@ -2458,7 +3433,11 @@ var TileGrid = class {
         y = Math.floor(y / 2);
         tileRange = createOrUpdate3(x, x, y, y, tempTileRange);
       } else {
-        tileRange = this.getTileRangeForExtentAndZ(tileCoordExtent, z, tempTileRange);
+        tileRange = this.getTileRangeForExtentAndZ(
+          tileCoordExtent,
+          z,
+          tempTileRange
+        );
       }
       if (callback(z, tileRange)) {
         return true;
@@ -2467,39 +3446,96 @@ var TileGrid = class {
     }
     return false;
   }
+  /**
+   * Get the extent for this tile grid, if it was configured.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getExtent() {
     return this.extent_;
   }
+  /**
+   * Get the maximum zoom level for the grid.
+   * @return {number} Max zoom.
+   * @api
+   */
   getMaxZoom() {
     return this.maxZoom;
   }
+  /**
+   * Get the minimum zoom level for the grid.
+   * @return {number} Min zoom.
+   * @api
+   */
   getMinZoom() {
     return this.minZoom;
   }
+  /**
+   * Get the origin for the grid at the given zoom level.
+   * @param {number} z Integer zoom level.
+   * @return {import("../coordinate.js").Coordinate} Origin.
+   * @api
+   */
   getOrigin(z) {
     if (this.origin_) {
       return this.origin_;
     }
     return this.origins_[z];
   }
+  /**
+   * Get the resolution for the given zoom level.
+   * @param {number} z Integer zoom level.
+   * @return {number} Resolution.
+   * @api
+   */
   getResolution(z) {
     return this.resolutions_[z];
   }
+  /**
+   * Get the list of resolutions for the tile grid.
+   * @return {Array<number>} Resolutions.
+   * @api
+   */
   getResolutions() {
     return this.resolutions_;
   }
+  /**
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {import("../TileRange.js").default} [tempTileRange] Temporary import("../TileRange.js").default object.
+   * @param {import("../extent.js").Extent} [tempExtent] Temporary import("../extent.js").Extent object.
+   * @return {import("../TileRange.js").default|null} Tile range.
+   */
   getTileCoordChildTileRange(tileCoord, tempTileRange, tempExtent) {
     if (tileCoord[0] < this.maxZoom) {
       if (this.zoomFactor_ === 2) {
         const minX = tileCoord[1] * 2;
         const minY = tileCoord[2] * 2;
-        return createOrUpdate3(minX, minX + 1, minY, minY + 1, tempTileRange);
+        return createOrUpdate3(
+          minX,
+          minX + 1,
+          minY,
+          minY + 1,
+          tempTileRange
+        );
       }
-      const tileCoordExtent = this.getTileCoordExtent(tileCoord, tempExtent || this.tmpExtent_);
-      return this.getTileRangeForExtentAndZ(tileCoordExtent, tileCoord[0] + 1, tempTileRange);
+      const tileCoordExtent = this.getTileCoordExtent(
+        tileCoord,
+        tempExtent || this.tmpExtent_
+      );
+      return this.getTileRangeForExtentAndZ(
+        tileCoordExtent,
+        tileCoord[0] + 1,
+        tempTileRange
+      );
     }
     return null;
   }
+  /**
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {number} z Integer zoom level.
+   * @param {import("../TileRange.js").default} [tempTileRange] Temporary import("../TileRange.js").default object.
+   * @return {import("../TileRange.js").default|null} Tile range.
+   */
   getTileRangeForTileCoordAndZ(tileCoord, z, tempTileRange) {
     if (z > this.maxZoom || z < this.minZoom) {
       return null;
@@ -2508,7 +3544,13 @@ var TileGrid = class {
     const tileCoordX = tileCoord[1];
     const tileCoordY = tileCoord[2];
     if (z === tileCoordZ) {
-      return createOrUpdate3(tileCoordX, tileCoordY, tileCoordX, tileCoordY, tempTileRange);
+      return createOrUpdate3(
+        tileCoordX,
+        tileCoordY,
+        tileCoordX,
+        tileCoordY,
+        tempTileRange
+      );
     }
     if (this.zoomFactor_) {
       const factor = Math.pow(this.zoomFactor_, z - tileCoordZ);
@@ -2524,6 +3566,13 @@ var TileGrid = class {
     const tileCoordExtent = this.getTileCoordExtent(tileCoord, this.tmpExtent_);
     return this.getTileRangeForExtentAndZ(tileCoordExtent, z, tempTileRange);
   }
+  /**
+   * Get the extent for a tile range.
+   * @param {number} z Integer zoom level.
+   * @param {import("../TileRange.js").default} tileRange Tile range.
+   * @param {import("../extent.js").Extent} [tempExtent] Temporary import("../extent.js").Extent object.
+   * @return {import("../extent.js").Extent} Extent.
+   */
   getTileRangeExtent(z, tileRange, tempExtent) {
     const origin = this.getOrigin(z);
     const resolution = this.getResolution(z);
@@ -2534,6 +3583,13 @@ var TileGrid = class {
     const maxY = origin[1] + (tileRange.maxY + 1) * tileSize[1] * resolution;
     return createOrUpdate(minX, minY, maxX, maxY, tempExtent);
   }
+  /**
+   * Get a tile range for the given extent and integer zoom level.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @param {number} z Integer zoom level.
+   * @param {import("../TileRange.js").default} [tempTileRange] Temporary tile range object.
+   * @return {import("../TileRange.js").default} Tile range.
+   */
   getTileRangeForExtentAndZ(extent, z, tempTileRange) {
     this.getTileCoordForXYAndZ_(extent[0], extent[3], z, false, tmpTileCoord);
     const minX = tmpTileCoord[1];
@@ -2543,6 +3599,10 @@ var TileGrid = class {
     const maxY = tmpTileCoord[2];
     return createOrUpdate3(minX, maxX, minY, maxY, tempTileRange);
   }
+  /**
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @return {import("../coordinate.js").Coordinate} Tile center.
+   */
   getTileCoordCenter(tileCoord) {
     const origin = this.getOrigin(tileCoord[0]);
     const resolution = this.getResolution(tileCoord[0]);
@@ -2552,6 +3612,14 @@ var TileGrid = class {
       origin[1] - (tileCoord[2] + 0.5) * tileSize[1] * resolution
     ];
   }
+  /**
+   * Get the extent of a tile coordinate.
+   *
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {import("../extent.js").Extent} [tempExtent] Temporary extent object.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getTileCoordExtent(tileCoord, tempExtent) {
     const origin = this.getOrigin(tileCoord[0]);
     const resolution = this.getResolution(tileCoord[0]);
@@ -2562,9 +3630,39 @@ var TileGrid = class {
     const maxY = minY + tileSize[1] * resolution;
     return createOrUpdate(minX, minY, maxX, maxY, tempExtent);
   }
+  /**
+   * Get the tile coordinate for the given map coordinate and resolution.  This
+   * method considers that coordinates that intersect tile boundaries should be
+   * assigned the higher tile coordinate.
+   *
+   * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {number} resolution Resolution.
+   * @param {import("../tilecoord.js").TileCoord} [opt_tileCoord] Destination import("../tilecoord.js").TileCoord object.
+   * @return {import("../tilecoord.js").TileCoord} Tile coordinate.
+   * @api
+   */
   getTileCoordForCoordAndResolution(coordinate, resolution, opt_tileCoord) {
-    return this.getTileCoordForXYAndResolution_(coordinate[0], coordinate[1], resolution, false, opt_tileCoord);
+    return this.getTileCoordForXYAndResolution_(
+      coordinate[0],
+      coordinate[1],
+      resolution,
+      false,
+      opt_tileCoord
+    );
   }
+  /**
+   * Note that this method should not be called for resolutions that correspond
+   * to an integer zoom level.  Instead call the `getTileCoordForXYAndZ_` method.
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {number} resolution Resolution (for a non-integer zoom level).
+   * @param {boolean} reverseIntersectionPolicy Instead of letting edge
+   *     intersections go to the higher tile coordinate, let edge intersections
+   *     go to the lower tile coordinate.
+   * @param {import("../tilecoord.js").TileCoord} [opt_tileCoord] Temporary import("../tilecoord.js").TileCoord object.
+   * @return {import("../tilecoord.js").TileCoord} Tile coordinate.
+   * @private
+   */
   getTileCoordForXYAndResolution_(x, y, resolution, reverseIntersectionPolicy, opt_tileCoord) {
     const z = this.getZForResolution(resolution);
     const scale2 = resolution / this.getResolution(z);
@@ -2581,6 +3679,21 @@ var TileGrid = class {
     }
     return createOrUpdate2(z, tileCoordX, tileCoordY, opt_tileCoord);
   }
+  /**
+   * Although there is repetition between this method and `getTileCoordForXYAndResolution_`,
+   * they should have separate implementations.  This method is for integer zoom
+   * levels.  The other method should only be called for resolutions corresponding
+   * to non-integer zoom levels.
+   * @param {number} x Map x coordinate.
+   * @param {number} y Map y coordinate.
+   * @param {number} z Integer zoom level.
+   * @param {boolean} reverseIntersectionPolicy Instead of letting edge
+   *     intersections go to the higher tile coordinate, let edge intersections
+   *     go to the lower tile coordinate.
+   * @param {import("../tilecoord.js").TileCoord} [opt_tileCoord] Temporary import("../tilecoord.js").TileCoord object.
+   * @return {import("../tilecoord.js").TileCoord} Tile coordinate.
+   * @private
+   */
   getTileCoordForXYAndZ_(x, y, z, reverseIntersectionPolicy, opt_tileCoord) {
     const origin = this.getOrigin(z);
     const resolution = this.getResolution(z);
@@ -2596,31 +3709,98 @@ var TileGrid = class {
     }
     return createOrUpdate2(z, tileCoordX, tileCoordY, opt_tileCoord);
   }
+  /**
+   * Get a tile coordinate given a map coordinate and zoom level.
+   * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {number} z Zoom level.
+   * @param {import("../tilecoord.js").TileCoord} [opt_tileCoord] Destination import("../tilecoord.js").TileCoord object.
+   * @return {import("../tilecoord.js").TileCoord} Tile coordinate.
+   * @api
+   */
   getTileCoordForCoordAndZ(coordinate, z, opt_tileCoord) {
-    return this.getTileCoordForXYAndZ_(coordinate[0], coordinate[1], z, false, opt_tileCoord);
+    return this.getTileCoordForXYAndZ_(
+      coordinate[0],
+      coordinate[1],
+      z,
+      false,
+      opt_tileCoord
+    );
   }
+  /**
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @return {number} Tile resolution.
+   */
   getTileCoordResolution(tileCoord) {
     return this.resolutions_[tileCoord[0]];
   }
+  /**
+   * Get the tile size for a zoom level. The type of the return value matches the
+   * `tileSize` or `tileSizes` that the tile grid was configured with. To always
+   * get an {@link import("../size.js").Size}, run the result through {@link module:ol/size.toSize}.
+   * @param {number} z Z.
+   * @return {number|import("../size.js").Size} Tile size.
+   * @api
+   */
   getTileSize(z) {
     if (this.tileSize_) {
       return this.tileSize_;
     }
     return this.tileSizes_[z];
   }
+  /**
+   * @param {number} z Zoom level.
+   * @return {import("../TileRange.js").default} Extent tile range for the specified zoom level.
+   */
   getFullTileRange(z) {
     if (!this.fullTileRanges_) {
       return this.extent_ ? this.getTileRangeForExtentAndZ(this.extent_, z) : null;
     }
     return this.fullTileRanges_[z];
   }
+  /**
+   * @param {number} resolution Resolution.
+   * @param {number|import("../array.js").NearestDirectionFunction} [opt_direction]
+   *     If 0, the nearest resolution will be used.
+   *     If 1, the nearest higher resolution (lower Z) will be used. If -1, the
+   *     nearest lower resolution (higher Z) will be used. Default is 0.
+   *     Use a {@link module:ol/array~NearestDirectionFunction} for more precise control.
+   *
+   * For example to change tile Z at the midpoint of zoom levels
+   * ```js
+   * function(value, high, low) {
+   *   return value - low * Math.sqrt(high / low);
+   * }
+   * ```
+   * @return {number} Z.
+   * @api
+   */
   getZForResolution(resolution, opt_direction) {
-    const z = linearFindNearest(this.resolutions_, resolution, opt_direction || 0);
+    const z = linearFindNearest(
+      this.resolutions_,
+      resolution,
+      opt_direction || 0
+    );
     return clamp(z, this.minZoom, this.maxZoom);
   }
+  /**
+   * The tile with the provided tile coordinate intersects the given viewport.
+   * @param {import('../tilecoord.js').TileCoord} tileCoord Tile coordinate.
+   * @param {Array<number>} viewport Viewport as returned from {@link module:ol/extent.getRotatedViewport}.
+   * @return {boolean} The tile with the provided tile coordinate intersects the given viewport.
+   */
   tileCoordIntersectsViewport(tileCoord, viewport) {
-    return intersectsLinearRing(viewport, 0, viewport.length, 2, this.getTileCoordExtent(tileCoord));
+    return intersectsLinearRing(
+      viewport,
+      0,
+      viewport.length,
+      2,
+      this.getTileCoordExtent(tileCoord)
+    );
   }
+  /**
+   * @param {!import("../extent.js").Extent} extent Extent for this tile grid.
+   * @private
+   */
   calculateTileRanges_(extent) {
     const length = this.resolutions_.length;
     const fullTileRanges = new Array(length);
@@ -2647,7 +3827,9 @@ function wrapX(tileGrid, tileCoord, projection) {
   const projectionExtent = extentFromProjection(projection);
   if (!containsCoordinate(projectionExtent, center)) {
     const worldWidth = getWidth(projectionExtent);
-    const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
+    const worldsAway = Math.ceil(
+      (projectionExtent[0] - center[0]) / worldWidth
+    );
     center[0] += worldWidth * worldsAway;
     return tileGrid.getTileCoordForCoordAndZ(center, z);
   }
@@ -2670,7 +3852,12 @@ function createXYZ(options) {
     extent,
     minZoom: xyzOptions.minZoom,
     tileSize: xyzOptions.tileSize,
-    resolutions: resolutionsFromExtent(extent, xyzOptions.maxZoom, xyzOptions.tileSize, xyzOptions.maxResolution)
+    resolutions: resolutionsFromExtent(
+      extent,
+      xyzOptions.maxZoom,
+      xyzOptions.tileSize,
+      xyzOptions.maxResolution
+    )
   };
   return new TileGrid_default(gridOptions);
 }
@@ -2703,6 +3890,9 @@ function extentFromProjection(projection) {
 
 // ../node_modules/ol/source/Tile.js
 var TileSource = class extends Source_default {
+  /**
+   * @param {Options} options SourceTile source options.
+   */
   constructor(options) {
     super({
       attributions: options.attributions,
@@ -2731,15 +3921,31 @@ var TileSource = class extends Source_default {
     };
     this.zDirection = options.zDirection ? options.zDirection : 0;
   }
+  /**
+   * @return {boolean} Can expire cache.
+   */
   canExpireCache() {
     return this.tileCache.canExpireCache();
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @param {!Object<string, boolean>} usedTiles Used tiles.
+   */
   expireCache(projection, usedTiles) {
     const tileCache = this.getTileCacheForProjection(projection);
     if (tileCache) {
       tileCache.expireCache(usedTiles);
     }
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @param {number} z Zoom level.
+   * @param {import("../TileRange.js").default} tileRange Tile range.
+   * @param {function(import("../Tile.js").default):(boolean|void)} callback Called with each
+   *     loaded tile.  If the callback returns `false`, the tile will not be
+   *     considered loaded.
+   * @return {boolean} The tile range is fully covered with loaded tiles.
+   */
   forEachLoadedTile(projection, z, tileRange, callback) {
     const tileCache = this.getTileCacheForProjection(projection);
     if (!tileCache) {
@@ -2752,7 +3958,8 @@ var TileSource = class extends Source_default {
         tileCoordKey = getKeyZXY(z, x, y);
         loaded = false;
         if (tileCache.containsKey(tileCoordKey)) {
-          tile = tileCache.get(tileCoordKey);
+          tile = /** @type {!import("../Tile.js").default} */
+          tileCache.get(tileCoordKey);
           loaded = tile.getState() === TileState_default.LOADED;
           if (loaded) {
             loaded = callback(tile) !== false;
@@ -2765,21 +3972,42 @@ var TileSource = class extends Source_default {
     }
     return covered;
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {number} Gutter.
+   */
   getGutterForProjection(projection) {
     return 0;
   }
+  /**
+   * Return the key to be used for all tiles in the source.
+   * @return {string} The key for all tiles.
+   */
   getKey() {
     return this.key_;
   }
+  /**
+   * Set the value to be used as the key for all tiles in the source.
+   * @param {string} key The key for tiles.
+   * @protected
+   */
   setKey(key) {
     if (this.key_ !== key) {
       this.key_ = key;
       this.changed();
     }
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {boolean} Opaque.
+   */
   getOpaque(projection) {
     return this.opaque_;
   }
+  /**
+   * @param {import("../proj/Projection").default} [projection] Projection.
+   * @return {Array<number>|null} Resolutions.
+   */
   getResolutions(projection) {
     const tileGrid = projection ? this.getTileGridForProjection(projection) : this.tileGrid;
     if (!tileGrid) {
@@ -2787,26 +4015,66 @@ var TileSource = class extends Source_default {
     }
     return tileGrid.getResolutions();
   }
+  /**
+   * @abstract
+   * @param {number} z Tile coordinate z.
+   * @param {number} x Tile coordinate x.
+   * @param {number} y Tile coordinate y.
+   * @param {number} pixelRatio Pixel ratio.
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {!import("../Tile.js").default} Tile.
+   */
   getTile(z, x, y, pixelRatio, projection) {
     return abstract();
   }
+  /**
+   * Return the tile grid of the tile source.
+   * @return {import("../tilegrid/TileGrid.js").default|null} Tile grid.
+   * @api
+   */
   getTileGrid() {
     return this.tileGrid;
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {!import("../tilegrid/TileGrid.js").default} Tile grid.
+   */
   getTileGridForProjection(projection) {
     if (!this.tileGrid) {
       return getForProjection(projection);
     }
     return this.tileGrid;
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {import("../TileCache.js").default} Tile cache.
+   * @protected
+   */
   getTileCacheForProjection(projection) {
     const sourceProjection = this.getProjection();
-    assert(sourceProjection === null || equivalent(sourceProjection, projection), 68);
+    assert(
+      sourceProjection === null || equivalent(sourceProjection, projection),
+      68
+      // A VectorTile source can only be rendered if it has a projection compatible with the view projection.
+    );
     return this.tileCache;
   }
+  /**
+   * Get the tile pixel ratio for this source. Subclasses may override this
+   * method, which is meant to return a supported pixel ratio that matches the
+   * provided `pixelRatio` as close as possible.
+   * @param {number} pixelRatio Pixel ratio.
+   * @return {number} Tile pixel ratio.
+   */
   getTilePixelRatio(pixelRatio) {
     return this.tilePixelRatio_;
   }
+  /**
+   * @param {number} z Z.
+   * @param {number} pixelRatio Pixel ratio.
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {import("../size.js").Size} Tile size.
+   */
   getTilePixelSize(z, pixelRatio, projection) {
     const tileGrid = this.getTileGridForProjection(projection);
     const tilePixelRatio = this.getTilePixelRatio(pixelRatio);
@@ -2816,6 +4084,15 @@ var TileSource = class extends Source_default {
     }
     return scale(tileSize, tilePixelRatio, this.tmpSize);
   }
+  /**
+   * Returns a tile coordinate wrapped around the x-axis. When the tile coordinate
+   * is outside the resolution and extent range of the tile grid, `null` will be
+   * returned.
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {import("../proj/Projection.js").default} [projection] Projection.
+   * @return {import("../tilecoord.js").TileCoord} Tile coordinate to be passed to the tileUrlFunction or
+   *     null if no tile URL should be created for the passed `tileCoord`.
+   */
   getTileCoordForTileUrlFunction(tileCoord, projection) {
     projection = projection !== void 0 ? projection : this.getProjection();
     const tileGrid = this.getTileGridForProjection(projection);
@@ -2824,6 +4101,10 @@ var TileSource = class extends Source_default {
     }
     return withinExtentAndZ(tileCoord, tileGrid) ? tileCoord : null;
   }
+  /**
+   * Remove all cached tiles from the source. The next render cycle will fetch new tiles.
+   * @api
+   */
   clear() {
     this.tileCache.clear();
   }
@@ -2831,16 +4112,33 @@ var TileSource = class extends Source_default {
     this.clear();
     super.refresh();
   }
+  /**
+   * Increases the cache size if needed
+   * @param {number} tileCount Minimum number of tiles needed.
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   */
   updateCacheSize(tileCount, projection) {
     const tileCache = this.getTileCacheForProjection(projection);
     if (tileCount > tileCache.highWaterMark) {
       tileCache.highWaterMark = tileCount;
     }
   }
+  /**
+   * Marks a tile coord as being used, without triggering a load.
+   * @abstract
+   * @param {number} z Tile coordinate z.
+   * @param {number} x Tile coordinate x.
+   * @param {number} y Tile coordinate y.
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   */
   useTile(z, x, y, projection) {
   }
 };
 var TileSourceEvent = class extends Event_default {
+  /**
+   * @param {string} type Type.
+   * @param {import("../Tile.js").default} tile The tile.
+   */
   constructor(type, tile) {
     super(type);
     this.tile = tile;
@@ -2854,18 +4152,26 @@ function createFromTemplate(template, tileGrid) {
   const xRegEx = /\{x\}/g;
   const yRegEx = /\{y\}/g;
   const dashYRegEx = /\{-y\}/g;
-  return function(tileCoord, pixelRatio, projection) {
-    if (!tileCoord) {
-      return void 0;
+  return (
+    /**
+     * @param {import("./tilecoord.js").TileCoord} tileCoord Tile Coordinate.
+     * @param {number} pixelRatio Pixel ratio.
+     * @param {import("./proj/Projection.js").default} projection Projection.
+     * @return {string|undefined} Tile URL.
+     */
+    function(tileCoord, pixelRatio, projection) {
+      if (!tileCoord) {
+        return void 0;
+      }
+      return template.replace(zRegEx, tileCoord[0].toString()).replace(xRegEx, tileCoord[1].toString()).replace(yRegEx, tileCoord[2].toString()).replace(dashYRegEx, function() {
+        const z = tileCoord[0];
+        const range = tileGrid.getFullTileRange(z);
+        assert(range, 55);
+        const y = range.getHeight() - tileCoord[2] - 1;
+        return y.toString();
+      });
     }
-    return template.replace(zRegEx, tileCoord[0].toString()).replace(xRegEx, tileCoord[1].toString()).replace(yRegEx, tileCoord[2].toString()).replace(dashYRegEx, function() {
-      const z = tileCoord[0];
-      const range = tileGrid.getFullTileRange(z);
-      assert(range, 55);
-      const y = range.getHeight() - tileCoord[2] - 1;
-      return y.toString();
-    });
-  };
+  );
 }
 function createFromTemplates(templates, tileGrid) {
   const len = templates.length;
@@ -2879,14 +4185,22 @@ function createFromTileUrlFunctions(tileUrlFunctions) {
   if (tileUrlFunctions.length === 1) {
     return tileUrlFunctions[0];
   }
-  return function(tileCoord, pixelRatio, projection) {
-    if (!tileCoord) {
-      return void 0;
+  return (
+    /**
+     * @param {import("./tilecoord.js").TileCoord} tileCoord Tile Coordinate.
+     * @param {number} pixelRatio Pixel ratio.
+     * @param {import("./proj/Projection.js").default} projection Projection.
+     * @return {string|undefined} Tile URL.
+     */
+    function(tileCoord, pixelRatio, projection) {
+      if (!tileCoord) {
+        return void 0;
+      }
+      const h = hash(tileCoord);
+      const index = modulo(h, tileUrlFunctions.length);
+      return tileUrlFunctions[index](tileCoord, pixelRatio, projection);
     }
-    const h = hash(tileCoord);
-    const index = modulo(h, tileUrlFunctions.length);
-    return tileUrlFunctions[index](tileCoord, pixelRatio, projection);
-  };
+  );
 }
 function expandUrl(url) {
   const urls = [];
@@ -2913,7 +4227,10 @@ function expandUrl(url) {
 }
 
 // ../node_modules/ol/source/UrlTile.js
-var UrlTile = class extends Tile_default3 {
+var UrlTile = class _UrlTile extends Tile_default3 {
+  /**
+   * @param {Options} options Image tile options.
+   */
   constructor(options) {
     super({
       attributions: options.attributions,
@@ -2930,7 +4247,7 @@ var UrlTile = class extends Tile_default3 {
       attributionsCollapsible: options.attributionsCollapsible,
       zDirection: options.zDirection
     });
-    this.generateTileUrlFunction_ = this.tileUrlFunction === UrlTile.prototype.tileUrlFunction;
+    this.generateTileUrlFunction_ = this.tileUrlFunction === _UrlTile.prototype.tileUrlFunction;
     this.tileLoadFunction = options.tileLoadFunction;
     if (options.tileUrlFunction) {
       this.tileUrlFunction = options.tileUrlFunction;
@@ -2943,17 +4260,42 @@ var UrlTile = class extends Tile_default3 {
     }
     this.tileLoadingKeys_ = {};
   }
+  /**
+   * Return the tile load function of the source.
+   * @return {import("../Tile.js").LoadFunction} TileLoadFunction
+   * @api
+   */
   getTileLoadFunction() {
     return this.tileLoadFunction;
   }
+  /**
+   * Return the tile URL function of the source.
+   * @return {import("../Tile.js").UrlFunction} TileUrlFunction
+   * @api
+   */
   getTileUrlFunction() {
     return Object.getPrototypeOf(this).tileUrlFunction === this.tileUrlFunction ? this.tileUrlFunction.bind(this) : this.tileUrlFunction;
   }
+  /**
+   * Return the URLs used for this source.
+   * When a tileUrlFunction is used instead of url or urls,
+   * null will be returned.
+   * @return {!Array<string>|null} URLs.
+   * @api
+   */
   getUrls() {
     return this.urls;
   }
+  /**
+   * Handle tile change events.
+   * @param {import("../events/Event.js").default} event Event.
+   * @protected
+   */
   handleTileChange(event) {
-    const tile = event.target;
+    const tile = (
+      /** @type {import("../Tile.js").default} */
+      event.target
+    );
     const uid = getUid(tile);
     const tileState = tile.getState();
     let type;
@@ -2968,11 +4310,22 @@ var UrlTile = class extends Tile_default3 {
       this.dispatchEvent(new TileSourceEvent(type, tile));
     }
   }
+  /**
+   * Set the tile load function of the source.
+   * @param {import("../Tile.js").LoadFunction} tileLoadFunction Tile load function.
+   * @api
+   */
   setTileLoadFunction(tileLoadFunction) {
     this.tileCache.clear();
     this.tileLoadFunction = tileLoadFunction;
     this.changed();
   }
+  /**
+   * Set the tile URL function of the source.
+   * @param {import("../Tile.js").UrlFunction} tileUrlFunction Tile URL function.
+   * @param {string} [key] Optional new tile key for the source.
+   * @api
+   */
   setTileUrlFunction(tileUrlFunction, key) {
     this.tileUrlFunction = tileUrlFunction;
     this.tileCache.pruneExceptNewestZ();
@@ -2982,11 +4335,21 @@ var UrlTile = class extends Tile_default3 {
       this.changed();
     }
   }
+  /**
+   * Set the URL to use for requests.
+   * @param {string} url URL.
+   * @api
+   */
   setUrl(url) {
     const urls = expandUrl(url);
     this.urls = urls;
     this.setUrls(urls);
   }
+  /**
+   * Set the URLs to use for requests.
+   * @param {Array<string>} urls URLs.
+   * @api
+   */
   setUrls(urls) {
     this.urls = urls;
     const key = urls.join("\n");
@@ -2996,9 +4359,21 @@ var UrlTile = class extends Tile_default3 {
       this.setKey(key);
     }
   }
+  /**
+   * @param {import("../tilecoord.js").TileCoord} tileCoord Tile coordinate.
+   * @param {number} pixelRatio Pixel ratio.
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {string|undefined} Tile URL.
+   */
   tileUrlFunction(tileCoord, pixelRatio, projection) {
     return void 0;
   }
+  /**
+   * Marks a tile coord as being used, without triggering a load.
+   * @param {number} z Tile coordinate z.
+   * @param {number} x Tile coordinate x.
+   * @param {number} y Tile coordinate y.
+   */
   useTile(z, x, y) {
     const tileCoordKey = getKeyZXY(z, x, y);
     if (this.tileCache.containsKey(tileCoordKey)) {
@@ -3010,6 +4385,9 @@ var UrlTile_default = UrlTile;
 
 // ../node_modules/ol/source/TileImage.js
 var TileImage = class extends UrlTile_default {
+  /**
+   * @param {!Options} options Image tile options.
+   */
   constructor(options) {
     super({
       attributions: options.attributions,
@@ -3037,6 +4415,9 @@ var TileImage = class extends UrlTile_default {
     this.reprojectionErrorThreshold_ = options.reprojectionErrorThreshold;
     this.renderReprojectionEdges_ = false;
   }
+  /**
+   * @return {boolean} Can expire cache.
+   */
   canExpireCache() {
     if (this.tileCache.canExpireCache()) {
       return true;
@@ -3048,23 +4429,40 @@ var TileImage = class extends UrlTile_default {
     }
     return false;
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @param {!Object<string, boolean>} usedTiles Used tiles.
+   */
   expireCache(projection, usedTiles) {
     const usedTileCache = this.getTileCacheForProjection(projection);
-    this.tileCache.expireCache(this.tileCache == usedTileCache ? usedTiles : {});
+    this.tileCache.expireCache(
+      this.tileCache == usedTileCache ? usedTiles : {}
+    );
     for (const id in this.tileCacheForProjection) {
       const tileCache = this.tileCacheForProjection[id];
       tileCache.expireCache(tileCache == usedTileCache ? usedTiles : {});
     }
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {number} Gutter.
+   */
   getGutterForProjection(projection) {
     if (this.getProjection() && projection && !equivalent(this.getProjection(), projection)) {
       return 0;
     }
     return this.getGutter();
   }
+  /**
+   * @return {number} Gutter.
+   */
   getGutter() {
     return 0;
   }
+  /**
+   * Return the key to be used for all tiles in the source.
+   * @return {string} The key for all tiles.
+   */
   getKey() {
     let key = super.getKey();
     if (!this.getInterpolate()) {
@@ -3072,12 +4470,20 @@ var TileImage = class extends UrlTile_default {
     }
     return key;
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {boolean} Opaque.
+   */
   getOpaque(projection) {
     if (this.getProjection() && projection && !equivalent(this.getProjection(), projection)) {
       return false;
     }
     return super.getOpaque(projection);
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {!import("../tilegrid/TileGrid.js").default} Tile grid.
+   */
   getTileGridForProjection(projection) {
     const thisProj = this.getProjection();
     if (this.tileGrid && (!thisProj || equivalent(thisProj, projection))) {
@@ -3089,6 +4495,10 @@ var TileImage = class extends UrlTile_default {
     }
     return this.tileGridForProjection[projKey];
   }
+  /**
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {import("../TileCache.js").default} Tile cache.
+   */
   getTileCacheForProjection(projection) {
     const thisProj = this.getProjection();
     if (!thisProj || equivalent(thisProj, projection)) {
@@ -3096,23 +4506,59 @@ var TileImage = class extends UrlTile_default {
     }
     const projKey = getUid(projection);
     if (!(projKey in this.tileCacheForProjection)) {
-      this.tileCacheForProjection[projKey] = new TileCache_default(this.tileCache.highWaterMark);
+      this.tileCacheForProjection[projKey] = new TileCache_default(
+        this.tileCache.highWaterMark
+      );
     }
     return this.tileCacheForProjection[projKey];
   }
+  /**
+   * @param {number} z Tile coordinate z.
+   * @param {number} x Tile coordinate x.
+   * @param {number} y Tile coordinate y.
+   * @param {number} pixelRatio Pixel ratio.
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @param {string} key The key set on the tile.
+   * @return {!ImageTile} Tile.
+   * @private
+   */
   createTile_(z, x, y, pixelRatio, projection, key) {
     const tileCoord = [z, x, y];
-    const urlTileCoord = this.getTileCoordForTileUrlFunction(tileCoord, projection);
+    const urlTileCoord = this.getTileCoordForTileUrlFunction(
+      tileCoord,
+      projection
+    );
     const tileUrl = urlTileCoord ? this.tileUrlFunction(urlTileCoord, pixelRatio, projection) : void 0;
-    const tile = new this.tileClass(tileCoord, tileUrl !== void 0 ? TileState_default.IDLE : TileState_default.EMPTY, tileUrl !== void 0 ? tileUrl : "", this.crossOrigin, this.tileLoadFunction, this.tileOptions);
+    const tile = new this.tileClass(
+      tileCoord,
+      tileUrl !== void 0 ? TileState_default.IDLE : TileState_default.EMPTY,
+      tileUrl !== void 0 ? tileUrl : "",
+      this.crossOrigin,
+      this.tileLoadFunction,
+      this.tileOptions
+    );
     tile.key = key;
     tile.addEventListener(EventType_default.CHANGE, this.handleTileChange.bind(this));
     return tile;
   }
+  /**
+   * @param {number} z Tile coordinate z.
+   * @param {number} x Tile coordinate x.
+   * @param {number} y Tile coordinate y.
+   * @param {number} pixelRatio Pixel ratio.
+   * @param {import("../proj/Projection.js").default} projection Projection.
+   * @return {!(ImageTile|ReprojTile)} Tile.
+   */
   getTile(z, x, y, pixelRatio, projection) {
     const sourceProjection = this.getProjection();
     if (!sourceProjection || !projection || equivalent(sourceProjection, projection)) {
-      return this.getTileInternal(z, x, y, pixelRatio, sourceProjection || projection);
+      return this.getTileInternal(
+        z,
+        x,
+        y,
+        pixelRatio,
+        sourceProjection || projection
+      );
     }
     const cache2 = this.getTileCacheForProjection(projection);
     const tileCoord = [z, x, y];
@@ -3127,8 +4573,24 @@ var TileImage = class extends UrlTile_default {
     }
     const sourceTileGrid = this.getTileGridForProjection(sourceProjection);
     const targetTileGrid = this.getTileGridForProjection(projection);
-    const wrappedTileCoord = this.getTileCoordForTileUrlFunction(tileCoord, projection);
-    const newTile = new Tile_default2(sourceProjection, sourceTileGrid, projection, targetTileGrid, tileCoord, wrappedTileCoord, this.getTilePixelRatio(pixelRatio), this.getGutter(), (z2, x2, y2, pixelRatio2) => this.getTileInternal(z2, x2, y2, pixelRatio2, sourceProjection), this.reprojectionErrorThreshold_, this.renderReprojectionEdges_, this.getInterpolate());
+    const wrappedTileCoord = this.getTileCoordForTileUrlFunction(
+      tileCoord,
+      projection
+    );
+    const newTile = new Tile_default2(
+      sourceProjection,
+      sourceTileGrid,
+      projection,
+      targetTileGrid,
+      tileCoord,
+      wrappedTileCoord,
+      this.getTilePixelRatio(pixelRatio),
+      this.getGutter(),
+      (z2, x2, y2, pixelRatio2) => this.getTileInternal(z2, x2, y2, pixelRatio2, sourceProjection),
+      this.reprojectionErrorThreshold_,
+      this.renderReprojectionEdges_,
+      this.getInterpolate()
+    );
     newTile.key = key;
     if (tile) {
       newTile.interimTile = tile;
@@ -3139,6 +4601,15 @@ var TileImage = class extends UrlTile_default {
     }
     return newTile;
   }
+  /**
+   * @param {number} z Tile coordinate z.
+   * @param {number} x Tile coordinate x.
+   * @param {number} y Tile coordinate y.
+   * @param {number} pixelRatio Pixel ratio.
+   * @param {!import("../proj/Projection.js").default} projection Projection.
+   * @return {!ImageTile} Tile.
+   * @protected
+   */
   getTileInternal(z, x, y, pixelRatio, projection) {
     let tile = null;
     const tileCoordKey = getKeyZXY(z, x, y);
@@ -3162,6 +4633,11 @@ var TileImage = class extends UrlTile_default {
     }
     return tile;
   }
+  /**
+   * Sets whether to render reprojection edges or not (usually for debugging).
+   * @param {boolean} render Render the edges.
+   * @api
+   */
   setRenderReprojectionEdges(render2) {
     if (this.renderReprojectionEdges_ == render2) {
       return;
@@ -3172,6 +4648,18 @@ var TileImage = class extends UrlTile_default {
     }
     this.changed();
   }
+  /**
+   * Sets the tile grid to use when reprojecting the tiles to the given
+   * projection instead of the default tile grid for the projection.
+   *
+   * This can be useful when the default tile grid cannot be created
+   * (e.g. projection has no extent defined) or
+   * for optimization reasons (custom tile size, resolutions, ...).
+   *
+   * @param {import("../proj.js").ProjectionLike} projection Projection.
+   * @param {import("../tilegrid/TileGrid.js").default} tilegrid Tile grid to use for the projection.
+   * @api
+   */
   setTileGridForProjection(projection, tilegrid) {
     const proj = get3(projection);
     if (proj) {
@@ -3195,6 +4683,9 @@ var TileImage_default = TileImage;
 
 // ../node_modules/ol/source/XYZ.js
 var XYZ = class extends TileImage_default {
+  /**
+   * @param {Options} [options] XYZ options.
+   */
   constructor(options) {
     options = options || {};
     const projection = options.projection !== void 0 ? options.projection : "EPSG:3857";
@@ -3226,6 +4717,9 @@ var XYZ = class extends TileImage_default {
     });
     this.gutter_ = options.gutter !== void 0 ? options.gutter : 0;
   }
+  /**
+   * @return {number} Gutter.
+   */
   getGutter() {
     return this.gutter_;
   }
@@ -3235,6 +4729,9 @@ var XYZ_default = XYZ;
 // ../node_modules/ol/source/OSM.js
 var ATTRIBUTION = '&#169; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors.';
 var OSM = class extends XYZ_default {
+  /**
+   * @param {Options} [options] Open Street Map options.
+   */
   constructor(options) {
     options = options || {};
     let attributions;

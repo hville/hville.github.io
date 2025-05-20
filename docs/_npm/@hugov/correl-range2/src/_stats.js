@@ -326,7 +326,7 @@ var LazyStats = class {
   }
 };
 
-// ../node_modules/@hugov/correl-range/src/_stats.js
+// ../node_modules/@hugov/correl-range2/src/_stats.js
 var Stats = class {
   static bufferOf(instance) {
     return instance[Symbol.for("buffer")];

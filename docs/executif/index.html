@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title>executif</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<meta name=description content="in browser benchmarking">
+	<link rel="stylesheet" href="../_src/main.css">
+	<link href="https://unpkg.com/prismjs@1.24.1/themes/prism.css" rel="stylesheet" />
+	<script type=module src="../_src/data-lang.js"></script>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2>Executif</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<pre><code id=code placeholder="//javasript"></code></pre>
+<iframe sandbox="allow-scripts"></iframe>
+
+<pre id=show></pre>
+<script type=module>
+import {$, $$} from '/_npm/@hugov/inhtml.js'
+import hashData from '../_src/hash-data.js'
+import editable from '../_src/editable.js'
+import {frame} from '../_npm/@hugov/inhtml.js'
+
+const el = editable($`#code`),
+			iframe = $`iframe`,
+			module = /(?<=import[^"'`]*["'`])[^"'`]+/g,
+			isurl = /^[.\/\\]/
+
+function cdnImports(code) {
+	return code.replaceAll(module, link => isurl.test(link) ? link : `https://esm.sh/${link}`)
+}
+
+// save|load
+const onhash = hashData( ({data}) => {
+	console.log('setting textContent from hash', location.hash.length-4, data.length)
+	el.textContent = data
+	iframe.srcdoc = `<link rel="stylesheet" href="../_src/main.css">
+	<script type=module>import {$, $$} from '/_npm/@hugov/inhtml.js'; window.$=$; window.$$=$$;<\/script>
+	<script type=module>${ cdnImports(data) }<\/script>`
+})
+iframe.onerror = e => {console.log('onERROR'); $`body`.append(e)}
+
+el.addEventListener('input', () => {
+	onhash({ data: el.textContent })
+})
+
+function nextFrame() {
+	return new Promise(r => requestAnimationFrame(r))
+}
+
+</script>
+</body>

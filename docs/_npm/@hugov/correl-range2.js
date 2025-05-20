@@ -1,3 +1,128 @@
+// ../node_modules/norm-dist/icdf-voutier.js
+var pL = 0.025;
+var pH = 1 - pL;
+var a0 = 0.151015505647689;
+var a1 = -0.5303572634357367;
+var a2 = 1.365020122861334;
+var b0 = 0.132089632343748;
+var b1 = -0.7607324991323768;
+var c3 = -1.000182518730158;
+var c0 = 16.682320830719988;
+var c1 = 4.120411523939115;
+var c2 = 0.02981418730820021;
+var d0 = 7.173787663925508;
+var d1 = 8.759693508958634;
+function icdf_voutier_default(p = Math.random()) {
+  if (p < pL) {
+    const r2 = Math.sqrt(-Math.log(p) * 2);
+    return (c1 * r2 + c0) / ((r2 + d1) * r2 + d0) + c3 * r2 + c2;
+  }
+  if (p > pH) {
+    const r2 = Math.sqrt(-Math.log1p(-p) * 2);
+    return -((c1 * r2 + c0) / ((r2 + d1) * r2 + d0) + c3 * r2 + c2);
+  }
+  const q = p - 0.5, r = q * q;
+  return ((a1 * r + a0) / ((r + b1) * r + b0) + a2) * q;
+}
+
+// ../node_modules/@hugov/metanorm/index.js
+function metanorm_default(low, top, { min, med, max, ci = 0.8 } = {}) {
+  if (top <= low) throw Error("top <= low");
+  if (max !== void 0 && max <= top) throw Error("max <= top");
+  if (min !== void 0 && low <= min) throw Error("low <= min");
+  if (med !== void 0 && (med <= low || top <= med)) throw Error("med <= low || top <= med");
+  if (min !== void 0 && max !== void 0) {
+    const [a13, a23, a32, k2] = params(ci, low, med, top, (x) => Math.log((x - min) / (max - x)));
+    if (med === void 0) {
+      return (z) => {
+        const q = Math.exp(a13 + a23 * z);
+        return q === Infinity ? max : (min + max * q) / (1 + q);
+      };
+    } else {
+      return (z) => {
+        if (z >= Number.MAX_VALUE) return max;
+        if (z <= -Number.MAX_VALUE) return min;
+        const q = Math.exp(a13 + z * (a23 + a32 * z / (1 + k2 * Math.abs(z))));
+        return q >= Number.MAX_VALUE ? max : (min + max * q) / (1 + q);
+      };
+    }
+  }
+  if (min !== void 0) {
+    const [a13, a23, a32, k2] = params(ci, low, med, top, (x) => Math.log(x - min));
+    if (med === void 0)
+      return (z) => min + Math.exp(a13 + a23 * z);
+    else
+      return (z) => z > 0 ? z === Infinity ? z : min + Math.exp(a13 + z * (a23 + a32 * z / (1 + k2 * z))) : z === -Infinity ? min : min + Math.exp(a13 + z * (a23 + a32 * z / (1 - k2 * z)));
+  }
+  if (max !== void 0) {
+    const [a13, a23, a32, k2] = params(ci, low, med, top, (x) => -Math.log(max - x));
+    if (med === void 0)
+      return (z) => max - Math.exp(-a13 - a23 * z);
+    else
+      return (z) => z > 0 ? z === Infinity ? max : max - Math.exp(-a13 - z * (a23 + a32 * z / (1 + k2 * z))) : z === -Infinity ? z : max - Math.exp(-a13 - z * (a23 + a32 * z / (1 - k2 * z)));
+  }
+  const [a12, a22, a3, k] = params(ci, low, med, top);
+  if (med === void 0)
+    return (z) => a12 + a22 * z;
+  else
+    return (z) => z + 1 === z ? z : a12 + z * (a22 + a3 * z / (1 + k * Math.abs(z)));
+}
+function params(ci, low, med, top, xfo = (x) => x) {
+  const l = xfo(low), t = xfo(top), zq = icdf_voutier_default(0.5 + ci / 2);
+  if (med === void 0) return [(t + l) / 2, (t - l) / (2 * zq), med, med];
+  const m = xfo(med), \u03B1 = 2 * (med - low) / (top - low) - 1, c = 2, k = c * Math.abs(\u03B1) / (zq * (1 - Math.abs(\u03B1)));
+  return [m, (t - l) / (2 * zq), k * (t + l - 2 * m) * (1 + k * zq) / (2 * k * zq * zq), k];
+}
+
+// ../node_modules/@hugov/correl-range2/src/_random-number.js
+var RandomNumber = class {
+  /**
+   * @param {([s: number]) => number} fz - Z random number gererator with optional [0-1] random seed
+   */
+  constructor(fz) {
+    this._fz = fz;
+    this._ks = [];
+    this._ws = [];
+    this.value = NaN;
+  }
+  valueOf() {
+    return this.value;
+  }
+  /**
+   * @param {Array<number>} zs - Z random iid numbers
+   */
+  update(zs) {
+    let v = 0;
+    for (var i = 0; i < this._ks.length; ++i) v += this._ws[i] * zs[this._ks[i]];
+    this.value = this._fz(v);
+    return this;
+  }
+  /**
+   * TODO - custom language in tag template: L`1 2 economy 3%` vs L(1,2,'economy',.03)
+   * @param {Array<string>} risks - random iid names|indices
+   * @param {Object} factors - name-weight risks
+   */
+  _link(risks, factors) {
+    const ks = this._ks, ws = this._ws;
+    let \u0394 = 1, i = 0;
+    Object.keys(factors).forEach((risk) => {
+      ks.push(riskIndex(risks, risk));
+      const w = factors[risk];
+      \u0394 -= (ws[ws.length] = w) ** 2;
+      if (\u0394 < -Number.EPSILON) throw Error("sum of squared weights > 1");
+    });
+    if (\u0394 > Number.EPSILON) {
+      ks.push(risks.push("self") - 1);
+      ws.push(Math.sqrt(\u0394));
+    }
+    return this;
+  }
+};
+function riskIndex(risks, riskName) {
+  let idx = risks.indexOf(riskName);
+  return idx !== -1 ? idx : risks.push(riskName ?? "") - 1;
+}
+
 // ../node_modules/sample-distribution/index.js
 var D = class {
   /**
@@ -326,7 +451,7 @@ var LazyStats = class {
   }
 };
 
-// ../node_modules/@hugov/correl-range/src/_stats.js
+// ../node_modules/@hugov/correl-range2/src/_stats.js
 var Stats = class {
   static bufferOf(instance) {
     return instance[Symbol.for("buffer")];
@@ -362,6 +487,105 @@ var Stats = class {
     return this;
   }
 };
+
+// ../node_modules/@hugov/correl-range2/src/_sim.js
+function random(dim) {
+  const zs = dim.length ? dim : new Float64Array(dim);
+  return function() {
+    for (let i = 0; i < zs.length; ++i) zs[i] = icdf_voutier_default(Math.random());
+    return zs;
+  };
+}
+var Sim = class {
+  constructor(rndNs, risks, model, resolution) {
+    const point = model(), names = Object.keys(point);
+    this.names = names;
+    this.risks = risks;
+    this.rndNs = rndNs;
+    this.model = model;
+    this.stats = new Stats(names, resolution);
+    this.one = Function(
+      "zs",
+      `for (const rn of this.rndNs) rn.update(zs);const o=this.model();${names.filter((n) => typeof point[n] !== "number").map((n) => `o['${n}']=o['${n}'].value`).join(";")};return o`
+    );
+    this.run = Function(
+      /* binded    */
+      "random",
+      "moments",
+      /* arguments */
+      "N=25000",
+      "sampler=random(this.risks.length)",
+      "dim",
+      /* javascrip */
+      `const stats = this.stats;
+			for (let i=0; i<N; ++i) {
+				const zs = sampler();
+				for (const rn of this.rndNs) rn.update(zs);
+				const o=this.model();
+				moments.push(${this.names.map(
+        (n, i) => typeof point[n] === "number" ? `o['${n}']` : `o['${n}'].value`
+      ).join(",")});${this.names.map(
+        (n) => typeof point[n] === "number" ? `stats['${n}'].push(o['${n}'])` : `stats['${n}'].push(o['${n}'].value)`
+      ).join(";")}
+			}
+			return this`
+    ).bind(this, random, Stats.momentsOf(this.stats));
+  }
+  all(iterations, sampler = random(this.risks.length)) {
+    const TypedArray = Float32Array, BYTES_PER_SET = TypedArray.BYTES_PER_ELEMENT * this.names.length, buffer = typeof iterations === "number" ? new ArrayBuffer(BYTES_PER_SET * iterations) : iterations.buffer || iterations;
+    let offset = iterations.byteOffset || 0;
+    const size = Math.floor((buffer.byteLength - offset) / BYTES_PER_SET), results = {};
+    for (const name of this.names) {
+      results[name] = new TypedArray(buffer, offset, size);
+      offset += size * TypedArray.BYTES_PER_ELEMENT;
+    }
+    for (let i = 0; i < size; ++i) {
+      const zs = sampler();
+      for (const rnd of this.rndNs) rnd.update(zs);
+      const sample = this.model();
+      for (const name of this.names) results[name][i] = +sample[name];
+    }
+    return results;
+  }
+  get buffer() {
+    return Stats.bufferOf(this.stats);
+  }
+};
+
+// ../node_modules/@hugov/correl-range2/src/parser.js
+function parser_default(strings, ...values) {
+  const tokens = strings.reduce((acc, str, i) => acc + str + (values[i] ?? ""), "").split(/\s+/), points = [], options = {}, risks = {};
+  for (let t of tokens) {
+    if (t.endsWith("]")) options.max = +t.slice(0, -1);
+    else if (t.startsWith("[")) options.min = +t.slice(1);
+    else if (t.includes(":")) {
+      const [key, val] = t.split(":");
+      risks[key] = val.endsWith("%") ? +val.slice(0, -1) / 100 : +val;
+    } else if (t.includes("=")) {
+      const [key, val] = t.split("=");
+      options[key] = val.endsWith("%") ? +val.slice(0, -1) / 100 : +val;
+    } else points.push(+t.replace(/[,_]/g, ""));
+  }
+  if (points.length === 3) options.med = points.splice(1, 1)[0];
+  points.push(options);
+  return { points, risks };
+}
+
+// ../node_modules/@hugov/correl-range2/sim.js
+function sim_default(factory, { confidence = 0.8, resolution = 128 } = {}) {
+  const riskNames = [], rndNs = [], conf = confidence <= 1 ? confidence : Math.pow(2, 1 - 1 / confidence) - 1;
+  let init = false;
+  const rndFn = function(strings, ...values) {
+    if (init) throw Error("distribution definition must be at initiation");
+    const { points, risks } = parser_default(strings, ...values);
+    return rndNs[rndNs.length] = new RandomNumber(metanorm_default.apply(null, points))._link(riskNames, risks);
+  };
+  const model = factory(rndFn);
+  init = true;
+  console.log("sim.js - riskNames", riskNames, "; # variables", rndNs.length);
+  return new Sim(rndNs, riskNames, model, resolution);
+}
 export {
-  Stats as default
+  Stats,
+  sim_default as default
 };

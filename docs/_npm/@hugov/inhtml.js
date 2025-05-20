@@ -1,8 +1,7 @@
 // ../node_modules/@hugov/inhtml/in-html.js
 function tag(strings) {
   let t = strings[0];
-  for (let i = 1; i < arguments.length; ++i)
-    t += arguments[i] + strings[i];
+  for (let i = 1; i < arguments.length; ++i) t += arguments[i] + strings[i];
   return t;
 }
 function $(selector, parent = document) {
@@ -12,7 +11,9 @@ function $$(selector, parent = document) {
   return parent.querySelectorAll(Array.isArray(selector) ? tag.apply(null, arguments) : selector);
 }
 function html(txt) {
-  return document.createRange().createContextualFragment(Array.isArray(txt) ? tag.apply(null, arguments) : txt);
+  return document.createRange().createContextualFragment(
+    Array.isArray(txt) ? tag.apply(null, arguments) : txt
+  );
 }
 function load(path) {
   return fetch(path).then((res) => res.text().then((txt) => html(txt)));
@@ -23,10 +24,8 @@ function getNode(selection) {
 }
 function $ids(el) {
   const ids = /* @__PURE__ */ Object.create(null);
-  if (el.id)
-    (ids[el.id] = el).removeAttribute("id");
-  for (const kid of el.querySelectorAll("[id]"))
-    (ids[kid.id] = kid).removeAttribute("id");
+  if (el.id) (ids[el.id] = el).removeAttribute("id");
+  for (const kid of el.querySelectorAll("[id]")) (ids[kid.id] = kid).removeAttribute("id");
   return ids;
 }
 function cast(template, decorator) {
@@ -46,23 +45,17 @@ function list(parent, factory, { getKey, after = null, before = null } = {}) {
   function updateList(arr) {
     const kids = /* @__PURE__ */ Object.create(null);
     let spot = after ? after.nextSibling : kin.firstChild;
-    if (!arr.length && !before && !after)
-      kin.textContent = "";
+    if (!arr.length && !before && !after) kin.textContent = "";
     else {
       for (let i = 0; i < arr.length; ++i) {
         const key = getKey?.(arr[i], i, arr) || i;
         let kid = last[key];
-        if (kid)
-          kid.update && kid.update(arr[i], key, arr);
-        else
-          kid = factory(arr[i], i, arr);
+        if (kid) kid.update && kid.update(arr[i], key, arr);
+        else kid = factory(arr[i], i, arr);
         kids[key] = kid;
-        if (!spot)
-          kin.appendChild(kid);
-        else if (kid === spot.nextSibling)
-          kin.removeChild(spot);
-        else if (kid !== spot)
-          kin.insertBefore(kid, spot);
+        if (!spot) kin.appendChild(kid);
+        else if (kid === spot.nextSibling) kin.removeChild(spot);
+        else if (kid !== spot) kin.insertBefore(kid, spot);
         spot = kid.nextSibling;
       }
       while (spot !== before) {
@@ -104,7 +97,12 @@ function frame(lambda, { context = "", transfer1, transfer2, scriptAttributes = 
 
 // ../node_modules/@hugov/inhtml/worker.js
 function worker(code, options = { type: "module" }) {
-  return new Worker(URL.createObjectURL(new Blob([code], { type: "text/javascript" })), options);
+  return new Worker(
+    URL.createObjectURL(
+      new Blob([code], { type: "text/javascript" })
+    ),
+    options
+  );
 }
 export {
   $,

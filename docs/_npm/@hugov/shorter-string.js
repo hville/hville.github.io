@@ -4,8 +4,7 @@ function lyndon(s) {
   let k = 0;
   while (k < s.length) {
     let i = k, j = k + 1;
-    while (j < s.length && s[i] <= s[j])
-      s[i] === s[j++] ? ++i : i = k;
+    while (j < s.length && s[i] <= s[j]) s[i] === s[j++] ? ++i : i = k;
     ends.push(k += j - i);
   }
   return ends;
@@ -14,8 +13,7 @@ function get_rotations(s) {
   const words = lyndon(s), rots = [];
   let iw = 0, i = 0;
   for (let k = 0; k < s.length; ++k) {
-    if (k === words[iw])
-      i = words[iw++];
+    if (k === words[iw]) i = words[iw++];
     rots[k] = { k, i, j: words[iw] };
   }
   return rots;
@@ -24,22 +22,17 @@ function encodeBWT(s) {
   return get_rotations(s).sort((a, b) => {
     let ka = a.k, kb = b.k;
     do {
-      if (s[ka] < s[kb])
-        return -1;
-      else if (s[ka] > s[kb])
-        return 1;
-      if (++ka === a.j)
-        ka = a.i;
-      if (++kb === b.j)
-        kb = b.i;
+      if (s[ka] < s[kb]) return -1;
+      else if (s[ka] > s[kb]) return 1;
+      if (++ka === a.j) ka = a.i;
+      if (++kb === b.j) kb = b.i;
     } while (ka !== a.k || kb !== b.k);
     return 0;
   }).reduce((acc, rot) => acc + s[(rot.k === rot.i ? rot.j : rot.k) - 1], "");
 }
 function match(str) {
   const cnt = {};
-  for (const c of str)
-    cnt[c] ? ++cnt[c] : cnt[c] = 1;
+  for (const c of str) cnt[c] ? ++cnt[c] : cnt[c] = 1;
   const keys = Object.keys(cnt).sort(), before = { [keys[0]]: 0 }, theta = [], seen = {};
   for (let i = 1; i < keys.length; ++i)
     before[keys[i]] = before[keys[i - 1]] + cnt[keys[i - 1]];
@@ -75,8 +68,7 @@ var HASH = QUERY + "#'/?";
 var MTF = ` ${LOWER},.'":;-?()[]{}
 !${DIGIT}+/*=_~<>^\`#%	$&@|\\${UPPER}\v\f\r${chars(0, 8) + chars(14, 31)}\x7F`;
 function chars(i, j, s = "") {
-  while (i <= j)
-    s += String.fromCharCode(i++);
+  while (i <= j) s += String.fromCharCode(i++);
   return s;
 }
 
@@ -84,13 +76,10 @@ function chars(i, j, s = "") {
 function decodeMTF(arr, DIC = MTF) {
   const res = [], dic = DIC.split("");
   for (let i of arr) {
-    if (i >= dic.length)
-      for (let j = dic.length; j <= i; ++j)
-        dic[j] = String.fromCharCode(j);
+    if (i >= dic.length) for (let j = dic.length; j <= i; ++j) dic[j] = String.fromCharCode(j);
     const c = dic[i];
     res.push(c);
-    while (i)
-      dic[i] = dic[--i];
+    while (i) dic[i] = dic[--i];
     dic[0] = c;
   }
   return res.join("");
@@ -101,12 +90,10 @@ function encodeMTF(txt, DIC = MTF) {
     let i = dic.indexOf(c);
     if (i < 0) {
       i = c.charCodeAt();
-      for (let j = dic.length; j < i; ++j)
-        dic[j] = String.fromCharCode(j);
+      for (let j = dic.length; j < i; ++j) dic[j] = String.fromCharCode(j);
     }
     res.push(i);
-    while (i)
-      dic[i] = dic[--i];
+    while (i) dic[i] = dic[--i];
     dic[0] = c;
   }
   return res;

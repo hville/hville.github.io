@@ -1,14 +1,26 @@
 // ../node_modules/ol/events/Event.js
 var BaseEvent = class {
+  /**
+   * @param {string} type Type.
+   */
   constructor(type) {
     this.propagationStopped;
     this.defaultPrevented;
     this.type = type;
     this.target = null;
   }
+  /**
+   * Prevent default. This means that no emulated `click`, `singleclick` or `doubleclick` events
+   * will be fired.
+   * @api
+   */
   preventDefault() {
     this.defaultPrevented = true;
   }
+  /**
+   * Stop event propagation.
+   * @api
+   */
   stopPropagation() {
     this.propagationStopped = true;
   }
@@ -17,6 +29,11 @@ var Event_default = BaseEvent;
 
 // ../node_modules/ol/ObjectEventType.js
 var ObjectEventType_default = {
+  /**
+   * Triggered when a property is changed.
+   * @event module:ol/Object.ObjectEvent#propertychange
+   * @api
+   */
   PROPERTYCHANGE: "propertychange"
 };
 
@@ -25,12 +42,19 @@ var Disposable = class {
   constructor() {
     this.disposed = false;
   }
+  /**
+   * Clean up.
+   */
   dispose() {
     if (!this.disposed) {
       this.disposed = true;
       this.disposeInternal();
     }
   }
+  /**
+   * Extension point for disposable objects.
+   * @protected
+   */
   disposeInternal() {
   }
 };
@@ -141,6 +165,9 @@ function isEmpty(object) {
 
 // ../node_modules/ol/events/Target.js
 var Target = class extends Disposable_default {
+  /**
+   * @param {*} [target] Default event target for dispatched events.
+   */
   constructor(target) {
     super();
     this.eventTarget_ = target;
@@ -148,6 +175,10 @@ var Target = class extends Disposable_default {
     this.dispatching_ = null;
     this.listeners_ = null;
   }
+  /**
+   * @param {string} type Type.
+   * @param {import("../events.js").Listener} listener Listener.
+   */
   addEventListener(type, listener) {
     if (!type || !listener) {
       return;
@@ -158,6 +189,16 @@ var Target = class extends Disposable_default {
       listenersForType.push(listener);
     }
   }
+  /**
+   * Dispatches an event and calls all listeners listening for events
+   * of this type. The event parameter can either be a string or an
+   * Object with a `type` property.
+   *
+   * @param {import("./Event.js").default|string} event Event object.
+   * @return {boolean|undefined} `false` if anyone called preventDefault on the
+   *     event object or if any of the listeners returned false.
+   * @api
+   */
   dispatchEvent(event) {
     const isString = typeof event === "string";
     const type = isString ? event : event.type;
@@ -165,7 +206,10 @@ var Target = class extends Disposable_default {
     if (!listeners) {
       return;
     }
-    const evt = isString ? new Event_default(event) : event;
+    const evt = isString ? new Event_default(event) : (
+      /** @type {Event} */
+      event
+    );
     if (!evt.target) {
       evt.target = this.eventTarget_ || this;
     }
@@ -179,9 +223,11 @@ var Target = class extends Disposable_default {
     let propagate;
     for (let i = 0, ii = listeners.length; i < ii; ++i) {
       if ("handleEvent" in listeners[i]) {
-        propagate = listeners[i].handleEvent(evt);
+        propagate = /** @type {import("../events.js").ListenerObject} */
+        listeners[i].handleEvent(evt);
       } else {
-        propagate = listeners[i].call(this, evt);
+        propagate = /** @type {import("../events.js").ListenerFunction} */
+        listeners[i].call(this, evt);
       }
       if (propagate === false || evt.propagationStopped) {
         propagate = false;
@@ -198,18 +244,37 @@ var Target = class extends Disposable_default {
     }
     return propagate;
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     this.listeners_ && clear(this.listeners_);
   }
+  /**
+   * Get the listeners for a specified event type. Listeners are returned in the
+   * order that they will be called in.
+   *
+   * @param {string} type Type.
+   * @return {Array<import("../events.js").Listener>|undefined} Listeners.
+   */
   getListeners(type) {
     return this.listeners_ && this.listeners_[type] || void 0;
   }
+  /**
+   * @param {string} [type] Type. If not provided,
+   *     `true` will be returned if this event target has any listeners.
+   * @return {boolean} Has listeners.
+   */
   hasListener(type) {
     if (!this.listeners_) {
       return false;
     }
     return type ? type in this.listeners_ : Object.keys(this.listeners_).length > 0;
   }
+  /**
+   * @param {string} type Type.
+   * @param {import("../events.js").Listener} listener Listener.
+   */
   removeEventListener(type, listener) {
     const listeners = this.listeners_ && this.listeners_[type];
     if (listeners) {
@@ -232,7 +297,17 @@ var Target_default = Target;
 
 // ../node_modules/ol/events/EventType.js
 var EventType_default = {
+  /**
+   * Generic change event. Triggered when the revision counter is increased.
+   * @event module:ol/events/Event~BaseEvent#change
+   * @api
+   */
   CHANGE: "change",
+  /**
+   * Generic error event. Triggered when an error occurs.
+   * @event module:ol/events/Event~BaseEvent#error
+   * @api
+   */
   ERROR: "error",
   BLUR: "blur",
   CLEAR: "clear",
@@ -285,18 +360,37 @@ function unlistenByKey(key) {
 var Observable = class extends Target_default {
   constructor() {
     super();
-    this.on = this.onInternal;
-    this.once = this.onceInternal;
-    this.un = this.unInternal;
+    this.on = /** @type {ObservableOnSignature<import("./events").EventsKey>} */
+    this.onInternal;
+    this.once = /** @type {ObservableOnSignature<import("./events").EventsKey>} */
+    this.onceInternal;
+    this.un = /** @type {ObservableOnSignature<void>} */
+    this.unInternal;
     this.revision_ = 0;
   }
+  /**
+   * Increases the revision counter and dispatches a 'change' event.
+   * @api
+   */
   changed() {
     ++this.revision_;
     this.dispatchEvent(EventType_default.CHANGE);
   }
+  /**
+   * Get the version number for this object.  Each time the object is modified,
+   * its version number will be incremented.
+   * @return {number} Revision.
+   * @api
+   */
   getRevision() {
     return this.revision_;
   }
+  /**
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @return {import("./events.js").EventsKey|Array<import("./events.js").EventsKey>} Event key.
+   * @protected
+   */
   onInternal(type, listener) {
     if (Array.isArray(type)) {
       const len = type.length;
@@ -306,8 +400,19 @@ var Observable = class extends Target_default {
       }
       return keys;
     }
-    return listen(this, type, listener);
+    return listen(
+      this,
+      /** @type {string} */
+      type,
+      listener
+    );
   }
+  /**
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @return {import("./events.js").EventsKey|Array<import("./events.js").EventsKey>} Event key.
+   * @protected
+   */
   onceInternal(type, listener) {
     let key;
     if (Array.isArray(type)) {
@@ -317,13 +422,27 @@ var Observable = class extends Target_default {
         key[i] = listenOnce(this, type[i], listener);
       }
     } else {
-      key = listenOnce(this, type, listener);
+      key = listenOnce(
+        this,
+        /** @type {string} */
+        type,
+        listener
+      );
     }
     listener.ol_key = key;
     return key;
   }
+  /**
+   * Unlisten for a certain type of event.
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @protected
+   */
   unInternal(type, listener) {
-    const key = listener.ol_key;
+    const key = (
+      /** @type {Object} */
+      listener.ol_key
+    );
     if (key) {
       unByKey(key);
     } else if (Array.isArray(type)) {
@@ -344,7 +463,10 @@ function unByKey(key) {
       unlistenByKey(key[i]);
     }
   } else {
-    unlistenByKey(key);
+    unlistenByKey(
+      /** @type {import("./events.js").EventsKey} */
+      key
+    );
   }
 }
 var Observable_default = Observable;
@@ -360,6 +482,11 @@ function getUid(obj) {
 
 // ../node_modules/ol/Object.js
 var ObjectEvent = class extends Event_default {
+  /**
+   * @param {string} type The event type.
+   * @param {string} key The property name.
+   * @param {*} oldValue The old value for `key`.
+   */
   constructor(type, key, oldValue) {
     super(type);
     this.key = key;
@@ -367,6 +494,9 @@ var ObjectEvent = class extends Event_default {
   }
 };
 var BaseObject = class extends Observable_default {
+  /**
+   * @param {Object<string, *>} [values] An object with key-value pairs.
+   */
   constructor(values) {
     super();
     this.on;
@@ -378,6 +508,12 @@ var BaseObject = class extends Observable_default {
       this.setProperties(values);
     }
   }
+  /**
+   * Gets a value.
+   * @param {string} key Key name.
+   * @return {*} Value.
+   * @api
+   */
   get(key) {
     let value;
     if (this.values_ && this.values_.hasOwnProperty(key)) {
@@ -385,15 +521,32 @@ var BaseObject = class extends Observable_default {
     }
     return value;
   }
+  /**
+   * Get a list of object property names.
+   * @return {Array<string>} List of property names.
+   * @api
+   */
   getKeys() {
     return this.values_ && Object.keys(this.values_) || [];
   }
+  /**
+   * Get an object of all property names and values.
+   * @return {Object<string, *>} Object.
+   * @api
+   */
   getProperties() {
     return this.values_ && Object.assign({}, this.values_) || {};
   }
+  /**
+   * @return {boolean} The object has properties.
+   */
   hasProperties() {
     return !!this.values_;
   }
+  /**
+   * @param {string} key Key name.
+   * @param {*} oldValue Old value.
+   */
   notify(key, oldValue) {
     let eventType;
     eventType = `change:${key}`;
@@ -405,12 +558,27 @@ var BaseObject = class extends Observable_default {
       this.dispatchEvent(new ObjectEvent(eventType, key, oldValue));
     }
   }
+  /**
+   * @param {string} key Key name.
+   * @param {import("./events.js").Listener} listener Listener.
+   */
   addChangeListener(key, listener) {
     this.addEventListener(`change:${key}`, listener);
   }
+  /**
+   * @param {string} key Key name.
+   * @param {import("./events.js").Listener} listener Listener.
+   */
   removeChangeListener(key, listener) {
     this.removeEventListener(`change:${key}`, listener);
   }
+  /**
+   * Sets a value.
+   * @param {string} key Key name.
+   * @param {*} value Value.
+   * @param {boolean} [silent] Update without triggering an event.
+   * @api
+   */
   set(key, value, silent) {
     const values = this.values_ || (this.values_ = {});
     if (silent) {
@@ -423,17 +591,35 @@ var BaseObject = class extends Observable_default {
       }
     }
   }
+  /**
+   * Sets a collection of key-value pairs.  Note that this changes any existing
+   * properties and adds new ones (it does not remove any existing properties).
+   * @param {Object<string, *>} values Values.
+   * @param {boolean} [silent] Update without triggering an event.
+   * @api
+   */
   setProperties(values, silent) {
     for (const key in values) {
       this.set(key, values[key], silent);
     }
   }
+  /**
+   * Apply any properties from another object without triggering events.
+   * @param {BaseObject} source The source object.
+   * @protected
+   */
   applyProperties(source) {
     if (!source.values_) {
       return;
     }
     Object.assign(this.values_ || (this.values_ = {}), source.values_);
   }
+  /**
+   * Unsets a property.
+   * @param {string} key Key name.
+   * @param {boolean} [silent] Unset without triggering an event.
+   * @api
+   */
   unset(key, silent) {
     if (this.values_ && key in this.values_) {
       const oldValue = this.values_[key];
@@ -510,6 +696,9 @@ var messages = {
   69: "`width` or `height` cannot be provided together with `scale`"
 };
 var AssertionError = class extends Error {
+  /**
+   * @param {number} code Error code.
+   */
   constructor(code) {
     const message = messages[code];
     super(message);
@@ -522,7 +711,17 @@ var AssertionError_default = AssertionError;
 
 // ../node_modules/ol/CollectionEventType.js
 var CollectionEventType_default = {
+  /**
+   * Triggered when an item is added to the collection.
+   * @event module:ol/Collection.CollectionEvent#add
+   * @api
+   */
   ADD: "add",
+  /**
+   * Triggered when an item is removed from the collection.
+   * @event module:ol/Collection.CollectionEvent#remove
+   * @api
+   */
   REMOVE: "remove"
 };
 
@@ -531,6 +730,11 @@ var Property = {
   LENGTH: "length"
 };
 var CollectionEvent = class extends Event_default {
+  /**
+   * @param {import("./CollectionEventType.js").default} type Type.
+   * @param {T} element Element.
+   * @param {number} index The index of the added or removed element.
+   */
   constructor(type, element, index) {
     super(type);
     this.element = element;
@@ -538,6 +742,10 @@ var CollectionEvent = class extends Event_default {
   }
 };
 var Collection = class extends Object_default {
+  /**
+   * @param {Array<T>} [array] Array.
+   * @param {Options} [options] Collection options.
+   */
   constructor(array, options) {
     super();
     this.on;
@@ -553,32 +761,76 @@ var Collection = class extends Object_default {
     }
     this.updateLength_();
   }
+  /**
+   * Remove all elements from the collection.
+   * @api
+   */
   clear() {
     while (this.getLength() > 0) {
       this.pop();
     }
   }
+  /**
+   * Add elements to the collection.  This pushes each item in the provided array
+   * to the end of the collection.
+   * @param {!Array<T>} arr Array.
+   * @return {Collection<T>} This collection.
+   * @api
+   */
   extend(arr) {
     for (let i = 0, ii = arr.length; i < ii; ++i) {
       this.push(arr[i]);
     }
     return this;
   }
+  /**
+   * Iterate over each element, calling the provided callback.
+   * @param {function(T, number, Array<T>): *} f The function to call
+   *     for every element. This function takes 3 arguments (the element, the
+   *     index and the array). The return value is ignored.
+   * @api
+   */
   forEach(f) {
     const array = this.array_;
     for (let i = 0, ii = array.length; i < ii; ++i) {
       f(array[i], i, array);
     }
   }
+  /**
+   * Get a reference to the underlying Array object. Warning: if the array
+   * is mutated, no events will be dispatched by the collection, and the
+   * collection's "length" property won't be in sync with the actual length
+   * of the array.
+   * @return {!Array<T>} Array.
+   * @api
+   */
   getArray() {
     return this.array_;
   }
+  /**
+   * Get the element at the provided index.
+   * @param {number} index Index.
+   * @return {T} Element.
+   * @api
+   */
   item(index) {
     return this.array_[index];
   }
+  /**
+   * Get the length of this collection.
+   * @return {number} The length of the array.
+   * @observable
+   * @api
+   */
   getLength() {
     return this.get(Property.LENGTH);
   }
+  /**
+   * Insert an element at the provided index.
+   * @param {number} index Index.
+   * @param {T} elem Element.
+   * @api
+   */
   insertAt(index, elem) {
     if (index < 0 || index > this.getLength()) {
       throw new Error("Index out of bounds: " + index);
@@ -588,11 +840,25 @@ var Collection = class extends Object_default {
     }
     this.array_.splice(index, 0, elem);
     this.updateLength_();
-    this.dispatchEvent(new CollectionEvent(CollectionEventType_default.ADD, elem, index));
+    this.dispatchEvent(
+      new CollectionEvent(CollectionEventType_default.ADD, elem, index)
+    );
   }
+  /**
+   * Remove the last element of the collection and return it.
+   * Return `undefined` if the collection is empty.
+   * @return {T|undefined} Element.
+   * @api
+   */
   pop() {
     return this.removeAt(this.getLength() - 1);
   }
+  /**
+   * Insert the provided element at the end of the collection.
+   * @param {T} elem Element.
+   * @return {number} New length of the collection.
+   * @api
+   */
   push(elem) {
     if (this.unique_) {
       this.assertUnique_(elem);
@@ -601,6 +867,12 @@ var Collection = class extends Object_default {
     this.insertAt(n, elem);
     return this.getLength();
   }
+  /**
+   * Remove the first occurrence of an element from the collection.
+   * @param {T} elem Element.
+   * @return {T|undefined} The removed element or undefined if none found.
+   * @api
+   */
   remove(elem) {
     const arr = this.array_;
     for (let i = 0, ii = arr.length; i < ii; ++i) {
@@ -610,6 +882,13 @@ var Collection = class extends Object_default {
     }
     return void 0;
   }
+  /**
+   * Remove the element at the provided index and return it.
+   * Return `undefined` if the collection does not contain this index.
+   * @param {number} index Index.
+   * @return {T|undefined} Value.
+   * @api
+   */
   removeAt(index) {
     if (index < 0 || index >= this.getLength()) {
       return void 0;
@@ -617,9 +896,18 @@ var Collection = class extends Object_default {
     const prev = this.array_[index];
     this.array_.splice(index, 1);
     this.updateLength_();
-    this.dispatchEvent(new CollectionEvent(CollectionEventType_default.REMOVE, prev, index));
+    this.dispatchEvent(
+      /** @type {CollectionEvent<T>} */
+      new CollectionEvent(CollectionEventType_default.REMOVE, prev, index)
+    );
     return prev;
   }
+  /**
+   * Set the element at the provided index.
+   * @param {number} index Index.
+   * @param {T} elem Element.
+   * @api
+   */
   setAt(index, elem) {
     const n = this.getLength();
     if (index >= n) {
@@ -634,12 +922,26 @@ var Collection = class extends Object_default {
     }
     const prev = this.array_[index];
     this.array_[index] = elem;
-    this.dispatchEvent(new CollectionEvent(CollectionEventType_default.REMOVE, prev, index));
-    this.dispatchEvent(new CollectionEvent(CollectionEventType_default.ADD, elem, index));
+    this.dispatchEvent(
+      /** @type {CollectionEvent<T>} */
+      new CollectionEvent(CollectionEventType_default.REMOVE, prev, index)
+    );
+    this.dispatchEvent(
+      /** @type {CollectionEvent<T>} */
+      new CollectionEvent(CollectionEventType_default.ADD, elem, index)
+    );
   }
+  /**
+   * @private
+   */
   updateLength_() {
     this.set(Property.LENGTH, this.array_.length);
   }
+  /**
+   * @private
+   * @param {T} elem Element.
+   * @param {number} [except] Optional index to ignore.
+   */
   assertUnique_(elem, except) {
     for (let i = 0, ii = this.array_.length; i < ii; ++i) {
       if (this.array_[i] === elem && i !== except) {
@@ -871,8 +1173,19 @@ function getCenter(extent) {
   return [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2];
 }
 function getForViewAndSize(center, resolution, rotation, size, dest) {
-  const [x0, y0, x1, y1, x2, y2, x3, y3] = getRotatedViewport(center, resolution, rotation, size);
-  return createOrUpdate(Math.min(x0, x1, x2, x3), Math.min(y0, y1, y2, y3), Math.max(x0, x1, x2, x3), Math.max(y0, y1, y2, y3), dest);
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = getRotatedViewport(
+    center,
+    resolution,
+    rotation,
+    size
+  );
+  return createOrUpdate(
+    Math.min(x0, x1, x2, x3),
+    Math.min(y0, y1, y2, y3),
+    Math.max(x0, x1, x2, x3),
+    Math.max(y0, y1, y2, y3),
+    dest
+  );
 }
 function getRotatedViewport(center, resolution, rotation, size) {
   const dx = resolution * size[0] / 2;
@@ -996,7 +1309,16 @@ function applyTransform(extent, transformFn, dest, stops) {
     const width = extent[2] - extent[0];
     const height = extent[3] - extent[1];
     for (let i = 0; i < stops; ++i) {
-      coordinates2.push(extent[0] + width * i / stops, extent[1], extent[2], extent[1] + height * i / stops, extent[2] - width * i / stops, extent[3], extent[0], extent[3] - height * i / stops);
+      coordinates2.push(
+        extent[0] + width * i / stops,
+        extent[1],
+        extent[2],
+        extent[1] + height * i / stops,
+        extent[2] - width * i / stops,
+        extent[3],
+        extent[0],
+        extent[3] - height * i / stops
+      );
     }
   } else {
     coordinates2 = [
@@ -1056,99 +1378,11 @@ function lerp(a, b, x) {
 }
 
 // ../node_modules/ol/color.js
-var HEX_COLOR_RE_ = /^#([a-f0-9]{3}|[a-f0-9]{4}(?:[a-f0-9]{2}){0,2})$/i;
-var NAMED_COLOR_RE_ = /^([a-z]*)$|^hsla?\(.*\)$/i;
 function asString(color) {
   if (typeof color === "string") {
     return color;
   }
   return toString(color);
-}
-function fromNamed(color) {
-  const el = document.createElement("div");
-  el.style.color = color;
-  if (el.style.color !== "") {
-    document.body.appendChild(el);
-    const rgb = getComputedStyle(el).color;
-    document.body.removeChild(el);
-    return rgb;
-  }
-  return "";
-}
-var fromString = function() {
-  const MAX_CACHE_SIZE = 1024;
-  const cache2 = {};
-  let cacheSize = 0;
-  return function(s) {
-    let color;
-    if (cache2.hasOwnProperty(s)) {
-      color = cache2[s];
-    } else {
-      if (cacheSize >= MAX_CACHE_SIZE) {
-        let i = 0;
-        for (const key in cache2) {
-          if ((i++ & 3) === 0) {
-            delete cache2[key];
-            --cacheSize;
-          }
-        }
-      }
-      color = fromStringInternal_(s);
-      cache2[s] = color;
-      ++cacheSize;
-    }
-    return color;
-  };
-}();
-function fromStringInternal_(s) {
-  let r, g, b, a, color;
-  if (NAMED_COLOR_RE_.exec(s)) {
-    s = fromNamed(s);
-  }
-  if (HEX_COLOR_RE_.exec(s)) {
-    const n = s.length - 1;
-    let d;
-    if (n <= 4) {
-      d = 1;
-    } else {
-      d = 2;
-    }
-    const hasAlpha = n === 4 || n === 8;
-    r = parseInt(s.substr(1 + 0 * d, d), 16);
-    g = parseInt(s.substr(1 + 1 * d, d), 16);
-    b = parseInt(s.substr(1 + 2 * d, d), 16);
-    if (hasAlpha) {
-      a = parseInt(s.substr(1 + 3 * d, d), 16);
-    } else {
-      a = 255;
-    }
-    if (d == 1) {
-      r = (r << 4) + r;
-      g = (g << 4) + g;
-      b = (b << 4) + b;
-      if (hasAlpha) {
-        a = (a << 4) + a;
-      }
-    }
-    color = [r, g, b, a / 255];
-  } else if (s.startsWith("rgba(")) {
-    color = s.slice(5, -1).split(",").map(Number);
-    normalize(color);
-  } else if (s.startsWith("rgb(")) {
-    color = s.slice(4, -1).split(",").map(Number);
-    color.push(1);
-    normalize(color);
-  } else {
-    assert(false, 14);
-  }
-  return color;
-}
-function normalize(color) {
-  color[0] = clamp(color[0] + 0.5 | 0, 0, 255);
-  color[1] = clamp(color[1] + 0.5 | 0, 0, 255);
-  color[2] = clamp(color[2] + 0.5 | 0, 0, 255);
-  color[3] = clamp(color[3], 0, 1);
-  return color;
 }
 function toString(color) {
   let r = color[0];
@@ -1174,13 +1408,22 @@ var IconImageCache = class {
     this.cacheSize_ = 0;
     this.maxCacheSize_ = 32;
   }
+  /**
+   * FIXME empty description for jsdoc
+   */
   clear() {
     this.cache_ = {};
     this.cacheSize_ = 0;
   }
+  /**
+   * @return {boolean} Can expire cache.
+   */
   canExpireCache() {
     return this.cacheSize_ > this.maxCacheSize_;
   }
+  /**
+   * FIXME empty description for jsdoc
+   */
   expire() {
     if (this.canExpireCache()) {
       let i = 0;
@@ -1193,15 +1436,34 @@ var IconImageCache = class {
       }
     }
   }
+  /**
+   * @param {string} src Src.
+   * @param {?string} crossOrigin Cross origin.
+   * @param {import("../color.js").Color} color Color.
+   * @return {import("./IconImage.js").default} Icon image.
+   */
   get(src, crossOrigin, color) {
     const key = getKey(src, crossOrigin, color);
     return key in this.cache_ ? this.cache_[key] : null;
   }
+  /**
+   * @param {string} src Src.
+   * @param {?string} crossOrigin Cross origin.
+   * @param {import("../color.js").Color} color Color.
+   * @param {import("./IconImage.js").default} iconImage Icon image.
+   */
   set(src, crossOrigin, color, iconImage) {
     const key = getKey(src, crossOrigin, color);
     this.cache_[key] = iconImage;
     ++this.cacheSize_;
   }
+  /**
+   * Set the cache size of the icon cache. Default is `32`. Change this value when
+   * your map uses more than 32 different icon images and you are not caching icon
+   * styles on the application level.
+   * @param {number} maxCacheSize Cache max size.
+   * @api
+   */
   setSize(maxCacheSize) {
     this.maxCacheSize_ = maxCacheSize;
     this.expire();
@@ -1229,6 +1491,9 @@ var Property_default = {
 
 // ../node_modules/ol/layer/Base.js
 var BaseLayer = class extends Object_default {
+  /**
+   * @param {Options} options Layer options.
+   */
   constructor(options) {
     super();
     this.on;
@@ -1253,14 +1518,29 @@ var BaseLayer = class extends Object_default {
     this.setProperties(properties);
     this.state_ = null;
   }
+  /**
+   * Get the background for this layer.
+   * @return {BackgroundColor|false} Layer background.
+   */
   getBackground() {
     return this.background_;
   }
+  /**
+   * @return {string} CSS class name.
+   */
   getClassName() {
     return this.className_;
   }
+  /**
+   * This method is not meant to be called by layers or layer renderers because the state
+   * is incorrect if the layer is included in a layer group.
+   *
+   * @param {boolean} [managed] Layer is managed.
+   * @return {import("./Layer.js").State} Layer state.
+   */
   getLayerState(managed) {
-    const state = this.state_ || {
+    const state = this.state_ || /** @type {?} */
+    {
       layer: this,
       managed: managed === void 0 ? true : managed
     };
@@ -1276,68 +1556,219 @@ var BaseLayer = class extends Object_default {
     this.state_ = state;
     return state;
   }
+  /**
+   * @abstract
+   * @param {Array<import("./Layer.js").default>} [array] Array of layers (to be
+   *     modified in place).
+   * @return {Array<import("./Layer.js").default>} Array of layers.
+   */
   getLayersArray(array) {
     return abstract();
   }
+  /**
+   * @abstract
+   * @param {Array<import("./Layer.js").State>} [states] Optional list of layer
+   *     states (to be modified in place).
+   * @return {Array<import("./Layer.js").State>} List of layer states.
+   */
   getLayerStatesArray(states) {
     return abstract();
   }
+  /**
+   * Return the {@link module:ol/extent~Extent extent} of the layer or `undefined` if it
+   * will be visible regardless of extent.
+   * @return {import("../extent.js").Extent|undefined} The layer extent.
+   * @observable
+   * @api
+   */
   getExtent() {
-    return this.get(Property_default.EXTENT);
+    return (
+      /** @type {import("../extent.js").Extent|undefined} */
+      this.get(Property_default.EXTENT)
+    );
   }
+  /**
+   * Return the maximum resolution of the layer.
+   * @return {number} The maximum resolution of the layer.
+   * @observable
+   * @api
+   */
   getMaxResolution() {
-    return this.get(Property_default.MAX_RESOLUTION);
+    return (
+      /** @type {number} */
+      this.get(Property_default.MAX_RESOLUTION)
+    );
   }
+  /**
+   * Return the minimum resolution of the layer.
+   * @return {number} The minimum resolution of the layer.
+   * @observable
+   * @api
+   */
   getMinResolution() {
-    return this.get(Property_default.MIN_RESOLUTION);
+    return (
+      /** @type {number} */
+      this.get(Property_default.MIN_RESOLUTION)
+    );
   }
+  /**
+   * Return the minimum zoom level of the layer.
+   * @return {number} The minimum zoom level of the layer.
+   * @observable
+   * @api
+   */
   getMinZoom() {
-    return this.get(Property_default.MIN_ZOOM);
+    return (
+      /** @type {number} */
+      this.get(Property_default.MIN_ZOOM)
+    );
   }
+  /**
+   * Return the maximum zoom level of the layer.
+   * @return {number} The maximum zoom level of the layer.
+   * @observable
+   * @api
+   */
   getMaxZoom() {
-    return this.get(Property_default.MAX_ZOOM);
+    return (
+      /** @type {number} */
+      this.get(Property_default.MAX_ZOOM)
+    );
   }
+  /**
+   * Return the opacity of the layer (between 0 and 1).
+   * @return {number} The opacity of the layer.
+   * @observable
+   * @api
+   */
   getOpacity() {
-    return this.get(Property_default.OPACITY);
+    return (
+      /** @type {number} */
+      this.get(Property_default.OPACITY)
+    );
   }
+  /**
+   * @abstract
+   * @return {import("../source/Source.js").State} Source state.
+   */
   getSourceState() {
     return abstract();
   }
+  /**
+   * Return the visibility of the layer (`true` or `false`).
+   * @return {boolean} The visibility of the layer.
+   * @observable
+   * @api
+   */
   getVisible() {
-    return this.get(Property_default.VISIBLE);
+    return (
+      /** @type {boolean} */
+      this.get(Property_default.VISIBLE)
+    );
   }
+  /**
+   * Return the Z-index of the layer, which is used to order layers before
+   * rendering. The default Z-index is 0.
+   * @return {number} The Z-index of the layer.
+   * @observable
+   * @api
+   */
   getZIndex() {
-    return this.get(Property_default.Z_INDEX);
+    return (
+      /** @type {number} */
+      this.get(Property_default.Z_INDEX)
+    );
   }
+  /**
+   * Sets the background color.
+   * @param {BackgroundColor} [background] Background color.
+   */
   setBackground(background) {
     this.background_ = background;
     this.changed();
   }
+  /**
+   * Set the extent at which the layer is visible.  If `undefined`, the layer
+   * will be visible at all extents.
+   * @param {import("../extent.js").Extent|undefined} extent The extent of the layer.
+   * @observable
+   * @api
+   */
   setExtent(extent) {
     this.set(Property_default.EXTENT, extent);
   }
+  /**
+   * Set the maximum resolution at which the layer is visible.
+   * @param {number} maxResolution The maximum resolution of the layer.
+   * @observable
+   * @api
+   */
   setMaxResolution(maxResolution) {
     this.set(Property_default.MAX_RESOLUTION, maxResolution);
   }
+  /**
+   * Set the minimum resolution at which the layer is visible.
+   * @param {number} minResolution The minimum resolution of the layer.
+   * @observable
+   * @api
+   */
   setMinResolution(minResolution) {
     this.set(Property_default.MIN_RESOLUTION, minResolution);
   }
+  /**
+   * Set the maximum zoom (exclusive) at which the layer is visible.
+   * Note that the zoom levels for layer visibility are based on the
+   * view zoom level, which may be different from a tile source zoom level.
+   * @param {number} maxZoom The maximum zoom of the layer.
+   * @observable
+   * @api
+   */
   setMaxZoom(maxZoom) {
     this.set(Property_default.MAX_ZOOM, maxZoom);
   }
+  /**
+   * Set the minimum zoom (inclusive) at which the layer is visible.
+   * Note that the zoom levels for layer visibility are based on the
+   * view zoom level, which may be different from a tile source zoom level.
+   * @param {number} minZoom The minimum zoom of the layer.
+   * @observable
+   * @api
+   */
   setMinZoom(minZoom) {
     this.set(Property_default.MIN_ZOOM, minZoom);
   }
+  /**
+   * Set the opacity of the layer, allowed values range from 0 to 1.
+   * @param {number} opacity The opacity of the layer.
+   * @observable
+   * @api
+   */
   setOpacity(opacity) {
     assert(typeof opacity === "number", 64);
     this.set(Property_default.OPACITY, opacity);
   }
+  /**
+   * Set the visibility of the layer (`true` or `false`).
+   * @param {boolean} visible The visibility of the layer.
+   * @observable
+   * @api
+   */
   setVisible(visible) {
     this.set(Property_default.VISIBLE, visible);
   }
+  /**
+   * Set Z-index of the layer, which is used to order layers before rendering.
+   * The default Z-index is 0.
+   * @param {number} zindex The z-index of the layer.
+   * @observable
+   * @api
+   */
   setZIndex(zindex) {
     this.set(Property_default.Z_INDEX, zindex);
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     if (this.state_) {
       this.state_.layer = null;
@@ -1350,10 +1781,41 @@ var Base_default = BaseLayer;
 
 // ../node_modules/ol/render/EventType.js
 var EventType_default2 = {
+  /**
+   * Triggered before a layer is rendered.
+   * @event module:ol/render/Event~RenderEvent#prerender
+   * @api
+   */
   PRERENDER: "prerender",
+  /**
+   * Triggered after a layer is rendered.
+   * @event module:ol/render/Event~RenderEvent#postrender
+   * @api
+   */
   POSTRENDER: "postrender",
+  /**
+   * Triggered before layers are composed.  When dispatched by the map, the event object will not have
+   * a `context` set.  When dispatched by a layer, the event object will have a `context` set.  Only
+   * WebGL layers currently dispatch this event.
+   * @event module:ol/render/Event~RenderEvent#precompose
+   * @api
+   */
   PRECOMPOSE: "precompose",
+  /**
+   * Triggered after layers are composed.  When dispatched by the map, the event object will not have
+   * a `context` set.  When dispatched by a layer, the event object will have a `context` set.  Only
+   * WebGL layers currently dispatch this event.
+   * @event module:ol/render/Event~RenderEvent#postcompose
+   * @api
+   */
   POSTCOMPOSE: "postcompose",
+  /**
+   * Triggered when rendering is complete, i.e. all sources and tiles have
+   * finished loading for the current viewport, and all tiles are faded in.
+   * The event object will not have a `context` set.
+   * @event module:ol/render/Event~RenderEvent#rendercomplete
+   * @api
+   */
   RENDERCOMPLETE: "rendercomplete"
 };
 
@@ -1375,6 +1837,7 @@ var DEFAULT_TILE_SIZE = 256;
 
 // ../node_modules/ol/proj/Units.js
 var METERS_PER_UNIT = {
+  // use the radius of the Normal sphere
   "radians": 6370997 / (2 * Math.PI),
   "degrees": 2 * Math.PI * 6370997 / 360,
   "ft": 0.3048,
@@ -1384,9 +1847,13 @@ var METERS_PER_UNIT = {
 
 // ../node_modules/ol/proj/Projection.js
 var Projection = class {
+  /**
+   * @param {Options} options Projection options.
+   */
   constructor(options) {
     this.code_ = options.code;
-    this.units_ = options.units;
+    this.units_ = /** @type {import("./Units.js").Units} */
+    options.units;
     this.extent_ = options.extent !== void 0 ? options.extent : null;
     this.worldExtent_ = options.worldExtent !== void 0 ? options.worldExtent : null;
     this.axisOrientation_ = options.axisOrientation !== void 0 ? options.axisOrientation : "enu";
@@ -1396,50 +1863,129 @@ var Projection = class {
     this.defaultTileGrid_ = null;
     this.metersPerUnit_ = options.metersPerUnit;
   }
+  /**
+   * @return {boolean} The projection is suitable for wrapping the x-axis
+   */
   canWrapX() {
     return this.canWrapX_;
   }
+  /**
+   * Get the code for this projection, e.g. 'EPSG:4326'.
+   * @return {string} Code.
+   * @api
+   */
   getCode() {
     return this.code_;
   }
+  /**
+   * Get the validity extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getExtent() {
     return this.extent_;
   }
+  /**
+   * Get the units of this projection.
+   * @return {import("./Units.js").Units} Units.
+   * @api
+   */
   getUnits() {
     return this.units_;
   }
+  /**
+   * Get the amount of meters per unit of this projection.  If the projection is
+   * not configured with `metersPerUnit` or a units identifier, the return is
+   * `undefined`.
+   * @return {number|undefined} Meters.
+   * @api
+   */
   getMetersPerUnit() {
     return this.metersPerUnit_ || METERS_PER_UNIT[this.units_];
   }
+  /**
+   * Get the world extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getWorldExtent() {
     return this.worldExtent_;
   }
+  /**
+   * Get the axis orientation of this projection.
+   * Example values are:
+   * enu - the default easting, northing, elevation.
+   * neu - northing, easting, up - useful for "lat/long" geographic coordinates,
+   *     or south orientated transverse mercator.
+   * wnu - westing, northing, up - some planetary coordinate systems have
+   *     "west positive" coordinate systems
+   * @return {string} Axis orientation.
+   * @api
+   */
   getAxisOrientation() {
     return this.axisOrientation_;
   }
+  /**
+   * Is this projection a global projection which spans the whole world?
+   * @return {boolean} Whether the projection is global.
+   * @api
+   */
   isGlobal() {
     return this.global_;
   }
+  /**
+   * Set if the projection is a global projection which spans the whole world
+   * @param {boolean} global Whether the projection is global.
+   * @api
+   */
   setGlobal(global) {
     this.global_ = global;
     this.canWrapX_ = !!(global && this.extent_);
   }
+  /**
+   * @return {import("../tilegrid/TileGrid.js").default} The default tile grid.
+   */
   getDefaultTileGrid() {
     return this.defaultTileGrid_;
   }
+  /**
+   * @param {import("../tilegrid/TileGrid.js").default} tileGrid The default tile grid.
+   */
   setDefaultTileGrid(tileGrid) {
     this.defaultTileGrid_ = tileGrid;
   }
+  /**
+   * Set the validity extent for this projection.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @api
+   */
   setExtent(extent) {
     this.extent_ = extent;
     this.canWrapX_ = !!(this.global_ && extent);
   }
+  /**
+   * Set the world extent for this projection.
+   * @param {import("../extent.js").Extent} worldExtent World extent
+   *     [minlon, minlat, maxlon, maxlat].
+   * @api
+   */
   setWorldExtent(worldExtent) {
     this.worldExtent_ = worldExtent;
   }
+  /**
+   * Set the getPointResolution function (see {@link module:ol/proj.getPointResolution}
+   * for this projection.
+   * @param {function(number, import("../coordinate.js").Coordinate):number} func Function
+   * @api
+   */
   setGetPointResolution(func) {
     this.getPointResolutionFunc_ = func;
   }
+  /**
+   * Get the custom point resolution function for this projection (if set).
+   * @return {function(number, import("../coordinate.js").Coordinate):number|undefined} The custom point
+   * resolution function (if set).
+   */
   getPointResolutionFunc() {
     return this.getPointResolutionFunc_;
   }
@@ -1453,6 +1999,9 @@ var EXTENT = [-HALF_SIZE, -HALF_SIZE, HALF_SIZE, HALF_SIZE];
 var WORLD_EXTENT = [-180, -85, 180, 85];
 var MAX_SAFE_Y = RADIUS * Math.log(Math.tan(Math.PI / 2));
 var EPSG3857Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   */
   constructor(code) {
     super({
       code,
@@ -1518,6 +2067,10 @@ var RADIUS2 = 6378137;
 var EXTENT2 = [-180, -90, 180, 90];
 var METERS_PER_UNIT2 = Math.PI * RADIUS2 / 180;
 var EPSG4326Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   * @param {string} [axisOrientation] Axis orientation.
+   */
   constructor(code, axisOrientation) {
     super({
       code,
@@ -1612,7 +2165,9 @@ function getWorldsAway(coordinate, projection, sourceExtentWidth) {
   let worldsAway = 0;
   if (projection.canWrapX() && (coordinate[0] < projectionExtent[0] || coordinate[0] > projectionExtent[2])) {
     sourceExtentWidth = sourceExtentWidth || getWidth(projectionExtent);
-    worldsAway = Math.floor((coordinate[0] - projectionExtent[0]) / sourceExtentWidth);
+    worldsAway = Math.floor(
+      (coordinate[0] - projectionExtent[0]) / sourceExtentWidth
+    );
   }
   return worldsAway;
 }
@@ -1666,7 +2221,13 @@ function addProjections(projections) {
   projections.forEach(addProjection);
 }
 function get3(projectionLike) {
-  return typeof projectionLike === "string" ? get(projectionLike) : projectionLike || null;
+  return typeof projectionLike === "string" ? get(
+    /** @type {string} */
+    projectionLike
+  ) : (
+    /** @type {Projection} */
+    projectionLike || null
+  );
 }
 function addEquivalentProjections(projections) {
   addProjections(projections);
@@ -1692,7 +2253,10 @@ function createProjection(projection, defaultCode) {
   } else if (typeof projection === "string") {
     return get3(projection);
   }
-  return projection;
+  return (
+    /** @type {Projection} */
+    projection
+  );
 }
 function getTransformFromProjections(sourceProjection, destinationProjection) {
   const sourceCode = sourceProjection.getCode();
@@ -1730,7 +2294,9 @@ function fromUserCoordinate(coordinate, destProjection) {
   if (!userProjection) {
     if (showCoordinateWarning && !equals3(coordinate, [0, 0]) && coordinate[0] >= -180 && coordinate[0] <= 180 && coordinate[1] >= -90 && coordinate[1] <= 90) {
       showCoordinateWarning = false;
-      warn("Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates.");
+      warn(
+        "Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates."
+      );
     }
     return coordinate;
   }
@@ -1751,44 +2317,59 @@ function fromUserExtent(extent, destProjection) {
 function addCommon() {
   addEquivalentProjections(PROJECTIONS);
   addEquivalentProjections(PROJECTIONS2);
-  addEquivalentTransforms(PROJECTIONS2, PROJECTIONS, fromEPSG4326, toEPSG4326);
+  addEquivalentTransforms(
+    PROJECTIONS2,
+    PROJECTIONS,
+    fromEPSG4326,
+    toEPSG4326
+  );
 }
 addCommon();
 
 // ../node_modules/ol/centerconstraint.js
 function createExtent(extent, onlyCenter, smooth) {
-  return function(center, resolution, size, isMoving, centerShift) {
-    if (!center) {
-      return void 0;
+  return (
+    /**
+     * @param {import("./coordinate.js").Coordinate|undefined} center Center.
+     * @param {number|undefined} resolution Resolution.
+     * @param {import("./size.js").Size} size Viewport size; unused if `onlyCenter` was specified.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @param {Array<number>} [centerShift] Shift between map center and viewport center.
+     * @return {import("./coordinate.js").Coordinate|undefined} Center.
+     */
+    function(center, resolution, size, isMoving, centerShift) {
+      if (!center) {
+        return void 0;
+      }
+      if (!resolution && !onlyCenter) {
+        return center;
+      }
+      const viewWidth = onlyCenter ? 0 : size[0] * resolution;
+      const viewHeight = onlyCenter ? 0 : size[1] * resolution;
+      const shiftX = centerShift ? centerShift[0] : 0;
+      const shiftY = centerShift ? centerShift[1] : 0;
+      let minX = extent[0] + viewWidth / 2 + shiftX;
+      let maxX = extent[2] - viewWidth / 2 + shiftX;
+      let minY = extent[1] + viewHeight / 2 + shiftY;
+      let maxY = extent[3] - viewHeight / 2 + shiftY;
+      if (minX > maxX) {
+        minX = (maxX + minX) / 2;
+        maxX = minX;
+      }
+      if (minY > maxY) {
+        minY = (maxY + minY) / 2;
+        maxY = minY;
+      }
+      let x = clamp(center[0], minX, maxX);
+      let y = clamp(center[1], minY, maxY);
+      if (isMoving && smooth && resolution) {
+        const ratio = 30 * resolution;
+        x += -ratio * Math.log(1 + Math.max(0, minX - center[0]) / ratio) + ratio * Math.log(1 + Math.max(0, center[0] - maxX) / ratio);
+        y += -ratio * Math.log(1 + Math.max(0, minY - center[1]) / ratio) + ratio * Math.log(1 + Math.max(0, center[1] - maxY) / ratio);
+      }
+      return [x, y];
     }
-    if (!resolution && !onlyCenter) {
-      return center;
-    }
-    const viewWidth = onlyCenter ? 0 : size[0] * resolution;
-    const viewHeight = onlyCenter ? 0 : size[1] * resolution;
-    const shiftX = centerShift ? centerShift[0] : 0;
-    const shiftY = centerShift ? centerShift[1] : 0;
-    let minX = extent[0] + viewWidth / 2 + shiftX;
-    let maxX = extent[2] - viewWidth / 2 + shiftX;
-    let minY = extent[1] + viewHeight / 2 + shiftY;
-    let maxY = extent[3] - viewHeight / 2 + shiftY;
-    if (minX > maxX) {
-      minX = (maxX + minX) / 2;
-      maxX = minX;
-    }
-    if (minY > maxY) {
-      minY = (maxY + minY) / 2;
-      maxY = minY;
-    }
-    let x = clamp(center[0], minX, maxX);
-    let y = clamp(center[1], minY, maxY);
-    if (isMoving && smooth && resolution) {
-      const ratio = 30 * resolution;
-      x += -ratio * Math.log(1 + Math.max(0, minX - center[0]) / ratio) + ratio * Math.log(1 + Math.max(0, center[0] - maxX) / ratio);
-      y += -ratio * Math.log(1 + Math.max(0, minY - center[1]) / ratio) + ratio * Math.log(1 + Math.max(0, center[1] - maxY) / ratio);
-    }
-    return [x, y];
-  };
+  );
 }
 function none(center) {
   return center;
@@ -1815,63 +2396,121 @@ function getSmoothClampedResolution(resolution, maxResolution, minResolution) {
 }
 function createSnapToResolutions(resolutions, smooth, maxExtent, showFullExtent) {
   smooth = smooth !== void 0 ? smooth : true;
-  return function(resolution, direction, size, isMoving) {
-    if (resolution !== void 0) {
-      const maxResolution = resolutions[0];
-      const minResolution = resolutions[resolutions.length - 1];
-      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
-      if (isMoving) {
-        if (!smooth) {
-          return clamp(resolution, minResolution, cappedMaxRes);
+  return (
+    /**
+     * @param {number|undefined} resolution Resolution.
+     * @param {number} direction Direction.
+     * @param {import("./size.js").Size} size Viewport size.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Resolution.
+     */
+    function(resolution, direction, size, isMoving) {
+      if (resolution !== void 0) {
+        const maxResolution = resolutions[0];
+        const minResolution = resolutions[resolutions.length - 1];
+        const cappedMaxRes = maxExtent ? getViewportClampedResolution(
+          maxResolution,
+          maxExtent,
+          size,
+          showFullExtent
+        ) : maxResolution;
+        if (isMoving) {
+          if (!smooth) {
+            return clamp(resolution, minResolution, cappedMaxRes);
+          }
+          return getSmoothClampedResolution(
+            resolution,
+            cappedMaxRes,
+            minResolution
+          );
         }
-        return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
+        const capped = Math.min(cappedMaxRes, resolution);
+        const z = Math.floor(linearFindNearest(resolutions, capped, direction));
+        if (resolutions[z] > cappedMaxRes && z < resolutions.length - 1) {
+          return resolutions[z + 1];
+        }
+        return resolutions[z];
       }
-      const capped = Math.min(cappedMaxRes, resolution);
-      const z = Math.floor(linearFindNearest(resolutions, capped, direction));
-      if (resolutions[z] > cappedMaxRes && z < resolutions.length - 1) {
-        return resolutions[z + 1];
-      }
-      return resolutions[z];
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 function createSnapToPower(power, maxResolution, minResolution, smooth, maxExtent, showFullExtent) {
   smooth = smooth !== void 0 ? smooth : true;
   minResolution = minResolution !== void 0 ? minResolution : 0;
-  return function(resolution, direction, size, isMoving) {
-    if (resolution !== void 0) {
-      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
-      if (isMoving) {
-        if (!smooth) {
-          return clamp(resolution, minResolution, cappedMaxRes);
+  return (
+    /**
+     * @param {number|undefined} resolution Resolution.
+     * @param {number} direction Direction.
+     * @param {import("./size.js").Size} size Viewport size.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Resolution.
+     */
+    function(resolution, direction, size, isMoving) {
+      if (resolution !== void 0) {
+        const cappedMaxRes = maxExtent ? getViewportClampedResolution(
+          maxResolution,
+          maxExtent,
+          size,
+          showFullExtent
+        ) : maxResolution;
+        if (isMoving) {
+          if (!smooth) {
+            return clamp(resolution, minResolution, cappedMaxRes);
+          }
+          return getSmoothClampedResolution(
+            resolution,
+            cappedMaxRes,
+            minResolution
+          );
         }
-        return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
+        const tolerance = 1e-9;
+        const minZoomLevel = Math.ceil(
+          Math.log(maxResolution / cappedMaxRes) / Math.log(power) - tolerance
+        );
+        const offset = -direction * (0.5 - tolerance) + 0.5;
+        const capped = Math.min(cappedMaxRes, resolution);
+        const cappedZoomLevel = Math.floor(
+          Math.log(maxResolution / capped) / Math.log(power) + offset
+        );
+        const zoomLevel = Math.max(minZoomLevel, cappedZoomLevel);
+        const newResolution = maxResolution / Math.pow(power, zoomLevel);
+        return clamp(newResolution, minResolution, cappedMaxRes);
       }
-      const tolerance = 1e-9;
-      const minZoomLevel = Math.ceil(Math.log(maxResolution / cappedMaxRes) / Math.log(power) - tolerance);
-      const offset = -direction * (0.5 - tolerance) + 0.5;
-      const capped = Math.min(cappedMaxRes, resolution);
-      const cappedZoomLevel = Math.floor(Math.log(maxResolution / capped) / Math.log(power) + offset);
-      const zoomLevel = Math.max(minZoomLevel, cappedZoomLevel);
-      const newResolution = maxResolution / Math.pow(power, zoomLevel);
-      return clamp(newResolution, minResolution, cappedMaxRes);
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 function createMinMaxResolution(maxResolution, minResolution, smooth, maxExtent, showFullExtent) {
   smooth = smooth !== void 0 ? smooth : true;
-  return function(resolution, direction, size, isMoving) {
-    if (resolution !== void 0) {
-      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
-      if (!smooth || !isMoving) {
-        return clamp(resolution, minResolution, cappedMaxRes);
+  return (
+    /**
+     * @param {number|undefined} resolution Resolution.
+     * @param {number} direction Direction.
+     * @param {import("./size.js").Size} size Viewport size.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Resolution.
+     */
+    function(resolution, direction, size, isMoving) {
+      if (resolution !== void 0) {
+        const cappedMaxRes = maxExtent ? getViewportClampedResolution(
+          maxResolution,
+          maxExtent,
+          size,
+          showFullExtent
+        ) : maxResolution;
+        if (!smooth || !isMoving) {
+          return clamp(resolution, minResolution, cappedMaxRes);
+        }
+        return getSmoothClampedResolution(
+          resolution,
+          cappedMaxRes,
+          minResolution
+        );
       }
-      return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 
 // ../node_modules/ol/rotationconstraint.js
@@ -1889,31 +2528,45 @@ function none2(rotation) {
 }
 function createSnapToN(n) {
   const theta = 2 * Math.PI / n;
-  return function(rotation, isMoving) {
-    if (isMoving) {
-      return rotation;
+  return (
+    /**
+     * @param {number|undefined} rotation Rotation.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Rotation.
+     */
+    function(rotation, isMoving) {
+      if (isMoving) {
+        return rotation;
+      }
+      if (rotation !== void 0) {
+        rotation = Math.floor(rotation / theta + 0.5) * theta;
+        return rotation;
+      }
+      return void 0;
     }
-    if (rotation !== void 0) {
-      rotation = Math.floor(rotation / theta + 0.5) * theta;
-      return rotation;
-    }
-    return void 0;
-  };
+  );
 }
 function createSnapToZero(tolerance) {
   tolerance = tolerance || toRadians(5);
-  return function(rotation, isMoving) {
-    if (isMoving) {
-      return rotation;
-    }
-    if (rotation !== void 0) {
-      if (Math.abs(rotation) <= tolerance) {
-        return 0;
+  return (
+    /**
+     * @param {number|undefined} rotation Rotation.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Rotation.
+     */
+    function(rotation, isMoving) {
+      if (isMoving) {
+        return rotation;
       }
-      return rotation;
+      if (rotation !== void 0) {
+        if (Math.abs(rotation) <= tolerance) {
+          return 0;
+        }
+        return rotation;
+      }
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 
 // ../node_modules/ol/easing.js
@@ -2019,30 +2672,86 @@ var Geometry = class extends Object_default {
       return clone2.getSimplifiedGeometry(squaredTolerance);
     });
   }
+  /**
+   * Get a transformed and simplified version of the geometry.
+   * @abstract
+   * @param {number} squaredTolerance Squared tolerance.
+   * @param {import("../proj.js").TransformFunction} [transform] Optional transform function.
+   * @return {Geometry} Simplified geometry.
+   */
   simplifyTransformed(squaredTolerance, transform2) {
-    return this.simplifyTransformedInternal(this.getRevision(), squaredTolerance, transform2);
+    return this.simplifyTransformedInternal(
+      this.getRevision(),
+      squaredTolerance,
+      transform2
+    );
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @abstract
+   * @return {!Geometry} Clone.
+   */
   clone() {
     return abstract();
   }
+  /**
+   * @abstract
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     return abstract();
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @return {boolean} Contains (x, y).
+   */
   containsXY(x, y) {
     const coord = this.getClosestPoint([x, y]);
     return coord[0] === x && coord[1] === y;
   }
+  /**
+   * Return the closest point of the geometry to the passed point as
+   * {@link module:ol/coordinate~Coordinate coordinate}.
+   * @param {import("../coordinate.js").Coordinate} point Point.
+   * @param {import("../coordinate.js").Coordinate} [closestPoint] Closest point.
+   * @return {import("../coordinate.js").Coordinate} Closest point.
+   * @api
+   */
   getClosestPoint(point, closestPoint) {
     closestPoint = closestPoint ? closestPoint : [NaN, NaN];
     this.closestPointXY(point[0], point[1], closestPoint, Infinity);
     return closestPoint;
   }
+  /**
+   * Returns true if this geometry includes the specified coordinate. If the
+   * coordinate is on the boundary of the geometry, returns false.
+   * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+   * @return {boolean} Contains coordinate.
+   * @api
+   */
   intersectsCoordinate(coordinate) {
     return this.containsXY(coordinate[0], coordinate[1]);
   }
+  /**
+   * @abstract
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @protected
+   * @return {import("../extent.js").Extent} extent Extent.
+   */
   computeExtent(extent) {
     return abstract();
   }
+  /**
+   * Get the extent of the geometry.
+   * @param {import("../extent.js").Extent} [extent] Extent.
+   * @return {import("../extent.js").Extent} extent Extent.
+   * @api
+   */
   getExtent(extent) {
     if (this.extentRevision_ != this.getRevision()) {
       const extent2 = this.computeExtent(this.extent_);
@@ -2053,39 +2762,137 @@ var Geometry = class extends Object_default {
     }
     return returnOrUpdate(this.extent_, extent);
   }
+  /**
+   * Rotate the geometry around a given coordinate. This modifies the geometry
+   * coordinates in place.
+   * @abstract
+   * @param {number} angle Rotation angle in radians.
+   * @param {import("../coordinate.js").Coordinate} anchor The rotation center.
+   * @api
+   */
   rotate(angle, anchor) {
     abstract();
   }
+  /**
+   * Scale the geometry (with an optional origin).  This modifies the geometry
+   * coordinates in place.
+   * @abstract
+   * @param {number} sx The scaling factor in the x-direction.
+   * @param {number} [sy] The scaling factor in the y-direction (defaults to sx).
+   * @param {import("../coordinate.js").Coordinate} [anchor] The scale origin (defaults to the center
+   *     of the geometry extent).
+   * @api
+   */
   scale(sx, sy, anchor) {
     abstract();
   }
+  /**
+   * Create a simplified version of this geometry.  For linestrings, this uses
+   * the [Douglas Peucker](https://en.wikipedia.org/wiki/Ramer-Douglas-Peucker_algorithm)
+   * algorithm.  For polygons, a quantization-based
+   * simplification is used to preserve topology.
+   * @param {number} tolerance The tolerance distance for simplification.
+   * @return {Geometry} A new, simplified version of the original geometry.
+   * @api
+   */
   simplify(tolerance) {
     return this.getSimplifiedGeometry(tolerance * tolerance);
   }
+  /**
+   * Create a simplified version of this geometry using the Douglas Peucker
+   * algorithm.
+   * See https://en.wikipedia.org/wiki/Ramer-Douglas-Peucker_algorithm.
+   * @abstract
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {Geometry} Simplified geometry.
+   */
   getSimplifiedGeometry(squaredTolerance) {
     return abstract();
   }
+  /**
+   * Get the type of this geometry.
+   * @abstract
+   * @return {Type} Geometry type.
+   */
   getType() {
     return abstract();
   }
+  /**
+   * Apply a transform function to the coordinates of the geometry.
+   * The geometry is modified in place.
+   * If you do not want the geometry modified in place, first `clone()` it and
+   * then use this function on the clone.
+   * @abstract
+   * @param {import("../proj.js").TransformFunction} transformFn Transform function.
+   * Called with a flat array of geometry coordinates.
+   */
   applyTransform(transformFn) {
     abstract();
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @abstract
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   */
   intersectsExtent(extent) {
     return abstract();
   }
+  /**
+   * Translate the geometry.  This modifies the geometry coordinates in place.  If
+   * instead you want a new geometry, first `clone()` this geometry.
+   * @abstract
+   * @param {number} deltaX Delta X.
+   * @param {number} deltaY Delta Y.
+   * @api
+   */
   translate(deltaX, deltaY) {
     abstract();
   }
+  /**
+   * Transform each coordinate of the geometry from one coordinate reference
+   * system to another. The geometry is modified in place.
+   * For example, a line will be transformed to a line and a circle to a circle.
+   * If you do not want the geometry modified in place, first `clone()` it and
+   * then use this function on the clone.
+   *
+   * @param {import("../proj.js").ProjectionLike} source The current projection.  Can be a
+   *     string identifier or a {@link module:ol/proj/Projection~Projection} object.
+   * @param {import("../proj.js").ProjectionLike} destination The desired projection.  Can be a
+   *     string identifier or a {@link module:ol/proj/Projection~Projection} object.
+   * @return {Geometry} This geometry.  Note that original geometry is
+   *     modified in place.
+   * @api
+   */
   transform(source, destination) {
     const sourceProj = get3(source);
     const transformFn = sourceProj.getUnits() == "tile-pixels" ? function(inCoordinates, outCoordinates, stride) {
       const pixelExtent = sourceProj.getExtent();
       const projectedExtent = sourceProj.getWorldExtent();
       const scale3 = getHeight(projectedExtent) / getHeight(pixelExtent);
-      compose(tmpTransform, projectedExtent[0], projectedExtent[3], scale3, -scale3, 0, 0, 0);
-      transform2D(inCoordinates, 0, inCoordinates.length, stride, tmpTransform, outCoordinates);
-      return getTransform(sourceProj, destination)(inCoordinates, outCoordinates, stride);
+      compose(
+        tmpTransform,
+        projectedExtent[0],
+        projectedExtent[3],
+        scale3,
+        -scale3,
+        0,
+        0,
+        0
+      );
+      transform2D(
+        inCoordinates,
+        0,
+        inCoordinates.length,
+        stride,
+        tmpTransform,
+        outCoordinates
+      );
+      return getTransform(sourceProj, destination)(
+        inCoordinates,
+        outCoordinates,
+        stride
+      );
     } : getTransform(sourceProj, destination);
     this.applyTransform(transformFn);
     return this;
@@ -2101,24 +2908,64 @@ var SimpleGeometry = class extends Geometry_default {
     this.stride = 2;
     this.flatCoordinates = null;
   }
+  /**
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @protected
+   * @return {import("../extent.js").Extent} extent Extent.
+   */
   computeExtent(extent) {
-    return createOrUpdateFromFlatCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, extent);
+    return createOrUpdateFromFlatCoordinates(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride,
+      extent
+    );
   }
+  /**
+   * @abstract
+   * @return {Array<*> | null} Coordinates.
+   */
   getCoordinates() {
     return abstract();
   }
+  /**
+   * Return the first coordinate of the geometry.
+   * @return {import("../coordinate.js").Coordinate} First coordinate.
+   * @api
+   */
   getFirstCoordinate() {
     return this.flatCoordinates.slice(0, this.stride);
   }
+  /**
+   * @return {Array<number>} Flat coordinates.
+   */
   getFlatCoordinates() {
     return this.flatCoordinates;
   }
+  /**
+   * Return the last coordinate of the geometry.
+   * @return {import("../coordinate.js").Coordinate} Last point.
+   * @api
+   */
   getLastCoordinate() {
-    return this.flatCoordinates.slice(this.flatCoordinates.length - this.stride);
+    return this.flatCoordinates.slice(
+      this.flatCoordinates.length - this.stride
+    );
   }
+  /**
+   * Return the {@link import("./Geometry.js").GeometryLayout layout} of the geometry.
+   * @return {import("./Geometry.js").GeometryLayout} Layout.
+   * @api
+   */
   getLayout() {
     return this.layout;
   }
+  /**
+   * Create a simplified version of this geometry using the Douglas Peucker algorithm.
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {SimpleGeometry} Simplified geometry.
+   */
   getSimplifiedGeometry(squaredTolerance) {
     if (this.simplifiedGeometryRevision !== this.getRevision()) {
       this.simplifiedGeometryMaxMinSquaredTolerance = 0;
@@ -2135,20 +2982,43 @@ var SimpleGeometry = class extends Geometry_default {
     this.simplifiedGeometryMaxMinSquaredTolerance = squaredTolerance;
     return this;
   }
+  /**
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {SimpleGeometry} Simplified geometry.
+   * @protected
+   */
   getSimplifiedGeometryInternal(squaredTolerance) {
     return this;
   }
+  /**
+   * @return {number} Stride.
+   */
   getStride() {
     return this.stride;
   }
+  /**
+   * @param {import("./Geometry.js").GeometryLayout} layout Layout.
+   * @param {Array<number>} flatCoordinates Flat coordinates.
+   */
   setFlatCoordinates(layout, flatCoordinates) {
     this.stride = getStrideForLayout(layout);
     this.layout = layout;
     this.flatCoordinates = flatCoordinates;
   }
+  /**
+   * @abstract
+   * @param {!Array<*>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   */
   setCoordinates(coordinates2, layout) {
     abstract();
   }
+  /**
+   * @param {import("./Geometry.js").GeometryLayout|undefined} layout Layout.
+   * @param {Array<*>} coordinates Coordinates.
+   * @param {number} nesting Nesting.
+   * @protected
+   */
   setLayout(layout, coordinates2, nesting) {
     let stride;
     if (layout) {
@@ -2160,7 +3030,8 @@ var SimpleGeometry = class extends Geometry_default {
           this.stride = 2;
           return;
         }
-        coordinates2 = coordinates2[0];
+        coordinates2 = /** @type {Array} */
+        coordinates2[0];
       }
       stride = coordinates2.length;
       layout = getLayoutForStride(stride);
@@ -2168,20 +3039,53 @@ var SimpleGeometry = class extends Geometry_default {
     this.layout = layout;
     this.stride = stride;
   }
+  /**
+   * Apply a transform function to the coordinates of the geometry.
+   * The geometry is modified in place.
+   * If you do not want the geometry modified in place, first `clone()` it and
+   * then use this function on the clone.
+   * @param {import("../proj.js").TransformFunction} transformFn Transform function.
+   * Called with a flat array of geometry coordinates.
+   * @api
+   */
   applyTransform(transformFn) {
     if (this.flatCoordinates) {
       transformFn(this.flatCoordinates, this.flatCoordinates, this.stride);
       this.changed();
     }
   }
+  /**
+   * Rotate the geometry around a given coordinate. This modifies the geometry
+   * coordinates in place.
+   * @param {number} angle Rotation angle in counter-clockwise radians.
+   * @param {import("../coordinate.js").Coordinate} anchor The rotation center.
+   * @api
+   */
   rotate(angle, anchor) {
     const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
       const stride = this.getStride();
-      rotate2(flatCoordinates, 0, flatCoordinates.length, stride, angle, anchor, flatCoordinates);
+      rotate2(
+        flatCoordinates,
+        0,
+        flatCoordinates.length,
+        stride,
+        angle,
+        anchor,
+        flatCoordinates
+      );
       this.changed();
     }
   }
+  /**
+   * Scale the geometry (with an optional origin).  This modifies the geometry
+   * coordinates in place.
+   * @param {number} sx The scaling factor in the x-direction.
+   * @param {number} [sy] The scaling factor in the y-direction (defaults to sx).
+   * @param {import("../coordinate.js").Coordinate} [anchor] The scale origin (defaults to the center
+   *     of the geometry extent).
+   * @api
+   */
   scale(sx, sy, anchor) {
     if (sy === void 0) {
       sy = sx;
@@ -2192,15 +3096,39 @@ var SimpleGeometry = class extends Geometry_default {
     const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
       const stride = this.getStride();
-      scale2(flatCoordinates, 0, flatCoordinates.length, stride, sx, sy, anchor, flatCoordinates);
+      scale2(
+        flatCoordinates,
+        0,
+        flatCoordinates.length,
+        stride,
+        sx,
+        sy,
+        anchor,
+        flatCoordinates
+      );
       this.changed();
     }
   }
+  /**
+   * Translate the geometry.  This modifies the geometry coordinates in place.  If
+   * instead you want a new geometry, first `clone()` this geometry.
+   * @param {number} deltaX Delta X.
+   * @param {number} deltaY Delta Y.
+   * @api
+   */
   translate(deltaX, deltaY) {
     const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
       const stride = this.getStride();
-      translate(flatCoordinates, 0, flatCoordinates.length, stride, deltaX, deltaY, flatCoordinates);
+      translate(
+        flatCoordinates,
+        0,
+        flatCoordinates.length,
+        stride,
+        deltaX,
+        deltaY,
+        flatCoordinates
+      );
       this.changed();
     }
   }
@@ -2214,7 +3142,10 @@ function getLayoutForStride(stride) {
   } else if (stride == 4) {
     layout = "XYZM";
   }
-  return layout;
+  return (
+    /** @type {import("./Geometry.js").GeometryLayout} */
+    layout
+  );
 }
 function getStrideForLayout(layout) {
   let stride;
@@ -2225,7 +3156,10 @@ function getStrideForLayout(layout) {
   } else if (layout == "XYZM") {
     stride = 4;
   }
-  return stride;
+  return (
+    /** @type {number} */
+    stride
+  );
 }
 var SimpleGeometry_default = SimpleGeometry;
 
@@ -2244,7 +3178,11 @@ function assignClosest(flatCoordinates, offset1, offset2, stride, x, y, closestP
       offset = offset2;
     } else if (t > 0) {
       for (let i = 0; i < stride; ++i) {
-        closestPoint[i] = lerp(flatCoordinates[offset1 + i], flatCoordinates[offset2 + i], t);
+        closestPoint[i] = lerp(
+          flatCoordinates[offset1 + i],
+          flatCoordinates[offset2 + i],
+          t
+        );
       }
       closestPoint.length = stride;
       return;
@@ -2286,7 +3224,12 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
   }
   let i, squaredDistance2;
   if (maxDelta === 0) {
-    squaredDistance2 = squaredDistance(x, y, flatCoordinates[offset], flatCoordinates[offset + 1]);
+    squaredDistance2 = squaredDistance(
+      x,
+      y,
+      flatCoordinates[offset],
+      flatCoordinates[offset + 1]
+    );
     if (squaredDistance2 < minSquaredDistance) {
       for (i = 0; i < stride; ++i) {
         closestPoint[i] = flatCoordinates[offset + i];
@@ -2299,7 +3242,15 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
   tmpPoint = tmpPoint ? tmpPoint : [NaN, NaN];
   let index = offset + stride;
   while (index < end) {
-    assignClosest(flatCoordinates, index - stride, index, stride, x, y, tmpPoint);
+    assignClosest(
+      flatCoordinates,
+      index - stride,
+      index,
+      stride,
+      x,
+      y,
+      tmpPoint
+    );
     squaredDistance2 = squaredDistance(x, y, tmpPoint[0], tmpPoint[1]);
     if (squaredDistance2 < minSquaredDistance) {
       minSquaredDistance = squaredDistance2;
@@ -2309,11 +3260,22 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
       closestPoint.length = stride;
       index += stride;
     } else {
-      index += stride * Math.max((Math.sqrt(squaredDistance2) - Math.sqrt(minSquaredDistance)) / maxDelta | 0, 1);
+      index += stride * Math.max(
+        (Math.sqrt(squaredDistance2) - Math.sqrt(minSquaredDistance)) / maxDelta | 0,
+        1
+      );
     }
   }
   if (isRing) {
-    assignClosest(flatCoordinates, end - stride, offset, stride, x, y, tmpPoint);
+    assignClosest(
+      flatCoordinates,
+      end - stride,
+      offset,
+      stride,
+      x,
+      y,
+      tmpPoint
+    );
     squaredDistance2 = squaredDistance(x, y, tmpPoint[0], tmpPoint[1]);
     if (squaredDistance2 < minSquaredDistance) {
       minSquaredDistance = squaredDistance2;
@@ -2329,7 +3291,19 @@ function assignClosestArrayPoint(flatCoordinates, offset, ends, stride, maxDelta
   tmpPoint = tmpPoint ? tmpPoint : [NaN, NaN];
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    minSquaredDistance = assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, tmpPoint);
+    minSquaredDistance = assignClosestPoint(
+      flatCoordinates,
+      offset,
+      end,
+      stride,
+      maxDelta,
+      isRing,
+      x,
+      y,
+      closestPoint,
+      minSquaredDistance,
+      tmpPoint
+    );
     offset = end;
   }
   return minSquaredDistance;
@@ -2355,7 +3329,12 @@ function deflateCoordinatesArray(flatCoordinates, offset, coordinatess, stride, 
   ends = ends ? ends : [];
   let i = 0;
   for (let j = 0, jj = coordinatess.length; j < jj; ++j) {
-    const end = deflateCoordinates(flatCoordinates, offset, coordinatess[j], stride);
+    const end = deflateCoordinates(
+      flatCoordinates,
+      offset,
+      coordinatess[j],
+      stride
+    );
     ends[i++] = end;
     offset = end;
   }
@@ -2466,7 +3445,15 @@ function quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFla
 function quantizeArray(flatCoordinates, offset, ends, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset, simplifiedEnds) {
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    simplifiedOffset = quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset);
+    simplifiedOffset = quantize(
+      flatCoordinates,
+      offset,
+      end,
+      stride,
+      tolerance,
+      simplifiedFlatCoordinates,
+      simplifiedOffset
+    );
     simplifiedEnds.push(simplifiedOffset);
     offset = end;
   }
@@ -2488,7 +3475,13 @@ function inflateCoordinatesArray(flatCoordinates, offset, ends, stride, coordina
   let i = 0;
   for (let j = 0, jj = ends.length; j < jj; ++j) {
     const end = ends[j];
-    coordinatess[i++] = inflateCoordinates(flatCoordinates, offset, end, stride, coordinatess[i]);
+    coordinatess[i++] = inflateCoordinates(
+      flatCoordinates,
+      offset,
+      end,
+      stride,
+      coordinatess[i]
+    );
     offset = end;
   }
   coordinatess.length = i;
@@ -2520,72 +3513,192 @@ function linearRings(flatCoordinates, offset, ends, stride) {
 }
 
 // ../node_modules/ol/geom/LinearRing.js
-var LinearRing = class extends SimpleGeometry_default {
+var LinearRing = class _LinearRing extends SimpleGeometry_default {
+  /**
+   * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
+   *     For internal use, flat coordinates in combination with `layout` are also accepted.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   */
   constructor(coordinates2, layout) {
     super();
     this.maxDelta_ = -1;
     this.maxDeltaRevision_ = -1;
     if (layout !== void 0 && !Array.isArray(coordinates2[0])) {
-      this.setFlatCoordinates(layout, coordinates2);
+      this.setFlatCoordinates(
+        layout,
+        /** @type {Array<number>} */
+        coordinates2
+      );
     } else {
-      this.setCoordinates(coordinates2, layout);
+      this.setCoordinates(
+        /** @type {Array<import("../coordinate.js").Coordinate>} */
+        coordinates2,
+        layout
+      );
     }
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @return {!LinearRing} Clone.
+   * @api
+   */
   clone() {
-    return new LinearRing(this.flatCoordinates.slice(), this.layout);
+    return new _LinearRing(this.flatCoordinates.slice(), this.layout);
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
       return minSquaredDistance;
     }
     if (this.maxDeltaRevision_ != this.getRevision()) {
-      this.maxDelta_ = Math.sqrt(maxSquaredDelta(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, 0));
+      this.maxDelta_ = Math.sqrt(
+        maxSquaredDelta(
+          this.flatCoordinates,
+          0,
+          this.flatCoordinates.length,
+          this.stride,
+          0
+        )
+      );
       this.maxDeltaRevision_ = this.getRevision();
     }
-    return assignClosestPoint(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, this.maxDelta_, true, x, y, closestPoint, minSquaredDistance);
+    return assignClosestPoint(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride,
+      this.maxDelta_,
+      true,
+      x,
+      y,
+      closestPoint,
+      minSquaredDistance
+    );
   }
+  /**
+   * Return the area of the linear ring on projected plane.
+   * @return {number} Area (on projected plane).
+   * @api
+   */
   getArea() {
-    return linearRing(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+    return linearRing(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride
+    );
   }
+  /**
+   * Return the coordinates of the linear ring.
+   * @return {Array<import("../coordinate.js").Coordinate>} Coordinates.
+   * @api
+   */
   getCoordinates() {
-    return inflateCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+    return inflateCoordinates(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride
+    );
   }
+  /**
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {LinearRing} Simplified LinearRing.
+   * @protected
+   */
   getSimplifiedGeometryInternal(squaredTolerance) {
     const simplifiedFlatCoordinates = [];
-    simplifiedFlatCoordinates.length = douglasPeucker(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, squaredTolerance, simplifiedFlatCoordinates, 0);
-    return new LinearRing(simplifiedFlatCoordinates, "XY");
+    simplifiedFlatCoordinates.length = douglasPeucker(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride,
+      squaredTolerance,
+      simplifiedFlatCoordinates,
+      0
+    );
+    return new _LinearRing(simplifiedFlatCoordinates, "XY");
   }
+  /**
+   * Get the type of this geometry.
+   * @return {import("./Geometry.js").Type} Geometry type.
+   * @api
+   */
   getType() {
     return "LinearRing";
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   * @api
+   */
   intersectsExtent(extent) {
     return false;
   }
+  /**
+   * Set the coordinates of the linear ring.
+   * @param {!Array<import("../coordinate.js").Coordinate>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @api
+   */
   setCoordinates(coordinates2, layout) {
     this.setLayout(layout, coordinates2, 1);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
-    this.flatCoordinates.length = deflateCoordinates(this.flatCoordinates, 0, coordinates2, this.stride);
+    this.flatCoordinates.length = deflateCoordinates(
+      this.flatCoordinates,
+      0,
+      coordinates2,
+      this.stride
+    );
     this.changed();
   }
 };
 var LinearRing_default = LinearRing;
 
 // ../node_modules/ol/geom/Point.js
-var Point = class extends SimpleGeometry_default {
+var Point = class _Point extends SimpleGeometry_default {
+  /**
+   * @param {import("../coordinate.js").Coordinate} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   */
   constructor(coordinates2, layout) {
     super();
     this.setCoordinates(coordinates2, layout);
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @return {!Point} Clone.
+   * @api
+   */
   clone() {
-    const point = new Point(this.flatCoordinates.slice(), this.layout);
+    const point = new _Point(this.flatCoordinates.slice(), this.layout);
     point.applyProperties(this);
     return point;
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     const flatCoordinates = this.flatCoordinates;
-    const squaredDistance2 = squaredDistance(x, y, flatCoordinates[0], flatCoordinates[1]);
+    const squaredDistance2 = squaredDistance(
+      x,
+      y,
+      flatCoordinates[0],
+      flatCoordinates[1]
+    );
     if (squaredDistance2 < minSquaredDistance) {
       const stride = this.stride;
       for (let i = 0; i < stride; ++i) {
@@ -2596,24 +3709,55 @@ var Point = class extends SimpleGeometry_default {
     }
     return minSquaredDistance;
   }
+  /**
+   * Return the coordinate of the point.
+   * @return {import("../coordinate.js").Coordinate} Coordinates.
+   * @api
+   */
   getCoordinates() {
     return !this.flatCoordinates ? [] : this.flatCoordinates.slice();
   }
+  /**
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @protected
+   * @return {import("../extent.js").Extent} extent Extent.
+   */
   computeExtent(extent) {
     return createOrUpdateFromCoordinate(this.flatCoordinates, extent);
   }
+  /**
+   * Get the type of this geometry.
+   * @return {import("./Geometry.js").Type} Geometry type.
+   * @api
+   */
   getType() {
     return "Point";
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   * @api
+   */
   intersectsExtent(extent) {
     return containsXY(extent, this.flatCoordinates[0], this.flatCoordinates[1]);
   }
+  /**
+   * @param {!Array<*>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @api
+   */
   setCoordinates(coordinates2, layout) {
     this.setLayout(layout, coordinates2, 0);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
-    this.flatCoordinates.length = deflateCoordinate(this.flatCoordinates, 0, coordinates2, this.stride);
+    this.flatCoordinates.length = deflateCoordinate(
+      this.flatCoordinates,
+      0,
+      coordinates2,
+      this.stride
+    );
     this.changed();
   }
 };
@@ -2621,9 +3765,23 @@ var Point_default = Point;
 
 // ../node_modules/ol/geom/flat/contains.js
 function linearRingContainsExtent(flatCoordinates, offset, end, stride, extent) {
-  const outside = forEachCorner(extent, function(coordinate) {
-    return !linearRingContainsXY(flatCoordinates, offset, end, stride, coordinate[0], coordinate[1]);
-  });
+  const outside = forEachCorner(
+    extent,
+    /**
+     * @param {import("../../coordinate.js").Coordinate} coordinate Coordinate.
+     * @return {boolean} Contains (x, y).
+     */
+    function(coordinate) {
+      return !linearRingContainsXY(
+        flatCoordinates,
+        offset,
+        end,
+        stride,
+        coordinate[0],
+        coordinate[1]
+      );
+    }
+  );
   return !outside;
 }
 function linearRingContainsXY(flatCoordinates, offset, end, stride, x, y) {
@@ -2711,7 +3869,10 @@ function forEach(flatCoordinates, offset, end, stride, callback) {
   let ret;
   offset += stride;
   for (; offset < end; offset += stride) {
-    ret = callback(flatCoordinates.slice(offset - stride, offset), flatCoordinates.slice(offset, offset + stride));
+    ret = callback(
+      flatCoordinates.slice(offset - stride, offset),
+      flatCoordinates.slice(offset, offset + stride)
+    );
     if (ret) {
       return ret;
     }
@@ -2721,7 +3882,13 @@ function forEach(flatCoordinates, offset, end, stride, callback) {
 
 // ../node_modules/ol/geom/flat/intersectsextent.js
 function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
-  const coordinatesExtent = extendFlatCoordinates(createEmpty(), flatCoordinates, offset, end, stride);
+  const coordinatesExtent = extendFlatCoordinates(
+    createEmpty(),
+    flatCoordinates,
+    offset,
+    end,
+    stride
+  );
   if (!intersects(extent, coordinatesExtent)) {
     return false;
   }
@@ -2734,24 +3901,64 @@ function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
   if (coordinatesExtent[1] >= extent[1] && coordinatesExtent[3] <= extent[3]) {
     return true;
   }
-  return forEach(flatCoordinates, offset, end, stride, function(point1, point2) {
-    return intersectsSegment(extent, point1, point2);
-  });
+  return forEach(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    /**
+     * @param {import("../../coordinate.js").Coordinate} point1 Start point.
+     * @param {import("../../coordinate.js").Coordinate} point2 End point.
+     * @return {boolean} `true` if the segment and the extent intersect,
+     *     `false` otherwise.
+     */
+    function(point1, point2) {
+      return intersectsSegment(extent, point1, point2);
+    }
+  );
 }
 function intersectsLinearRing(flatCoordinates, offset, end, stride, extent) {
   if (intersectsLineString(flatCoordinates, offset, end, stride, extent)) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[0], extent[1])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[0],
+    extent[1]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[0], extent[3])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[0],
+    extent[3]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[2], extent[1])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[2],
+    extent[1]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[2], extent[3])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[2],
+    extent[3]
+  )) {
     return true;
   }
   return false;
@@ -2764,8 +3971,20 @@ function intersectsLinearRingArray(flatCoordinates, offset, ends, stride, extent
     return true;
   }
   for (let i = 1, ii = ends.length; i < ii; ++i) {
-    if (linearRingContainsExtent(flatCoordinates, ends[i - 1], ends[i], stride, extent)) {
-      if (!intersectsLineString(flatCoordinates, ends[i - 1], ends[i], stride, extent)) {
+    if (linearRingContainsExtent(
+      flatCoordinates,
+      ends[i - 1],
+      ends[i],
+      stride,
+      extent
+    )) {
+      if (!intersectsLineString(
+        flatCoordinates,
+        ends[i - 1],
+        ends[i],
+        stride,
+        extent
+      )) {
         return false;
       }
     }
@@ -2804,7 +4023,12 @@ function linearRingsAreOriented(flatCoordinates, offset, ends, stride, right) {
   right = right !== void 0 ? right : false;
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    const isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
+    const isClockwise = linearRingIsClockwise(
+      flatCoordinates,
+      offset,
+      end,
+      stride
+    );
     if (i === 0) {
       if (right && isClockwise || !right && !isClockwise) {
         return false;
@@ -2822,7 +4046,12 @@ function orientLinearRings(flatCoordinates, offset, ends, stride, right) {
   right = right !== void 0 ? right : false;
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    const isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
+    const isClockwise = linearRingIsClockwise(
+      flatCoordinates,
+      offset,
+      end,
+      stride
+    );
     const reverse = i === 0 ? right && isClockwise || !right && !isClockwise : right && !isClockwise || !right && isClockwise;
     if (reverse) {
       coordinates(flatCoordinates, offset, end, stride);
@@ -2833,7 +4062,18 @@ function orientLinearRings(flatCoordinates, offset, ends, stride, right) {
 }
 
 // ../node_modules/ol/geom/Polygon.js
-var Polygon = class extends SimpleGeometry_default {
+var Polygon = class _Polygon extends SimpleGeometry_default {
+  /**
+   * @param {!Array<Array<import("../coordinate.js").Coordinate>>|!Array<number>} coordinates
+   *     Array of linear rings that define the polygon. The first linear ring of the
+   *     array defines the outer-boundary or surface of the polygon. Each subsequent
+   *     linear ring defines a hole in the surface of the polygon. A linear ring is
+   *     an array of vertices' coordinates where the first coordinate and the last are
+   *     equivalent. (For internal use, flat coordinates in combination with
+   *     `layout` and `ends` are also accepted.)
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @param {Array<number>} [ends] Ends (for internal use with flat coordinates).
+   */
   constructor(coordinates2, layout, ends) {
     super();
     this.ends_ = [];
@@ -2844,12 +4084,25 @@ var Polygon = class extends SimpleGeometry_default {
     this.orientedRevision_ = -1;
     this.orientedFlatCoordinates_ = null;
     if (layout !== void 0 && ends) {
-      this.setFlatCoordinates(layout, coordinates2);
+      this.setFlatCoordinates(
+        layout,
+        /** @type {Array<number>} */
+        coordinates2
+      );
       this.ends_ = ends;
     } else {
-      this.setCoordinates(coordinates2, layout);
+      this.setCoordinates(
+        /** @type {Array<Array<import("../coordinate.js").Coordinate>>} */
+        coordinates2,
+        layout
+      );
     }
   }
+  /**
+   * Append the passed linear ring to this polygon.
+   * @param {LinearRing} linearRing Linear ring.
+   * @api
+   */
   appendLinearRing(linearRing2) {
     if (!this.flatCoordinates) {
       this.flatCoordinates = linearRing2.getFlatCoordinates().slice();
@@ -2859,27 +4112,97 @@ var Polygon = class extends SimpleGeometry_default {
     this.ends_.push(this.flatCoordinates.length);
     this.changed();
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @return {!Polygon} Clone.
+   * @api
+   */
   clone() {
-    const polygon = new Polygon(this.flatCoordinates.slice(), this.layout, this.ends_.slice());
+    const polygon = new _Polygon(
+      this.flatCoordinates.slice(),
+      this.layout,
+      this.ends_.slice()
+    );
     polygon.applyProperties(this);
     return polygon;
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
       return minSquaredDistance;
     }
     if (this.maxDeltaRevision_ != this.getRevision()) {
-      this.maxDelta_ = Math.sqrt(arrayMaxSquaredDelta(this.flatCoordinates, 0, this.ends_, this.stride, 0));
+      this.maxDelta_ = Math.sqrt(
+        arrayMaxSquaredDelta(
+          this.flatCoordinates,
+          0,
+          this.ends_,
+          this.stride,
+          0
+        )
+      );
       this.maxDeltaRevision_ = this.getRevision();
     }
-    return assignClosestArrayPoint(this.flatCoordinates, 0, this.ends_, this.stride, this.maxDelta_, true, x, y, closestPoint, minSquaredDistance);
+    return assignClosestArrayPoint(
+      this.flatCoordinates,
+      0,
+      this.ends_,
+      this.stride,
+      this.maxDelta_,
+      true,
+      x,
+      y,
+      closestPoint,
+      minSquaredDistance
+    );
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @return {boolean} Contains (x, y).
+   */
   containsXY(x, y) {
-    return linearRingsContainsXY(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, x, y);
+    return linearRingsContainsXY(
+      this.getOrientedFlatCoordinates(),
+      0,
+      this.ends_,
+      this.stride,
+      x,
+      y
+    );
   }
+  /**
+   * Return the area of the polygon on projected plane.
+   * @return {number} Area (on projected plane).
+   * @api
+   */
   getArea() {
-    return linearRings(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride);
+    return linearRings(
+      this.getOrientedFlatCoordinates(),
+      0,
+      this.ends_,
+      this.stride
+    );
   }
+  /**
+   * Get the coordinate array for this geometry.  This array has the structure
+   * of a GeoJSON coordinate array for polygons.
+   *
+   * @param {boolean} [right] Orient coordinates according to the right-hand
+   *     rule (counter-clockwise for exterior and clockwise for interior rings).
+   *     If `false`, coordinates will be oriented according to the left-hand rule
+   *     (clockwise for exterior and counter-clockwise for interior rings).
+   *     By default, coordinate orientation will depend on how the geometry was
+   *     constructed.
+   * @return {Array<Array<import("../coordinate.js").Coordinate>>} Coordinates.
+   * @api
+   */
   getCoordinates(right) {
     let flatCoordinates;
     if (right !== void 0) {
@@ -2890,29 +4213,76 @@ var Polygon = class extends SimpleGeometry_default {
     }
     return inflateCoordinatesArray(flatCoordinates, 0, this.ends_, this.stride);
   }
+  /**
+   * @return {Array<number>} Ends.
+   */
   getEnds() {
     return this.ends_;
   }
+  /**
+   * @return {Array<number>} Interior point.
+   */
   getFlatInteriorPoint() {
     if (this.flatInteriorPointRevision_ != this.getRevision()) {
       const flatCenter = getCenter(this.getExtent());
-      this.flatInteriorPoint_ = getInteriorPointOfArray(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, flatCenter, 0);
+      this.flatInteriorPoint_ = getInteriorPointOfArray(
+        this.getOrientedFlatCoordinates(),
+        0,
+        this.ends_,
+        this.stride,
+        flatCenter,
+        0
+      );
       this.flatInteriorPointRevision_ = this.getRevision();
     }
     return this.flatInteriorPoint_;
   }
+  /**
+   * Return an interior point of the polygon.
+   * @return {Point} Interior point as XYM coordinate, where M is the
+   * length of the horizontal intersection that the point belongs to.
+   * @api
+   */
   getInteriorPoint() {
     return new Point_default(this.getFlatInteriorPoint(), "XYM");
   }
+  /**
+   * Return the number of rings of the polygon,  this includes the exterior
+   * ring and any interior rings.
+   *
+   * @return {number} Number of rings.
+   * @api
+   */
   getLinearRingCount() {
     return this.ends_.length;
   }
+  /**
+   * Return the Nth linear ring of the polygon geometry. Return `null` if the
+   * given index is out of range.
+   * The exterior linear ring is available at index `0` and the interior rings
+   * at index `1` and beyond.
+   *
+   * @param {number} index Index.
+   * @return {LinearRing|null} Linear ring.
+   * @api
+   */
   getLinearRing(index) {
     if (index < 0 || this.ends_.length <= index) {
       return null;
     }
-    return new LinearRing_default(this.flatCoordinates.slice(index === 0 ? 0 : this.ends_[index - 1], this.ends_[index]), this.layout);
+    return new LinearRing_default(
+      this.flatCoordinates.slice(
+        index === 0 ? 0 : this.ends_[index - 1],
+        this.ends_[index]
+      ),
+      this.layout
+    );
   }
+  /**
+   * Return the linear rings of the polygon.
+   * @return {Array<LinearRing>} Linear rings.
+   * @api
+   */
   getLinearRings() {
     const layout = this.layout;
     const flatCoordinates = this.flatCoordinates;
@@ -2921,12 +4291,18 @@ var Polygon = class extends SimpleGeometry_default {
     let offset = 0;
     for (let i = 0, ii = ends.length; i < ii; ++i) {
       const end = ends[i];
-      const linearRing2 = new LinearRing_default(flatCoordinates.slice(offset, end), layout);
+      const linearRing2 = new LinearRing_default(
+        flatCoordinates.slice(offset, end),
+        layout
+      );
       linearRings2.push(linearRing2);
       offset = end;
     }
     return linearRings2;
   }
+  /**
+   * @return {Array<number>} Oriented flat coordinates.
+   */
   getOrientedFlatCoordinates() {
     if (this.orientedRevision_ != this.getRevision()) {
       const flatCoordinates = this.flatCoordinates;
@@ -2934,30 +4310,78 @@ var Polygon = class extends SimpleGeometry_default {
         this.orientedFlatCoordinates_ = flatCoordinates;
       } else {
         this.orientedFlatCoordinates_ = flatCoordinates.slice();
-        this.orientedFlatCoordinates_.length = orientLinearRings(this.orientedFlatCoordinates_, 0, this.ends_, this.stride);
+        this.orientedFlatCoordinates_.length = orientLinearRings(
+          this.orientedFlatCoordinates_,
+          0,
+          this.ends_,
+          this.stride
+        );
       }
       this.orientedRevision_ = this.getRevision();
     }
     return this.orientedFlatCoordinates_;
   }
+  /**
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {Polygon} Simplified Polygon.
+   * @protected
+   */
   getSimplifiedGeometryInternal(squaredTolerance) {
     const simplifiedFlatCoordinates = [];
     const simplifiedEnds = [];
-    simplifiedFlatCoordinates.length = quantizeArray(this.flatCoordinates, 0, this.ends_, this.stride, Math.sqrt(squaredTolerance), simplifiedFlatCoordinates, 0, simplifiedEnds);
-    return new Polygon(simplifiedFlatCoordinates, "XY", simplifiedEnds);
+    simplifiedFlatCoordinates.length = quantizeArray(
+      this.flatCoordinates,
+      0,
+      this.ends_,
+      this.stride,
+      Math.sqrt(squaredTolerance),
+      simplifiedFlatCoordinates,
+      0,
+      simplifiedEnds
+    );
+    return new _Polygon(simplifiedFlatCoordinates, "XY", simplifiedEnds);
   }
+  /**
+   * Get the type of this geometry.
+   * @return {import("./Geometry.js").Type} Geometry type.
+   * @api
+   */
   getType() {
     return "Polygon";
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   * @api
+   */
   intersectsExtent(extent) {
-    return intersectsLinearRingArray(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, extent);
+    return intersectsLinearRingArray(
+      this.getOrientedFlatCoordinates(),
+      0,
+      this.ends_,
+      this.stride,
+      extent
+    );
   }
+  /**
+   * Set the coordinates of the polygon.
+   * @param {!Array<Array<import("../coordinate.js").Coordinate>>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @api
+   */
   setCoordinates(coordinates2, layout) {
     this.setLayout(layout, coordinates2, 2);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
-    const ends = deflateCoordinatesArray(this.flatCoordinates, 0, coordinates2, this.stride, this.ends_);
+    const ends = deflateCoordinatesArray(
+      this.flatCoordinates,
+      0,
+      coordinates2,
+      this.stride,
+      this.ends_
+    );
     this.flatCoordinates.length = ends.length === 0 ? 0 : ends[ends.length - 1];
     this.changed();
   }
@@ -2986,6 +4410,9 @@ function fromExtent(extent) {
 // ../node_modules/ol/View.js
 var DEFAULT_MIN_ZOOM = 0;
 var View = class extends Object_default {
+  /**
+   * @param {ViewOptions} [options] View options.
+   */
   constructor(options) {
     super();
     this.on;
@@ -3015,6 +4442,10 @@ var View = class extends Object_default {
     }
     this.applyOptions_(options);
   }
+  /**
+   * Set up the view with the given options.
+   * @param {ViewOptions} options View options.
+   */
   applyOptions_(options) {
     const properties = Object.assign({}, options);
     for (const key in ViewProperty_default) {
@@ -3037,13 +4468,24 @@ var View = class extends Object_default {
       rotation: rotationConstraint
     };
     this.setRotation(options.rotation !== void 0 ? options.rotation : 0);
-    this.setCenterInternal(options.center !== void 0 ? options.center : null);
+    this.setCenterInternal(
+      options.center !== void 0 ? options.center : null
+    );
     if (options.resolution !== void 0) {
       this.setResolution(options.resolution);
     } else if (options.zoom !== void 0) {
       this.setZoom(options.zoom);
     }
   }
+  /**
+   * Padding (in css pixels).
+   * If the map viewport is partially covered with other content (overlays) along
+   * its edges, this setting allows to shift the center of the viewport away from that
+   * content. The order of the values in the array is top, right, bottom, left.
+   * The default is no padding, which is equivalent to `[0, 0, 0, 0]`.
+   * @type {Array<number>|undefined}
+   * @api
+   */
   get padding() {
     return this.padding_;
   }
@@ -3060,6 +4502,14 @@ var View = class extends Object_default {
       this.setCenterInternal([center[0] + offsetX, center[1] - offsetY]);
     }
   }
+  /**
+   * Get an updated version of the view options used to construct the view.  The
+   * current resolution (or zoom), center, and rotation are applied to any stored
+   * options.  The provided options can be used to apply new min/max zoom or
+   * resolution limits.
+   * @param {ViewOptions} newOptions New options to be applied.
+   * @return {ViewOptions} New options updated with the current view state.
+   */
   getUpdatedOptions_(newOptions) {
     const options = this.getProperties();
     if (options.resolution !== void 0) {
@@ -3071,6 +4521,39 @@ var View = class extends Object_default {
     options.rotation = this.getRotation();
     return Object.assign({}, options, newOptions);
   }
+  /**
+   * Animate the view.  The view's center, zoom (or resolution), and rotation
+   * can be animated for smooth transitions between view states.  For example,
+   * to animate the view to a new zoom level:
+   *
+   *     view.animate({zoom: view.getZoom() + 1});
+   *
+   * By default, the animation lasts one second and uses in-and-out easing.  You
+   * can customize this behavior by including `duration` (in milliseconds) and
+   * `easing` options (see {@link module:ol/easing}).
+   *
+   * To chain together multiple animations, call the method with multiple
+   * animation objects.  For example, to first zoom and then pan:
+   *
+   *     view.animate({zoom: 10}, {center: [0, 0]});
+   *
+   * If you provide a function as the last argument to the animate method, it
+   * will get called at the end of an animation series.  The callback will be
+   * called with `true` if the animation series completed on its own or `false`
+   * if it was cancelled.
+   *
+   * Animations are cancelled by user interactions (e.g. dragging the map) or by
+   * calling `view.setCenter()`, `view.setResolution()`, or `view.setRotation()`
+   * (or another method that calls one of these).
+   *
+   * @param {...(AnimationOptions|function(boolean): void)} var_args Animation
+   *     options.  Multiple animations can be run in series by passing multiple
+   *     options objects.  To run multiple animations in parallel, call the method
+   *     multiple times.  An optional callback can be provided as a final
+   *     argument.  The callback will be called with a boolean indicating whether
+   *     the animation completed without being cancelled.
+   * @api
+   */
   animate(var_args) {
     if (this.isDef() && !this.getAnimating()) {
       this.resolveConstraints(0);
@@ -3080,16 +4563,25 @@ var View = class extends Object_default {
       let options = arguments[i];
       if (options.center) {
         options = Object.assign({}, options);
-        options.center = fromUserCoordinate(options.center, this.getProjection());
+        options.center = fromUserCoordinate(
+          options.center,
+          this.getProjection()
+        );
       }
       if (options.anchor) {
         options = Object.assign({}, options);
-        options.anchor = fromUserCoordinate(options.anchor, this.getProjection());
+        options.anchor = fromUserCoordinate(
+          options.anchor,
+          this.getProjection()
+        );
       }
       args[i] = options;
     }
     this.animateInternal.apply(this, args);
   }
+  /**
+   * @param {...(AnimationOptions|function(boolean): void)} var_args Animation options.
+   */
   animateInternal(var_args) {
     let animationCount = arguments.length;
     let callback;
@@ -3124,7 +4616,10 @@ var View = class extends Object_default {
     let rotation = this.targetRotation_;
     const series = [];
     for (; i < animationCount; ++i) {
-      const options = arguments[i];
+      const options = (
+        /** @type {AnimationOptions} */
+        arguments[i]
+      );
       const animation = {
         start,
         complete: false,
@@ -3164,12 +4659,26 @@ var View = class extends Object_default {
     this.setHint(ViewHint_default.ANIMATING, 1);
     this.updateAnimations_();
   }
+  /**
+   * Determine if the view is being animated.
+   * @return {boolean} The view is being animated.
+   * @api
+   */
   getAnimating() {
     return this.hints_[ViewHint_default.ANIMATING] > 0;
   }
+  /**
+   * Determine if the user is interacting with the view, such as panning or zooming.
+   * @return {boolean} The view is being interacted with.
+   * @api
+   */
   getInteracting() {
     return this.hints_[ViewHint_default.INTERACTING] > 0;
   }
+  /**
+   * Cancel any ongoing animations.
+   * @api
+   */
   cancelAnimations() {
     this.setHint(ViewHint_default.ANIMATING, -this.hints_[ViewHint_default.ANIMATING]);
     let anchor;
@@ -3194,6 +4703,9 @@ var View = class extends Object_default {
     this.nextResolution_ = NaN;
     this.nextRotation_ = NaN;
   }
+  /**
+   * Update all animations.
+   */
   updateAnimations_() {
     if (this.updateAnimationKey_ !== void 0) {
       cancelAnimationFrame(this.updateAnimationKey_);
@@ -3235,8 +4747,16 @@ var View = class extends Object_default {
           const resolution = progress === 1 ? animation.targetResolution : animation.sourceResolution + progress * (animation.targetResolution - animation.sourceResolution);
           if (animation.anchor) {
             const size = this.getViewportSize_(this.getRotation());
-            const constrainedResolution = this.constraints_.resolution(resolution, 0, size, true);
-            this.targetCenter_ = this.calculateCenterZoom(constrainedResolution, animation.anchor);
+            const constrainedResolution = this.constraints_.resolution(
+              resolution,
+              0,
+              size,
+              true
+            );
+            this.targetCenter_ = this.calculateCenterZoom(
+              constrainedResolution,
+              animation.anchor
+            );
           }
           this.nextResolution_ = animation.targetResolution;
           this.targetResolution_ = resolution;
@@ -3245,8 +4765,14 @@ var View = class extends Object_default {
         if (animation.sourceRotation !== void 0 && animation.targetRotation !== void 0) {
           const rotation = progress === 1 ? modulo(animation.targetRotation + Math.PI, 2 * Math.PI) - Math.PI : animation.sourceRotation + progress * (animation.targetRotation - animation.sourceRotation);
           if (animation.anchor) {
-            const constrainedRotation = this.constraints_.rotation(rotation, true);
-            this.targetCenter_ = this.calculateCenterRotate(constrainedRotation, animation.anchor);
+            const constrainedRotation = this.constraints_.rotation(
+              rotation,
+              true
+            );
+            this.targetCenter_ = this.calculateCenterRotate(
+              constrainedRotation,
+              animation.anchor
+            );
           }
           this.nextRotation_ = animation.targetRotation;
           this.targetRotation_ = rotation;
@@ -3271,9 +4797,16 @@ var View = class extends Object_default {
     }
     this.animations_ = this.animations_.filter(Boolean);
     if (more && this.updateAnimationKey_ === void 0) {
-      this.updateAnimationKey_ = requestAnimationFrame(this.updateAnimations_.bind(this));
+      this.updateAnimationKey_ = requestAnimationFrame(
+        this.updateAnimations_.bind(this)
+      );
     }
   }
+  /**
+   * @param {number} rotation Target rotation.
+   * @param {import("./coordinate.js").Coordinate} anchor Rotation anchor.
+   * @return {import("./coordinate.js").Coordinate|undefined} Center for rotation and anchor.
+   */
   calculateCenterRotate(rotation, anchor) {
     let center;
     const currentCenter = this.getCenterInternal();
@@ -3284,6 +4817,11 @@ var View = class extends Object_default {
     }
     return center;
   }
+  /**
+   * @param {number} resolution Target resolution.
+   * @param {import("./coordinate.js").Coordinate} anchor Zoom anchor.
+   * @return {import("./coordinate.js").Coordinate|undefined} Center for resolution and anchor.
+   */
   calculateCenterZoom(resolution, anchor) {
     let center;
     const currentCenter = this.getCenterInternal();
@@ -3295,6 +4833,12 @@ var View = class extends Object_default {
     }
     return center;
   }
+  /**
+   * Returns the current viewport size.
+   * @private
+   * @param {number} [rotation] Take into account the rotation of the viewport when giving the size
+   * @return {import("./size.js").Size} Viewport size or `[100, 100]` when no viewport is found.
+   */
   getViewportSize_(rotation) {
     const size = this.viewportSize_;
     if (rotation) {
@@ -3307,12 +4851,25 @@ var View = class extends Object_default {
     }
     return size;
   }
+  /**
+   * Stores the viewport size on the view. The viewport size is not read every time from the DOM
+   * to avoid performance hit and layout reflow.
+   * This should be done on map size change.
+   * Note: the constraints are not resolved during an animation to avoid stopping it
+   * @param {import("./size.js").Size} [size] Viewport size; if undefined, [100, 100] is assumed
+   */
   setViewportSize(size) {
     this.viewportSize_ = Array.isArray(size) ? size.slice() : [100, 100];
     if (!this.getAnimating()) {
       this.resolveConstraints(0);
     }
   }
+  /**
+   * Get the view center.
+   * @return {import("./coordinate.js").Coordinate|undefined} The center of the view.
+   * @observable
+   * @api
+   */
   getCenter() {
     const center = this.getCenterInternal();
     if (!center) {
@@ -3320,15 +4877,32 @@ var View = class extends Object_default {
     }
     return toUserCoordinate(center, this.getProjection());
   }
+  /**
+   * Get the view center without transforming to user projection.
+   * @return {import("./coordinate.js").Coordinate|undefined} The center of the view.
+   */
   getCenterInternal() {
-    return this.get(ViewProperty_default.CENTER);
+    return (
+      /** @type {import("./coordinate.js").Coordinate|undefined} */
+      this.get(ViewProperty_default.CENTER)
+    );
   }
+  /**
+   * @return {Constraints} Constraints.
+   */
   getConstraints() {
     return this.constraints_;
   }
+  /**
+   * @return {boolean} Resolution constraint is set
+   */
   getConstrainResolution() {
     return this.get("constrainResolution");
   }
+  /**
+   * @param {Array<number>} [hints] Destination array.
+   * @return {Array<number>} Hint.
+   */
   getHints(hints) {
     if (hints !== void 0) {
       hints[0] = this.hints_[0];
@@ -3337,82 +4911,224 @@ var View = class extends Object_default {
     }
     return this.hints_.slice();
   }
+  /**
+   * Calculate the extent for the current view state and the passed size.
+   * The size is the pixel dimensions of the box into which the calculated extent
+   * should fit. In most cases you want to get the extent of the entire map,
+   * that is `map.getSize()`.
+   * @param {import("./size.js").Size} [size] Box pixel size. If not provided, the size
+   * of the map that uses this view will be used.
+   * @return {import("./extent.js").Extent} Extent.
+   * @api
+   */
   calculateExtent(size) {
     const extent = this.calculateExtentInternal(size);
     return toUserExtent(extent, this.getProjection());
   }
+  /**
+   * @param {import("./size.js").Size} [size] Box pixel size. If not provided,
+   * the map's last known viewport size will be used.
+   * @return {import("./extent.js").Extent} Extent.
+   */
   calculateExtentInternal(size) {
     size = size || this.getViewportSizeMinusPadding_();
-    const center = this.getCenterInternal();
+    const center = (
+      /** @type {!import("./coordinate.js").Coordinate} */
+      this.getCenterInternal()
+    );
     assert(center, 1);
-    const resolution = this.getResolution();
+    const resolution = (
+      /** @type {!number} */
+      this.getResolution()
+    );
     assert(resolution !== void 0, 2);
-    const rotation = this.getRotation();
+    const rotation = (
+      /** @type {!number} */
+      this.getRotation()
+    );
     assert(rotation !== void 0, 3);
     return getForViewAndSize(center, resolution, rotation, size);
   }
+  /**
+   * Get the maximum resolution of the view.
+   * @return {number} The maximum resolution of the view.
+   * @api
+   */
   getMaxResolution() {
     return this.maxResolution_;
   }
+  /**
+   * Get the minimum resolution of the view.
+   * @return {number} The minimum resolution of the view.
+   * @api
+   */
   getMinResolution() {
     return this.minResolution_;
   }
+  /**
+   * Get the maximum zoom level for the view.
+   * @return {number} The maximum zoom level.
+   * @api
+   */
   getMaxZoom() {
-    return this.getZoomForResolution(this.minResolution_);
+    return (
+      /** @type {number} */
+      this.getZoomForResolution(this.minResolution_)
+    );
   }
+  /**
+   * Set a new maximum zoom level for the view.
+   * @param {number} zoom The maximum zoom level.
+   * @api
+   */
   setMaxZoom(zoom) {
     this.applyOptions_(this.getUpdatedOptions_({ maxZoom: zoom }));
   }
+  /**
+   * Get the minimum zoom level for the view.
+   * @return {number} The minimum zoom level.
+   * @api
+   */
   getMinZoom() {
-    return this.getZoomForResolution(this.maxResolution_);
+    return (
+      /** @type {number} */
+      this.getZoomForResolution(this.maxResolution_)
+    );
   }
+  /**
+   * Set a new minimum zoom level for the view.
+   * @param {number} zoom The minimum zoom level.
+   * @api
+   */
   setMinZoom(zoom) {
     this.applyOptions_(this.getUpdatedOptions_({ minZoom: zoom }));
   }
+  /**
+   * Set whether the view should allow intermediary zoom levels.
+   * @param {boolean} enabled Whether the resolution is constrained.
+   * @api
+   */
   setConstrainResolution(enabled) {
     this.applyOptions_(this.getUpdatedOptions_({ constrainResolution: enabled }));
   }
+  /**
+   * Get the view projection.
+   * @return {import("./proj/Projection.js").default} The projection of the view.
+   * @api
+   */
   getProjection() {
     return this.projection_;
   }
+  /**
+   * Get the view resolution.
+   * @return {number|undefined} The resolution of the view.
+   * @observable
+   * @api
+   */
   getResolution() {
-    return this.get(ViewProperty_default.RESOLUTION);
+    return (
+      /** @type {number|undefined} */
+      this.get(ViewProperty_default.RESOLUTION)
+    );
   }
+  /**
+   * Get the resolutions for the view. This returns the array of resolutions
+   * passed to the constructor of the View, or undefined if none were given.
+   * @return {Array<number>|undefined} The resolutions of the view.
+   * @api
+   */
   getResolutions() {
     return this.resolutions_;
   }
+  /**
+   * Get the resolution for a provided extent (in map units) and size (in pixels).
+   * @param {import("./extent.js").Extent} extent Extent.
+   * @param {import("./size.js").Size} [size] Box pixel size.
+   * @return {number} The resolution at which the provided extent will render at
+   *     the given size.
+   * @api
+   */
   getResolutionForExtent(extent, size) {
-    return this.getResolutionForExtentInternal(fromUserExtent(extent, this.getProjection()), size);
+    return this.getResolutionForExtentInternal(
+      fromUserExtent(extent, this.getProjection()),
+      size
+    );
   }
+  /**
+   * Get the resolution for a provided extent (in map units) and size (in pixels).
+   * @param {import("./extent.js").Extent} extent Extent.
+   * @param {import("./size.js").Size} [size] Box pixel size.
+   * @return {number} The resolution at which the provided extent will render at
+   *     the given size.
+   */
   getResolutionForExtentInternal(extent, size) {
     size = size || this.getViewportSizeMinusPadding_();
     const xResolution = getWidth(extent) / size[0];
     const yResolution = getHeight(extent) / size[1];
     return Math.max(xResolution, yResolution);
   }
+  /**
+   * Return a function that returns a value between 0 and 1 for a
+   * resolution. Exponential scaling is assumed.
+   * @param {number} [power] Power.
+   * @return {function(number): number} Resolution for value function.
+   */
   getResolutionForValueFunction(power) {
     power = power || 2;
     const maxResolution = this.getConstrainedResolution(this.maxResolution_);
     const minResolution = this.minResolution_;
     const max = Math.log(maxResolution / minResolution) / Math.log(power);
-    return function(value) {
-      const resolution = maxResolution / Math.pow(power, value * max);
-      return resolution;
-    };
+    return (
+      /**
+       * @param {number} value Value.
+       * @return {number} Resolution.
+       */
+      function(value) {
+        const resolution = maxResolution / Math.pow(power, value * max);
+        return resolution;
+      }
+    );
   }
+  /**
+   * Get the view rotation.
+   * @return {number} The rotation of the view in radians.
+   * @observable
+   * @api
+   */
   getRotation() {
-    return this.get(ViewProperty_default.ROTATION);
+    return (
+      /** @type {number} */
+      this.get(ViewProperty_default.ROTATION)
+    );
   }
+  /**
+   * Return a function that returns a resolution for a value between
+   * 0 and 1. Exponential scaling is assumed.
+   * @param {number} [power] Power.
+   * @return {function(number): number} Value for resolution function.
+   */
   getValueForResolutionFunction(power) {
     const logPower = Math.log(power || 2);
     const maxResolution = this.getConstrainedResolution(this.maxResolution_);
     const minResolution = this.minResolution_;
     const max = Math.log(maxResolution / minResolution) / logPower;
-    return function(resolution) {
-      const value = Math.log(maxResolution / resolution) / logPower / max;
-      return value;
-    };
+    return (
+      /**
+       * @param {number} resolution Resolution.
+       * @return {number} Value.
+       */
+      function(resolution) {
+        const value = Math.log(maxResolution / resolution) / logPower / max;
+        return value;
+      }
+    );
   }
+  /**
+   * Returns the size of the viewport minus padding.
+   * @private
+   * @param {number} [rotation] Take into account the rotation of the viewport when giving the size
+   * @return {import("./size.js").Size} Viewport size reduced by the padding.
+   */
   getViewportSizeMinusPadding_(rotation) {
     let size = this.getViewportSize_(rotation);
     const padding = this.padding_;
@@ -3424,15 +5140,27 @@ var View = class extends Object_default {
     }
     return size;
   }
+  /**
+   * @return {State} View state.
+   */
   getState() {
     const projection = this.getProjection();
     const resolution = this.getResolution();
     const rotation = this.getRotation();
-    let center = this.getCenterInternal();
+    let center = (
+      /** @type {import("./coordinate.js").Coordinate} */
+      this.getCenterInternal()
+    );
     const padding = this.padding_;
     if (padding) {
       const reducedSize = this.getViewportSizeMinusPadding_();
-      center = calculateCenterOn(center, this.getViewportSize_(), [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]], resolution, rotation);
+      center = calculateCenterOn(
+        center,
+        this.getViewportSize_(),
+        [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]],
+        resolution,
+        rotation
+      );
     }
     return {
       center: center.slice(0),
@@ -3445,12 +5173,22 @@ var View = class extends Object_default {
       zoom: this.getZoom()
     };
   }
+  /**
+   * @return {ViewStateAndExtent} Like `FrameState`, but just `viewState` and `extent`.
+   */
   getViewStateAndExtent() {
     return {
       viewState: this.getState(),
       extent: this.calculateExtent()
     };
   }
+  /**
+   * Get the current zoom level. This method may return non-integer zoom levels
+   * if the view does not constrain the resolution, or if an interaction or
+   * animation is underway.
+   * @return {number|undefined} Zoom.
+   * @api
+   */
   getZoom() {
     let zoom;
     const resolution = this.getResolution();
@@ -3459,6 +5197,12 @@ var View = class extends Object_default {
     }
     return zoom;
   }
+  /**
+   * Get the zoom level for a resolution.
+   * @param {number} resolution The resolution.
+   * @return {number|undefined} The zoom level for the provided resolution.
+   * @api
+   */
   getZoomForResolution(resolution) {
     let offset = this.minZoom_ || 0;
     let max, zoomFactor;
@@ -3477,38 +5221,71 @@ var View = class extends Object_default {
     }
     return offset + Math.log(max / resolution) / Math.log(zoomFactor);
   }
+  /**
+   * Get the resolution for a zoom level.
+   * @param {number} zoom Zoom level.
+   * @return {number} The view resolution for the provided zoom level.
+   * @api
+   */
   getResolutionForZoom(zoom) {
     if (this.resolutions_) {
       if (this.resolutions_.length <= 1) {
         return 0;
       }
-      const baseLevel = clamp(Math.floor(zoom), 0, this.resolutions_.length - 2);
+      const baseLevel = clamp(
+        Math.floor(zoom),
+        0,
+        this.resolutions_.length - 2
+      );
       const zoomFactor = this.resolutions_[baseLevel] / this.resolutions_[baseLevel + 1];
       return this.resolutions_[baseLevel] / Math.pow(zoomFactor, clamp(zoom - baseLevel, 0, 1));
     }
     return this.maxResolution_ / Math.pow(this.zoomFactor_, zoom - this.minZoom_);
   }
+  /**
+   * Fit the given geometry or extent based on the given map size and border.
+   * The size is pixel dimensions of the box to fit the extent into.
+   * In most cases you will want to use the map size, that is `map.getSize()`.
+   * Takes care of the map angle.
+   * @param {import("./geom/SimpleGeometry.js").default|import("./extent.js").Extent} geometryOrExtent The geometry or
+   *     extent to fit the view to.
+   * @param {FitOptions} [options] Options.
+   * @api
+   */
   fit(geometryOrExtent, options) {
     let geometry;
-    assert(Array.isArray(geometryOrExtent) || typeof geometryOrExtent.getSimplifiedGeometry === "function", 24);
+    assert(
+      Array.isArray(geometryOrExtent) || typeof /** @type {?} */
+      geometryOrExtent.getSimplifiedGeometry === "function",
+      24
+    );
     if (Array.isArray(geometryOrExtent)) {
       assert(!isEmpty2(geometryOrExtent), 25);
       const extent = fromUserExtent(geometryOrExtent, this.getProjection());
       geometry = fromExtent(extent);
     } else if (geometryOrExtent.getType() === "Circle") {
-      const extent = fromUserExtent(geometryOrExtent.getExtent(), this.getProjection());
+      const extent = fromUserExtent(
+        geometryOrExtent.getExtent(),
+        this.getProjection()
+      );
       geometry = fromExtent(extent);
       geometry.rotate(this.getRotation(), getCenter(extent));
     } else {
       const userProjection2 = getUserProjection();
       if (userProjection2) {
-        geometry = geometryOrExtent.clone().transform(userProjection2, this.getProjection());
+        geometry = /** @type {import("./geom/SimpleGeometry.js").default} */
+        geometryOrExtent.clone().transform(userProjection2, this.getProjection());
       } else {
         geometry = geometryOrExtent;
       }
     }
     this.fitInternal(geometry, options);
   }
+  /**
+   * Calculate rotated extent
+   * @param {import("./geom/SimpleGeometry.js").default} geometry The geometry.
+   * @return {import("./extent").Extent} The rotated extent for the geometry.
+   */
   rotatedExtentForGeometry(geometry) {
     const rotation = this.getRotation();
     const cosAngle = Math.cos(rotation);
@@ -3529,6 +5306,10 @@ var View = class extends Object_default {
     }
     return [minRotX, minRotY, maxRotX, maxRotY];
   }
+  /**
+   * @param {import("./geom/SimpleGeometry.js").default} geometry The geometry.
+   * @param {FitOptions} [options] Options.
+   */
   fitInternal(geometry, options) {
     options = options || {};
     let size = options.size;
@@ -3563,12 +5344,15 @@ var View = class extends Object_default {
     const center = this.getConstrainedCenter([centerX, centerY], resolution);
     const callback = options.callback ? options.callback : VOID;
     if (options.duration !== void 0) {
-      this.animateInternal({
-        resolution,
-        center,
-        duration: options.duration,
-        easing: options.easing
-      }, callback);
+      this.animateInternal(
+        {
+          resolution,
+          center,
+          duration: options.duration,
+          easing: options.easing
+        },
+        callback
+      );
     } else {
       this.targetResolution_ = resolution;
       this.targetCenter_ = center;
@@ -3576,18 +5360,56 @@ var View = class extends Object_default {
       animationCallback(callback, true);
     }
   }
+  /**
+   * Center on coordinate and view position.
+   * @param {import("./coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {import("./size.js").Size} size Box pixel size.
+   * @param {import("./pixel.js").Pixel} position Position on the view to center on.
+   * @api
+   */
   centerOn(coordinate, size, position) {
-    this.centerOnInternal(fromUserCoordinate(coordinate, this.getProjection()), size, position);
+    this.centerOnInternal(
+      fromUserCoordinate(coordinate, this.getProjection()),
+      size,
+      position
+    );
   }
+  /**
+   * @param {import("./coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {import("./size.js").Size} size Box pixel size.
+   * @param {import("./pixel.js").Pixel} position Position on the view to center on.
+   */
   centerOnInternal(coordinate, size, position) {
-    this.setCenterInternal(calculateCenterOn(coordinate, size, position, this.getResolution(), this.getRotation()));
+    this.setCenterInternal(
+      calculateCenterOn(
+        coordinate,
+        size,
+        position,
+        this.getResolution(),
+        this.getRotation()
+      )
+    );
   }
+  /**
+   * Calculates the shift between map and viewport center.
+   * @param {import("./coordinate.js").Coordinate} center Center.
+   * @param {number} resolution Resolution.
+   * @param {number} rotation Rotation.
+   * @param {import("./size.js").Size} size Size.
+   * @return {Array<number>|undefined} Center shift.
+   */
   calculateCenterShift(center, resolution, rotation, size) {
     let centerShift;
     const padding = this.padding_;
     if (padding && center) {
       const reducedSize = this.getViewportSizeMinusPadding_(-rotation);
-      const shiftedCenter = calculateCenterOn(center, size, [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]], resolution, rotation);
+      const shiftedCenter = calculateCenterOn(
+        center,
+        size,
+        [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]],
+        resolution,
+        rotation
+      );
       centerShift = [
         center[0] - shiftedCenter[0],
         center[1] - shiftedCenter[1]
@@ -3595,9 +5417,17 @@ var View = class extends Object_default {
     }
     return centerShift;
   }
+  /**
+   * @return {boolean} Is defined.
+   */
   isDef() {
     return !!this.getCenterInternal() && this.getResolution() !== void 0;
   }
+  /**
+   * Adds relative coordinates to the center of the view. Any extent constraint will apply.
+   * @param {import("./coordinate.js").Coordinate} deltaCoordinates Relative value to add.
+   * @api
+   */
   adjustCenter(deltaCoordinates) {
     const center = toUserCoordinate(this.targetCenter_, this.getProjection());
     this.setCenter([
@@ -3605,6 +5435,10 @@ var View = class extends Object_default {
       center[1] + deltaCoordinates[1]
     ]);
   }
+  /**
+   * Adds relative coordinates to the center of the view. Any extent constraint will apply.
+   * @param {import("./coordinate.js").Coordinate} deltaCoordinates Relative value to add.
+   */
   adjustCenterInternal(deltaCoordinates) {
     const center = this.targetCenter_;
     this.setCenterInternal([
@@ -3612,67 +5446,167 @@ var View = class extends Object_default {
       center[1] + deltaCoordinates[1]
     ]);
   }
+  /**
+   * Multiply the view resolution by a ratio, optionally using an anchor. Any resolution
+   * constraint will apply.
+   * @param {number} ratio The ratio to apply on the view resolution.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   * @api
+   */
   adjustResolution(ratio, anchor) {
     anchor = anchor && fromUserCoordinate(anchor, this.getProjection());
     this.adjustResolutionInternal(ratio, anchor);
   }
+  /**
+   * Multiply the view resolution by a ratio, optionally using an anchor. Any resolution
+   * constraint will apply.
+   * @param {number} ratio The ratio to apply on the view resolution.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   */
   adjustResolutionInternal(ratio, anchor) {
     const isMoving = this.getAnimating() || this.getInteracting();
     const size = this.getViewportSize_(this.getRotation());
-    const newResolution = this.constraints_.resolution(this.targetResolution_ * ratio, 0, size, isMoving);
+    const newResolution = this.constraints_.resolution(
+      this.targetResolution_ * ratio,
+      0,
+      size,
+      isMoving
+    );
     if (anchor) {
       this.targetCenter_ = this.calculateCenterZoom(newResolution, anchor);
     }
     this.targetResolution_ *= ratio;
     this.applyTargetState_();
   }
+  /**
+   * Adds a value to the view zoom level, optionally using an anchor. Any resolution
+   * constraint will apply.
+   * @param {number} delta Relative value to add to the zoom level.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   * @api
+   */
   adjustZoom(delta, anchor) {
     this.adjustResolution(Math.pow(this.zoomFactor_, -delta), anchor);
   }
+  /**
+   * Adds a value to the view rotation, optionally using an anchor. Any rotation
+   * constraint will apply.
+   * @param {number} delta Relative value to add to the zoom rotation, in radians.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The rotation center.
+   * @api
+   */
   adjustRotation(delta, anchor) {
     if (anchor) {
       anchor = fromUserCoordinate(anchor, this.getProjection());
     }
     this.adjustRotationInternal(delta, anchor);
   }
+  /**
+   * @param {number} delta Relative value to add to the zoom rotation, in radians.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The rotation center.
+   */
   adjustRotationInternal(delta, anchor) {
     const isMoving = this.getAnimating() || this.getInteracting();
-    const newRotation = this.constraints_.rotation(this.targetRotation_ + delta, isMoving);
+    const newRotation = this.constraints_.rotation(
+      this.targetRotation_ + delta,
+      isMoving
+    );
     if (anchor) {
       this.targetCenter_ = this.calculateCenterRotate(newRotation, anchor);
     }
     this.targetRotation_ += delta;
     this.applyTargetState_();
   }
+  /**
+   * Set the center of the current view. Any extent constraint will apply.
+   * @param {import("./coordinate.js").Coordinate|undefined} center The center of the view.
+   * @observable
+   * @api
+   */
   setCenter(center) {
-    this.setCenterInternal(center ? fromUserCoordinate(center, this.getProjection()) : center);
+    this.setCenterInternal(
+      center ? fromUserCoordinate(center, this.getProjection()) : center
+    );
   }
+  /**
+   * Set the center using the view projection (not the user projection).
+   * @param {import("./coordinate.js").Coordinate|undefined} center The center of the view.
+   */
   setCenterInternal(center) {
     this.targetCenter_ = center;
     this.applyTargetState_();
   }
+  /**
+   * @param {import("./ViewHint.js").default} hint Hint.
+   * @param {number} delta Delta.
+   * @return {number} New value.
+   */
   setHint(hint, delta) {
     this.hints_[hint] += delta;
     this.changed();
     return this.hints_[hint];
   }
+  /**
+   * Set the resolution for this view. Any resolution constraint will apply.
+   * @param {number|undefined} resolution The resolution of the view.
+   * @observable
+   * @api
+   */
   setResolution(resolution) {
     this.targetResolution_ = resolution;
     this.applyTargetState_();
   }
+  /**
+   * Set the rotation for this view. Any rotation constraint will apply.
+   * @param {number} rotation The rotation of the view in radians.
+   * @observable
+   * @api
+   */
   setRotation(rotation) {
     this.targetRotation_ = rotation;
     this.applyTargetState_();
   }
+  /**
+   * Zoom to a specific zoom level. Any resolution constrain will apply.
+   * @param {number} zoom Zoom level.
+   * @api
+   */
   setZoom(zoom) {
     this.setResolution(this.getResolutionForZoom(zoom));
   }
+  /**
+   * Recompute rotation/resolution/center based on target values.
+   * Note: we have to compute rotation first, then resolution and center considering that
+   * parameters can influence one another in case a view extent constraint is present.
+   * @param {boolean} [doNotCancelAnims] Do not cancel animations.
+   * @param {boolean} [forceMoving] Apply constraints as if the view is moving.
+   * @private
+   */
   applyTargetState_(doNotCancelAnims, forceMoving) {
     const isMoving = this.getAnimating() || this.getInteracting() || forceMoving;
-    const newRotation = this.constraints_.rotation(this.targetRotation_, isMoving);
+    const newRotation = this.constraints_.rotation(
+      this.targetRotation_,
+      isMoving
+    );
     const size = this.getViewportSize_(newRotation);
-    const newResolution = this.constraints_.resolution(this.targetResolution_, 0, size, isMoving);
-    const newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, isMoving, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
+    const newResolution = this.constraints_.resolution(
+      this.targetResolution_,
+      0,
+      size,
+      isMoving
+    );
+    const newCenter = this.constraints_.center(
+      this.targetCenter_,
+      newResolution,
+      size,
+      isMoving,
+      this.calculateCenterShift(
+        this.targetCenter_,
+        newResolution,
+        newRotation,
+        size
+      )
+    );
     if (this.get(ViewProperty_default.ROTATION) !== newRotation) {
       this.set(ViewProperty_default.ROTATION, newRotation);
     }
@@ -3688,13 +5622,37 @@ var View = class extends Object_default {
     }
     this.cancelAnchor_ = void 0;
   }
+  /**
+   * If any constraints need to be applied, an animation will be triggered.
+   * This is typically done on interaction end.
+   * Note: calling this with a duration of 0 will apply the constrained values straight away,
+   * without animation.
+   * @param {number} [duration] The animation duration in ms.
+   * @param {number} [resolutionDirection] Which direction to zoom.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   */
   resolveConstraints(duration, resolutionDirection, anchor) {
     duration = duration !== void 0 ? duration : 200;
     const direction = resolutionDirection || 0;
     const newRotation = this.constraints_.rotation(this.targetRotation_);
     const size = this.getViewportSize_(newRotation);
-    const newResolution = this.constraints_.resolution(this.targetResolution_, direction, size);
-    const newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, false, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
+    const newResolution = this.constraints_.resolution(
+      this.targetResolution_,
+      direction,
+      size
+    );
+    const newCenter = this.constraints_.center(
+      this.targetCenter_,
+      newResolution,
+      size,
+      false,
+      this.calculateCenterShift(
+        this.targetCenter_,
+        newResolution,
+        newRotation,
+        size
+      )
+    );
     if (duration === 0 && !this.cancelAnchor_) {
       this.targetResolution_ = newResolution;
       this.targetRotation_ = newRotation;
@@ -3718,14 +5676,35 @@ var View = class extends Object_default {
       });
     }
   }
+  /**
+   * Notify the View that an interaction has started.
+   * The view state will be resolved to a stable one if needed
+   * (depending on its constraints).
+   * @api
+   */
   beginInteraction() {
     this.resolveConstraints(0);
     this.setHint(ViewHint_default.INTERACTING, 1);
   }
+  /**
+   * Notify the View that an interaction has ended. The view state will be resolved
+   * to a stable one if needed (depending on its constraints).
+   * @param {number} [duration] Animation duration in ms.
+   * @param {number} [resolutionDirection] Which direction to zoom.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   * @api
+   */
   endInteraction(duration, resolutionDirection, anchor) {
     anchor = anchor && fromUserCoordinate(anchor, this.getProjection());
     this.endInteractionInternal(duration, resolutionDirection, anchor);
   }
+  /**
+   * Notify the View that an interaction has ended. The view state will be resolved
+   * to a stable one if needed (depending on its constraints).
+   * @param {number} [duration] Animation duration in ms.
+   * @param {number} [resolutionDirection] Which direction to zoom.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   */
   endInteractionInternal(duration, resolutionDirection, anchor) {
     if (!this.getInteracting()) {
       return;
@@ -3733,14 +5712,45 @@ var View = class extends Object_default {
     this.setHint(ViewHint_default.INTERACTING, -1);
     this.resolveConstraints(duration, resolutionDirection, anchor);
   }
+  /**
+   * Get a valid position for the view center according to the current constraints.
+   * @param {import("./coordinate.js").Coordinate|undefined} targetCenter Target center position.
+   * @param {number} [targetResolution] Target resolution. If not supplied, the current one will be used.
+   * This is useful to guess a valid center position at a different zoom level.
+   * @return {import("./coordinate.js").Coordinate|undefined} Valid center position.
+   */
   getConstrainedCenter(targetCenter, targetResolution) {
     const size = this.getViewportSize_(this.getRotation());
-    return this.constraints_.center(targetCenter, targetResolution || this.getResolution(), size);
+    return this.constraints_.center(
+      targetCenter,
+      targetResolution || this.getResolution(),
+      size
+    );
   }
+  /**
+   * Get a valid zoom level according to the current view constraints.
+   * @param {number|undefined} targetZoom Target zoom.
+   * @param {number} [direction=0] Indicate which resolution should be used
+   * by a renderer if the view resolution does not match any resolution of the tile source.
+   * If 0, the nearest resolution will be used. If 1, the nearest lower resolution
+   * will be used. If -1, the nearest higher resolution will be used.
+   * @return {number|undefined} Valid zoom level.
+   */
   getConstrainedZoom(targetZoom, direction) {
     const targetRes = this.getResolutionForZoom(targetZoom);
-    return this.getZoomForResolution(this.getConstrainedResolution(targetRes, direction));
+    return this.getZoomForResolution(
+      this.getConstrainedResolution(targetRes, direction)
+    );
   }
+  /**
+   * Get a valid resolution according to the current view constraints.
+   * @param {number|undefined} targetResolution Target resolution.
+   * @param {number} [direction=0] Indicate which resolution should be used
+   * by a renderer if the view resolution does not match any resolution of the tile source.
+   * If 0, the nearest resolution will be used. If 1, the nearest lower resolution
+   * will be used. If -1, the nearest higher resolution will be used.
+   * @return {number|undefined} Valid resolution.
+   */
   getConstrainedResolution(targetResolution, direction) {
     direction = direction || 0;
     const size = this.getViewportSize_(this.getRotation());
@@ -3791,12 +5801,26 @@ function createResolutionConstraint(options) {
     maxResolution = resolutions[minZoom];
     minResolution = resolutions[maxZoom] !== void 0 ? resolutions[maxZoom] : resolutions[resolutions.length - 1];
     if (options.constrainResolution) {
-      resolutionConstraint = createSnapToResolutions(resolutions, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createSnapToResolutions(
+        resolutions,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     } else {
-      resolutionConstraint = createMinMaxResolution(maxResolution, minResolution, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createMinMaxResolution(
+        maxResolution,
+        minResolution,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     }
   } else {
-    const size = !projExtent ? 360 * METERS_PER_UNIT.degrees / projection.getMetersPerUnit() : Math.max(getWidth(projExtent), getHeight(projExtent));
+    const size = !projExtent ? (
+      // use an extent that can fit the whole world if need be
+      360 * METERS_PER_UNIT.degrees / projection.getMetersPerUnit()
+    ) : Math.max(getWidth(projExtent), getHeight(projExtent));
     const defaultMaxResolution = size / DEFAULT_TILE_SIZE / Math.pow(defaultZoomFactor, DEFAULT_MIN_ZOOM);
     const defaultMinResolution = defaultMaxResolution / Math.pow(defaultZoomFactor, defaultMaxZoom - DEFAULT_MIN_ZOOM);
     maxResolution = options.maxResolution;
@@ -3817,12 +5841,27 @@ function createResolutionConstraint(options) {
         minResolution = defaultMinResolution;
       }
     }
-    maxZoom = minZoom + Math.floor(Math.log(maxResolution / minResolution) / Math.log(zoomFactor));
+    maxZoom = minZoom + Math.floor(
+      Math.log(maxResolution / minResolution) / Math.log(zoomFactor)
+    );
     minResolution = maxResolution / Math.pow(zoomFactor, maxZoom - minZoom);
     if (options.constrainResolution) {
-      resolutionConstraint = createSnapToPower(zoomFactor, maxResolution, minResolution, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createSnapToPower(
+        zoomFactor,
+        maxResolution,
+        minResolution,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     } else {
-      resolutionConstraint = createMinMaxResolution(maxResolution, minResolution, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createMinMaxResolution(
+        maxResolution,
+        minResolution,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     }
   }
   return {
@@ -3878,6 +5917,9 @@ var View_default = View;
 
 // ../node_modules/ol/layer/Layer.js
 var Layer = class extends Base_default {
+  /**
+   * @param {Options<SourceType>} options Layer options.
+   */
   constructor(options) {
     const baseOptions = Object.assign({}, options);
     delete baseOptions.source;
@@ -3897,30 +5939,62 @@ var Layer = class extends Base_default {
     if (options.map) {
       this.setMap(options.map);
     }
-    this.addChangeListener(Property_default.SOURCE, this.handleSourcePropertyChange_);
-    const source = options.source ? options.source : null;
+    this.addChangeListener(
+      Property_default.SOURCE,
+      this.handleSourcePropertyChange_
+    );
+    const source = options.source ? (
+      /** @type {SourceType} */
+      options.source
+    ) : null;
     this.setSource(source);
   }
+  /**
+   * @param {Array<import("./Layer.js").default>} [array] Array of layers (to be modified in place).
+   * @return {Array<import("./Layer.js").default>} Array of layers.
+   */
   getLayersArray(array) {
     array = array ? array : [];
     array.push(this);
     return array;
   }
+  /**
+   * @param {Array<import("./Layer.js").State>} [states] Optional list of layer states (to be modified in place).
+   * @return {Array<import("./Layer.js").State>} List of layer states.
+   */
   getLayerStatesArray(states) {
     states = states ? states : [];
     states.push(this.getLayerState());
     return states;
   }
+  /**
+   * Get the layer source.
+   * @return {SourceType|null} The layer source (or `null` if not yet set).
+   * @observable
+   * @api
+   */
   getSource() {
-    return this.get(Property_default.SOURCE) || null;
+    return (
+      /** @type {SourceType} */
+      this.get(Property_default.SOURCE) || null
+    );
   }
+  /**
+   * @return {SourceType|null} The source being rendered.
+   */
   getRenderSource() {
     return this.getSource();
   }
+  /**
+   * @return {import("../source/Source.js").State} Source state.
+   */
   getSourceState() {
     const source = this.getSource();
     return !source ? "undefined" : source.getState();
   }
+  /**
+   * @private
+   */
   handleSourceChange_() {
     this.changed();
     if (this.sourceReady_ || this.getSource().getState() !== "ready") {
@@ -3929,6 +6003,9 @@ var Layer = class extends Base_default {
     this.sourceReady_ = true;
     this.dispatchEvent("sourceready");
   }
+  /**
+   * @private
+   */
   handleSourcePropertyChange_() {
     if (this.sourceChangeKey_) {
       unlistenByKey(this.sourceChangeKey_);
@@ -3937,7 +6014,12 @@ var Layer = class extends Base_default {
     this.sourceReady_ = false;
     const source = this.getSource();
     if (source) {
-      this.sourceChangeKey_ = listen(source, EventType_default.CHANGE, this.handleSourceChange_, this);
+      this.sourceChangeKey_ = listen(
+        source,
+        EventType_default.CHANGE,
+        this.handleSourceChange_,
+        this
+      );
       if (source.getState() === "ready") {
         this.sourceReady_ = true;
         setTimeout(() => {
@@ -3947,18 +6029,34 @@ var Layer = class extends Base_default {
     }
     this.changed();
   }
+  /**
+   * @param {import("../pixel").Pixel} pixel Pixel.
+   * @return {Promise<Array<import("../Feature").FeatureLike>>} Promise that resolves with
+   * an array of features.
+   */
   getFeatures(pixel) {
     if (!this.renderer_) {
       return Promise.resolve([]);
     }
     return this.renderer_.getFeatures(pixel);
   }
+  /**
+   * @param {import("../pixel").Pixel} pixel Pixel.
+   * @return {Uint8ClampedArray|Uint8Array|Float32Array|DataView|null} Pixel data.
+   */
   getData(pixel) {
     if (!this.renderer_ || !this.rendered) {
       return null;
     }
     return this.renderer_.getData(pixel);
   }
+  /**
+   * The layer is visible in the given view, i.e. within its min/max resolution or zoom and
+   * extent, and `getVisible()` is `true`.
+   * @param {View|import("../View.js").ViewStateAndExtent} view View or {@link import("../Map.js").FrameState}.
+   * @return {boolean} The layer is visible in the current view.
+   * @api
+   */
   isVisible(view) {
     let frameState;
     if (view instanceof View_default) {
@@ -3972,6 +6070,12 @@ var Layer = class extends Base_default {
     const layerExtent = this.getExtent();
     return this.getVisible() && inView(this.getLayerState(), frameState.viewState) && (!layerExtent || intersects(layerExtent, frameState.extent));
   }
+  /**
+   * Get the attributions of the source of this layer for the given view.
+   * @param {View|import("../View.js").ViewStateAndExtent} view View or  {@link import("../Map.js").FrameState}.
+   * @return {Array<string>} Attributions for this layer at the given view.
+   * @api
+   */
   getAttributions(view) {
     if (!this.isVisible(view)) {
       return [];
@@ -3991,6 +6095,14 @@ var Layer = class extends Base_default {
     }
     return attributions;
   }
+  /**
+   * In charge to manage the rendering of the layer. One layer type is
+   * bounded with one layer renderer.
+   * @param {?import("../Map.js").FrameState} frameState Frame state.
+   * @param {HTMLElement} target Target which the renderer may (but need not) use
+   * for rendering its content.
+   * @return {HTMLElement} The rendered element.
+   */
   render(frameState, target) {
     const layerRenderer = this.getRenderer();
     if (layerRenderer.prepareFrame(frameState)) {
@@ -3998,18 +6110,40 @@ var Layer = class extends Base_default {
       return layerRenderer.renderFrame(frameState, target);
     }
   }
+  /**
+   * Called when a layer is not visible during a map render.
+   */
   unrender() {
     this.rendered = false;
   }
+  /**
+   * For use inside the library only.
+   * @param {import("../Map.js").default|null} map Map.
+   */
   setMapInternal(map) {
     if (!map) {
       this.unrender();
     }
     this.set(Property_default.MAP, map);
   }
+  /**
+   * For use inside the library only.
+   * @return {import("../Map.js").default|null} Map.
+   */
   getMapInternal() {
     return this.get(Property_default.MAP);
   }
+  /**
+   * Sets the layer to be rendered on top of other layers on a map. The map will
+   * not manage this layer in its layers collection. This
+   * is useful for temporary layers. To remove an unmanaged layer from the map,
+   * use `#setMap(null)`.
+   *
+   * To add the layer to a map and have it managed by the map, use
+   * {@link module:ol/Map~Map#addLayer} instead.
+   * @param {import("../Map.js").default|null} map Map.
+   * @api
+   */
   setMap(map) {
     if (this.mapPrecomposeKey_) {
       unlistenByKey(this.mapPrecomposeKey_);
@@ -4023,34 +6157,66 @@ var Layer = class extends Base_default {
       this.mapRenderKey_ = null;
     }
     if (map) {
-      this.mapPrecomposeKey_ = listen(map, EventType_default2.PRECOMPOSE, function(evt) {
-        const renderEvent = evt;
-        const layerStatesArray = renderEvent.frameState.layerStatesArray;
-        const layerState = this.getLayerState(false);
-        assert(!layerStatesArray.some(function(arrayLayerState) {
-          return arrayLayerState.layer === layerState.layer;
-        }), 67);
-        layerStatesArray.push(layerState);
-      }, this);
+      this.mapPrecomposeKey_ = listen(
+        map,
+        EventType_default2.PRECOMPOSE,
+        function(evt) {
+          const renderEvent = (
+            /** @type {import("../render/Event.js").default} */
+            evt
+          );
+          const layerStatesArray = renderEvent.frameState.layerStatesArray;
+          const layerState = this.getLayerState(false);
+          assert(
+            !layerStatesArray.some(function(arrayLayerState) {
+              return arrayLayerState.layer === layerState.layer;
+            }),
+            67
+          );
+          layerStatesArray.push(layerState);
+        },
+        this
+      );
       this.mapRenderKey_ = listen(this, EventType_default.CHANGE, map.render, map);
       this.changed();
     }
   }
+  /**
+   * Set the layer source.
+   * @param {SourceType|null} source The layer source.
+   * @observable
+   * @api
+   */
   setSource(source) {
     this.set(Property_default.SOURCE, source);
   }
+  /**
+   * Get the renderer for this layer.
+   * @return {RendererType|null} The layer renderer.
+   */
   getRenderer() {
     if (!this.renderer_) {
       this.renderer_ = this.createRenderer();
     }
     return this.renderer_;
   }
+  /**
+   * @return {boolean} The layer has a renderer.
+   */
   hasRenderer() {
     return !!this.renderer_;
   }
+  /**
+   * Create a renderer for this layer.
+   * @return {RendererType} A layer renderer.
+   * @protected
+   */
   createRenderer() {
     return null;
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     if (this.renderer_) {
       this.renderer_.dispose();
@@ -4075,20 +6241,56 @@ var Layer_default = Layer;
 
 // ../node_modules/ol/renderer/Map.js
 var MapRenderer = class extends Disposable_default {
+  /**
+   * @param {import("../Map.js").default} map Map.
+   */
   constructor(map) {
     super();
     this.map_ = map;
   }
+  /**
+   * @abstract
+   * @param {import("../render/EventType.js").default} type Event type.
+   * @param {import("../Map.js").FrameState} frameState Frame state.
+   */
   dispatchRenderEvent(type, frameState) {
     abstract();
   }
+  /**
+   * @param {import("../Map.js").FrameState} frameState FrameState.
+   * @protected
+   */
   calculateMatrices2D(frameState) {
     const viewState = frameState.viewState;
     const coordinateToPixelTransform = frameState.coordinateToPixelTransform;
     const pixelToCoordinateTransform = frameState.pixelToCoordinateTransform;
-    compose(coordinateToPixelTransform, frameState.size[0] / 2, frameState.size[1] / 2, 1 / viewState.resolution, -1 / viewState.resolution, -viewState.rotation, -viewState.center[0], -viewState.center[1]);
+    compose(
+      coordinateToPixelTransform,
+      frameState.size[0] / 2,
+      frameState.size[1] / 2,
+      1 / viewState.resolution,
+      -1 / viewState.resolution,
+      -viewState.rotation,
+      -viewState.center[0],
+      -viewState.center[1]
+    );
     makeInverse(pixelToCoordinateTransform, coordinateToPixelTransform);
   }
+  /**
+   * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {import("../Map.js").FrameState} frameState FrameState.
+   * @param {number} hitTolerance Hit tolerance in pixels.
+   * @param {boolean} checkWrapped Check for wrapped geometries.
+   * @param {import("./vector.js").FeatureCallback<T>} callback Feature callback.
+   * @param {S} thisArg Value to use as `this` when executing `callback`.
+   * @param {function(this: U, import("../layer/Layer.js").default): boolean} layerFilter Layer filter
+   *     function, only layers which are visible and for which this function
+   *     returns `true` will be tested for features.  By default, all visible
+   *     layers will be tested.
+   * @param {U} thisArg2 Value to use as `this` when executing `layerFilter`.
+   * @return {T|undefined} Callback result.
+   * @template S,T,U
+   */
   forEachFeatureAtCoordinate(coordinate, frameState, hitTolerance, checkWrapped, callback, thisArg, layerFilter, thisArg2) {
     let result;
     const viewState = frameState.viewState;
@@ -4105,7 +6307,10 @@ var MapRenderer = class extends Disposable_default {
     }
     const layerStates = frameState.layerStatesArray;
     const numLayers = layerStates.length;
-    const matches = [];
+    const matches = (
+      /** @type {Array<HitMatch<T>>} */
+      []
+    );
     const tmpCoord = [];
     for (let i = 0; i < offsets.length; i++) {
       for (let j = numLayers - 1; j >= 0; --j) {
@@ -4116,10 +6321,19 @@ var MapRenderer = class extends Disposable_default {
           const source = layer.getSource();
           if (layerRenderer && source) {
             const coordinates2 = source.getWrapX() ? translatedCoordinate : coordinate;
-            const callback2 = forEachFeatureAtCoordinate.bind(null, layerState.managed);
+            const callback2 = forEachFeatureAtCoordinate.bind(
+              null,
+              layerState.managed
+            );
             tmpCoord[0] = coordinates2[0] + offsets[i][0];
             tmpCoord[1] = coordinates2[1] + offsets[i][1];
-            result = layerRenderer.forEachFeatureAtCoordinate(tmpCoord, frameState, hitTolerance, callback2, matches);
+            result = layerRenderer.forEachFeatureAtCoordinate(
+              tmpCoord,
+              frameState,
+              hitTolerance,
+              callback2,
+              matches
+            );
           }
           if (result) {
             return result;
@@ -4138,16 +6352,50 @@ var MapRenderer = class extends Disposable_default {
     });
     return result;
   }
+  /**
+   * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {import("../Map.js").FrameState} frameState FrameState.
+   * @param {number} hitTolerance Hit tolerance in pixels.
+   * @param {boolean} checkWrapped Check for wrapped geometries.
+   * @param {function(this: U, import("../layer/Layer.js").default): boolean} layerFilter Layer filter
+   *     function, only layers which are visible and for which this function
+   *     returns `true` will be tested for features.  By default, all visible
+   *     layers will be tested.
+   * @param {U} thisArg Value to use as `this` when executing `layerFilter`.
+   * @return {boolean} Is there a feature at the given coordinate?
+   * @template U
+   */
   hasFeatureAtCoordinate(coordinate, frameState, hitTolerance, checkWrapped, layerFilter, thisArg) {
-    const hasFeature = this.forEachFeatureAtCoordinate(coordinate, frameState, hitTolerance, checkWrapped, TRUE, this, layerFilter, thisArg);
+    const hasFeature = this.forEachFeatureAtCoordinate(
+      coordinate,
+      frameState,
+      hitTolerance,
+      checkWrapped,
+      TRUE,
+      this,
+      layerFilter,
+      thisArg
+    );
     return hasFeature !== void 0;
   }
+  /**
+   * @return {import("../Map.js").default} Map.
+   */
   getMap() {
     return this.map_;
   }
+  /**
+   * Render.
+   * @abstract
+   * @param {?import("../Map.js").FrameState} frameState Frame state.
+   */
   renderFrame(frameState) {
     abstract();
   }
+  /**
+   * @param {import("../Map.js").FrameState} frameState Frame state.
+   * @protected
+   */
   scheduleExpireIconCache(frameState) {
     if (shared.canExpireCache()) {
       frameState.postRenderFunctions.push(expireIconCache);
@@ -4161,6 +6409,13 @@ var Map_default = MapRenderer;
 
 // ../node_modules/ol/render/Event.js
 var RenderEvent = class extends Event_default {
+  /**
+   * @param {import("./EventType.js").default} type Type.
+   * @param {import("../transform.js").Transform} [inversePixelTransform] Transform for
+   *     CSS pixels to rendered pixels.
+   * @param {import("../Map.js").FrameState} [frameState] Frame state.
+   * @param {?(CanvasRenderingContext2D|WebGLRenderingContext)} [context] Context.
+   */
   constructor(type, inversePixelTransform, frameState, context) {
     super(type);
     this.inversePixelTransform = inversePixelTransform;
@@ -4175,15 +6430,18 @@ var CLASS_HIDDEN = "ol-hidden";
 var CLASS_UNSELECTABLE = "ol-unselectable";
 var CLASS_CONTROL = "ol-control";
 var CLASS_COLLAPSED = "ol-collapsed";
-var fontRegEx = new RegExp([
-  "^\\s*(?=(?:(?:[-a-z]+\\s*){0,2}(italic|oblique))?)",
-  "(?=(?:(?:[-a-z]+\\s*){0,2}(small-caps))?)",
-  "(?=(?:(?:[-a-z]+\\s*){0,2}(bold(?:er)?|lighter|[1-9]00 ))?)",
-  "(?:(?:normal|\\1|\\2|\\3)\\s*){0,3}((?:xx?-)?",
-  "(?:small|large)|medium|smaller|larger|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx]))",
-  "(?:\\s*\\/\\s*(normal|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx])?))",
-  `?\\s*([-,\\"\\'\\sa-z]+?)\\s*$`
-].join(""), "i");
+var fontRegEx = new RegExp(
+  [
+    "^\\s*(?=(?:(?:[-a-z]+\\s*){0,2}(italic|oblique))?)",
+    "(?=(?:(?:[-a-z]+\\s*){0,2}(small-caps))?)",
+    "(?=(?:(?:[-a-z]+\\s*){0,2}(bold(?:er)?|lighter|[1-9]00 ))?)",
+    "(?:(?:normal|\\1|\\2|\\3)\\s*){0,3}((?:xx?-)?",
+    "(?:small|large)|medium|smaller|larger|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx]))",
+    "(?:\\s*\\/\\s*(normal|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx])?))",
+    `?\\s*([-,\\"\\'\\sa-z]+?)\\s*$`
+  ].join(""),
+  "i"
+);
 var fontRegExMatchIndex = [
   "style",
   "variant",
@@ -4197,13 +6455,16 @@ var getFontParameters = function(fontSpec) {
   if (!match) {
     return null;
   }
-  const style = {
-    lineHeight: "normal",
-    size: "1.2em",
-    style: "normal",
-    weight: "normal",
-    variant: "normal"
-  };
+  const style = (
+    /** @type {FontParameters} */
+    {
+      lineHeight: "normal",
+      size: "1.2em",
+      style: "normal",
+      weight: "normal",
+      variant: "normal"
+    }
+  );
   for (let i = 0, ii = fontRegExMatchIndex.length; i < ii; ++i) {
     const value = match[i + 1];
     if (value !== void 0) {
@@ -4230,7 +6491,10 @@ function createCanvasContext2D(width, height, canvasPool, settings) {
   if (height) {
     canvas.height = height;
   }
-  return canvas.getContext("2d", settings);
+  return (
+    /** @type {CanvasRenderingContext2D} */
+    canvas.getContext("2d", settings)
+  );
 }
 function replaceNode(newNode, oldNode) {
   const parent = oldNode.parentNode;
@@ -4286,9 +6550,15 @@ var registerFont = function() {
     let available = true;
     for (let i = 0; i < len; ++i) {
       const referenceFont = referenceFonts[i];
-      referenceWidth = measureTextWidth(fontStyle + " " + fontWeight + " " + size + referenceFont, text);
+      referenceWidth = measureTextWidth(
+        fontStyle + " " + fontWeight + " " + size + referenceFont,
+        text
+      );
       if (fontFamily != referenceFont) {
-        const width = measureTextWidth(fontStyle + " " + fontWeight + " " + size + fontFamily + "," + referenceFont, text);
+        const width = measureTextWidth(
+          fontStyle + " " + fontWeight + " " + size + fontFamily + "," + referenceFont,
+          text
+        );
         available = available && width != referenceWidth;
       }
     }
@@ -4340,39 +6610,6 @@ var registerFont = function() {
     }
   };
 }();
-var measureTextHeight = function() {
-  let measureElement;
-  return function(fontSpec) {
-    let height = textHeights[fontSpec];
-    if (height == void 0) {
-      if (WORKER_OFFSCREEN_CANVAS) {
-        const font = getFontParameters(fontSpec);
-        const metrics = measureText(fontSpec, "\u017Dg");
-        const lineHeight = isNaN(Number(font.lineHeight)) ? 1.2 : Number(font.lineHeight);
-        height = lineHeight * (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent);
-      } else {
-        if (!measureElement) {
-          measureElement = document.createElement("div");
-          measureElement.innerHTML = "M";
-          measureElement.style.minHeight = "0";
-          measureElement.style.maxHeight = "none";
-          measureElement.style.height = "auto";
-          measureElement.style.padding = "0";
-          measureElement.style.border = "none";
-          measureElement.style.position = "absolute";
-          measureElement.style.display = "block";
-          measureElement.style.left = "-99999px";
-        }
-        measureElement.style.font = fontSpec;
-        document.body.appendChild(measureElement);
-        height = measureElement.offsetHeight;
-        document.body.removeChild(measureElement);
-      }
-      textHeights[fontSpec] = height;
-    }
-    return height;
-  };
-}();
 function measureText(font, text) {
   if (!measureContext) {
     measureContext = createCanvasContext2D(1, 1);
@@ -4389,9 +6626,16 @@ function measureTextWidth(font, text) {
 
 // ../node_modules/ol/renderer/Composite.js
 var CompositeMapRenderer = class extends Map_default {
+  /**
+   * @param {import("../Map.js").default} map Map.
+   */
   constructor(map) {
     super(map);
-    this.fontChangeListenerKey_ = listen(checkedFonts, ObjectEventType_default.PROPERTYCHANGE, map.redrawText.bind(map));
+    this.fontChangeListenerKey_ = listen(
+      checkedFonts,
+      ObjectEventType_default.PROPERTYCHANGE,
+      map.redrawText.bind(map)
+    );
     this.element_ = document.createElement("div");
     const style = this.element_.style;
     style.position = "absolute";
@@ -4404,6 +6648,10 @@ var CompositeMapRenderer = class extends Map_default {
     this.children_ = [];
     this.renderedVisible_ = true;
   }
+  /**
+   * @param {import("../render/EventType.js").default} type Event type.
+   * @param {import("../Map.js").FrameState} frameState Frame state.
+   */
   dispatchRenderEvent(type, frameState) {
     const map = this.getMap();
     if (map.hasListener(type)) {
@@ -4416,6 +6664,10 @@ var CompositeMapRenderer = class extends Map_default {
     this.element_.parentNode.removeChild(this.element_);
     super.disposeInternal();
   }
+  /**
+   * Render.
+   * @param {?import("../Map.js").FrameState} frameState Frame state.
+   */
   renderFrame(frameState) {
     if (!frameState) {
       if (this.renderedVisible_) {
@@ -4451,7 +6703,10 @@ var CompositeMapRenderer = class extends Map_default {
         previousElement = element;
       }
       if ("getDeclutter" in layer) {
-        declutterLayers.push(layer);
+        declutterLayers.push(
+          /** @type {import("../layer/BaseVector.js").default} */
+          layer
+        );
       }
     }
     for (let i = declutterLayers.length - 1; i >= 0; --i) {
@@ -4470,6 +6725,10 @@ var Composite_default = CompositeMapRenderer;
 
 // ../node_modules/ol/layer/Group.js
 var GroupEvent = class extends Event_default {
+  /**
+   * @param {EventType} type The event type.
+   * @param {BaseLayer} layer The layer.
+   */
   constructor(type, layer) {
     super(type);
     this.layer = layer;
@@ -4478,10 +6737,16 @@ var GroupEvent = class extends Event_default {
 var Property2 = {
   LAYERS: "layers"
 };
-var LayerGroup = class extends Base_default {
+var LayerGroup = class _LayerGroup extends Base_default {
+  /**
+   * @param {Options} [options] Layer options.
+   */
   constructor(options) {
     options = options || {};
-    const baseOptions = Object.assign({}, options);
+    const baseOptions = (
+      /** @type {Options} */
+      Object.assign({}, options)
+    );
     delete baseOptions.layers;
     let layers = options.layers;
     super(baseOptions);
@@ -4495,21 +6760,31 @@ var LayerGroup = class extends Base_default {
       if (Array.isArray(layers)) {
         layers = new Collection_default(layers.slice(), { unique: true });
       } else {
-        assert(typeof layers.getArray === "function", 43);
+        assert(typeof /** @type {?} */
+        layers.getArray === "function", 43);
       }
     } else {
       layers = new Collection_default(void 0, { unique: true });
     }
     this.setLayers(layers);
   }
+  /**
+   * @private
+   */
   handleLayerChange_() {
     this.changed();
   }
+  /**
+   * @private
+   */
   handleLayersChanged_() {
     this.layersListenerKeys_.forEach(unlistenByKey);
     this.layersListenerKeys_.length = 0;
     const layers = this.getLayers();
-    this.layersListenerKeys_.push(listen(layers, CollectionEventType_default.ADD, this.handleLayersAdd_, this), listen(layers, CollectionEventType_default.REMOVE, this.handleLayersRemove_, this));
+    this.layersListenerKeys_.push(
+      listen(layers, CollectionEventType_default.ADD, this.handleLayersAdd_, this),
+      listen(layers, CollectionEventType_default.REMOVE, this.handleLayersRemove_, this)
+    );
     for (const id in this.listenerKeys_) {
       this.listenerKeys_[id].forEach(unlistenByKey);
     }
@@ -4522,28 +6797,53 @@ var LayerGroup = class extends Base_default {
     }
     this.changed();
   }
+  /**
+   * @param {BaseLayer} layer The layer.
+   */
   registerLayerListeners_(layer) {
     const listenerKeys = [
-      listen(layer, ObjectEventType_default.PROPERTYCHANGE, this.handleLayerChange_, this),
+      listen(
+        layer,
+        ObjectEventType_default.PROPERTYCHANGE,
+        this.handleLayerChange_,
+        this
+      ),
       listen(layer, EventType_default.CHANGE, this.handleLayerChange_, this)
     ];
-    if (layer instanceof LayerGroup) {
-      listenerKeys.push(listen(layer, "addlayer", this.handleLayerGroupAdd_, this), listen(layer, "removelayer", this.handleLayerGroupRemove_, this));
+    if (layer instanceof _LayerGroup) {
+      listenerKeys.push(
+        listen(layer, "addlayer", this.handleLayerGroupAdd_, this),
+        listen(layer, "removelayer", this.handleLayerGroupRemove_, this)
+      );
     }
     this.listenerKeys_[getUid(layer)] = listenerKeys;
   }
+  /**
+   * @param {GroupEvent} event The layer group event.
+   */
   handleLayerGroupAdd_(event) {
     this.dispatchEvent(new GroupEvent("addlayer", event.layer));
   }
+  /**
+   * @param {GroupEvent} event The layer group event.
+   */
   handleLayerGroupRemove_(event) {
     this.dispatchEvent(new GroupEvent("removelayer", event.layer));
   }
+  /**
+   * @param {import("../Collection.js").CollectionEvent<import("./Base.js").default>} collectionEvent CollectionEvent.
+   * @private
+   */
   handleLayersAdd_(collectionEvent) {
     const layer = collectionEvent.element;
     this.registerLayerListeners_(layer);
     this.dispatchEvent(new GroupEvent("addlayer", layer));
     this.changed();
   }
+  /**
+   * @param {import("../Collection.js").CollectionEvent<import("./Base.js").default>} collectionEvent CollectionEvent.
+   * @private
+   */
   handleLayersRemove_(collectionEvent) {
     const layer = collectionEvent.element;
     const key = getUid(layer);
@@ -4552,9 +6852,28 @@ var LayerGroup = class extends Base_default {
     this.dispatchEvent(new GroupEvent("removelayer", layer));
     this.changed();
   }
+  /**
+   * Returns the {@link module:ol/Collection~Collection collection} of {@link module:ol/layer/Layer~Layer layers}
+   * in this group.
+   * @return {!Collection<import("./Base.js").default>} Collection of
+   *   {@link module:ol/layer/Base~BaseLayer layers} that are part of this group.
+   * @observable
+   * @api
+   */
   getLayers() {
-    return this.get(Property2.LAYERS);
+    return (
+      /** @type {!Collection<import("./Base.js").default>} */
+      this.get(Property2.LAYERS)
+    );
   }
+  /**
+   * Set the {@link module:ol/Collection~Collection collection} of {@link module:ol/layer/Layer~Layer layers}
+   * in this group.
+   * @param {!Collection<import("./Base.js").default>} layers Collection of
+   *   {@link module:ol/layer/Base~BaseLayer layers} that are part of this group.
+   * @observable
+   * @api
+   */
   setLayers(layers) {
     const collection = this.getLayers();
     if (collection) {
@@ -4565,6 +6884,10 @@ var LayerGroup = class extends Base_default {
     }
     this.set(Property2.LAYERS, layers);
   }
+  /**
+   * @param {Array<import("./Layer.js").default>} [array] Array of layers (to be modified in place).
+   * @return {Array<import("./Layer.js").default>} Array of layers.
+   */
   getLayersArray(array) {
     array = array !== void 0 ? array : [];
     this.getLayers().forEach(function(layer) {
@@ -4572,6 +6895,15 @@ var LayerGroup = class extends Base_default {
     });
     return array;
   }
+  /**
+   * Get the layer states list and use this groups z-index as the default
+   * for all layers in this and nested groups, if it is unset at this point.
+   * If dest is not provided and this group's z-index is undefined
+   * 0 is used a the default z-index.
+   * @param {Array<import("./Layer.js").State>} [dest] Optional list
+   * of layer states (to be modified in place).
+   * @return {Array<import("./Layer.js").State>} List of layer states.
+   */
   getLayerStatesArray(dest) {
     const states = dest !== void 0 ? dest : [];
     const pos = states.length;
@@ -4587,13 +6919,22 @@ var LayerGroup = class extends Base_default {
       const layerState = states[i];
       layerState.opacity *= ownLayerState.opacity;
       layerState.visible = layerState.visible && ownLayerState.visible;
-      layerState.maxResolution = Math.min(layerState.maxResolution, ownLayerState.maxResolution);
-      layerState.minResolution = Math.max(layerState.minResolution, ownLayerState.minResolution);
+      layerState.maxResolution = Math.min(
+        layerState.maxResolution,
+        ownLayerState.maxResolution
+      );
+      layerState.minResolution = Math.max(
+        layerState.minResolution,
+        ownLayerState.minResolution
+      );
       layerState.minZoom = Math.max(layerState.minZoom, ownLayerState.minZoom);
       layerState.maxZoom = Math.min(layerState.maxZoom, ownLayerState.maxZoom);
       if (ownLayerState.extent !== void 0) {
         if (layerState.extent !== void 0) {
-          layerState.extent = getIntersection(layerState.extent, ownLayerState.extent);
+          layerState.extent = getIntersection(
+            layerState.extent,
+            ownLayerState.extent
+          );
         } else {
           layerState.extent = ownLayerState.extent;
         }
@@ -4604,6 +6945,9 @@ var LayerGroup = class extends Base_default {
     }
     return states;
   }
+  /**
+   * @return {import("../source/Source.js").State} Source state.
+   */
   getSourceState() {
     return "ready";
   }
@@ -4612,6 +6956,11 @@ var Group_default = LayerGroup;
 
 // ../node_modules/ol/MapEvent.js
 var MapEvent = class extends Event_default {
+  /**
+   * @param {string} type Event type.
+   * @param {import("./Map.js").default} map Map.
+   * @param {?import("./Map.js").FrameState} [frameState] Frame state.
+   */
   constructor(type, map, frameState) {
     super(type);
     this.map = map;
@@ -4622,6 +6971,14 @@ var MapEvent_default = MapEvent;
 
 // ../node_modules/ol/MapBrowserEvent.js
 var MapBrowserEvent = class extends MapEvent_default {
+  /**
+   * @param {string} type Event type.
+   * @param {import("./Map.js").default} map Map.
+   * @param {EVENT} originalEvent Original event.
+   * @param {boolean} [dragging] Is the map currently being dragged?
+   * @param {import("./Map.js").FrameState} [frameState] Frame state.
+   * @param {Array<PointerEvent>} [activePointers] Active pointers.
+   */
   constructor(type, map, originalEvent, dragging, frameState, activePointers) {
     super(type, map, frameState);
     this.originalEvent = originalEvent;
@@ -4630,6 +6987,11 @@ var MapBrowserEvent = class extends MapEvent_default {
     this.dragging = dragging !== void 0 ? dragging : false;
     this.activePointers = activePointers;
   }
+  /**
+   * The map pixel relative to the viewport corresponding to the original event.
+   * @type {import("./pixel.js").Pixel}
+   * @api
+   */
   get pixel() {
     if (!this.pixel_) {
       this.pixel_ = this.map.getEventPixel(this.originalEvent);
@@ -4639,6 +7001,12 @@ var MapBrowserEvent = class extends MapEvent_default {
   set pixel(pixel) {
     this.pixel_ = pixel;
   }
+  /**
+   * The coordinate corresponding to the original browser event.  This will be in the user
+   * projection if one is set.  Otherwise it will be in the view projection.
+   * @type {import("./coordinate.js").Coordinate}
+   * @api
+   */
   get coordinate() {
     if (!this.coordinate_) {
       this.coordinate_ = this.map.getCoordinateFromPixel(this.pixel);
@@ -4648,12 +7016,22 @@ var MapBrowserEvent = class extends MapEvent_default {
   set coordinate(coordinate) {
     this.coordinate_ = coordinate;
   }
+  /**
+   * Prevents the default browser action.
+   * See https://developer.mozilla.org/en-US/docs/Web/API/event.preventDefault.
+   * @api
+   */
   preventDefault() {
     super.preventDefault();
     if ("preventDefault" in this.originalEvent) {
       this.originalEvent.preventDefault();
     }
   }
+  /**
+   * Prevents further propagation of the current event.
+   * See https://developer.mozilla.org/en-US/docs/Web/API/event.stopPropagation.
+   * @api
+   */
   stopPropagation() {
     super.stopPropagation();
     if ("stopPropagation" in this.originalEvent) {
@@ -4665,10 +7043,37 @@ var MapBrowserEvent_default = MapBrowserEvent;
 
 // ../node_modules/ol/MapBrowserEventType.js
 var MapBrowserEventType_default = {
+  /**
+   * A true single click with no dragging and no double click. Note that this
+   * event is delayed by 250 ms to ensure that it is not a double click.
+   * @event module:ol/MapBrowserEvent~MapBrowserEvent#singleclick
+   * @api
+   */
   SINGLECLICK: "singleclick",
+  /**
+   * A click with no dragging. A double click will fire two of this.
+   * @event module:ol/MapBrowserEvent~MapBrowserEvent#click
+   * @api
+   */
   CLICK: EventType_default.CLICK,
+  /**
+   * A true double click, with no dragging.
+   * @event module:ol/MapBrowserEvent~MapBrowserEvent#dblclick
+   * @api
+   */
   DBLCLICK: EventType_default.DBLCLICK,
+  /**
+   * Triggered when a pointer is dragged.
+   * @event module:ol/MapBrowserEvent~MapBrowserEvent#pointerdrag
+   * @api
+   */
   POINTERDRAG: "pointerdrag",
+  /**
+   * Triggered when a pointer is moved. Note that on touch devices this is
+   * triggered when the map is panned, so is not the same as mousemove.
+   * @event module:ol/MapBrowserEvent~MapBrowserEvent#pointermove
+   * @api
+   */
   POINTERMOVE: "pointermove",
   POINTERDOWN: "pointerdown",
   POINTERUP: "pointerup",
@@ -4693,6 +7098,10 @@ var EventType_default3 = {
 
 // ../node_modules/ol/MapBrowserEventHandler.js
 var MapBrowserEventHandler = class extends Target_default {
+  /**
+   * @param {import("./Map.js").default} map The map with the viewport to listen to events on.
+   * @param {number} [moveTolerance] The minimal distance the pointer must travel to trigger a move.
+   */
   constructor(map, moveTolerance) {
     super(map);
     this.map_ = map;
@@ -4706,28 +7115,66 @@ var MapBrowserEventHandler = class extends Target_default {
     this.activePointers_ = [];
     this.trackedTouches_ = {};
     this.element_ = element;
-    this.pointerdownListenerKey_ = listen(element, EventType_default3.POINTERDOWN, this.handlePointerDown_, this);
+    this.pointerdownListenerKey_ = listen(
+      element,
+      EventType_default3.POINTERDOWN,
+      this.handlePointerDown_,
+      this
+    );
     this.originalPointerMoveEvent_;
-    this.relayedListenerKey_ = listen(element, EventType_default3.POINTERMOVE, this.relayMoveEvent_, this);
+    this.relayedListenerKey_ = listen(
+      element,
+      EventType_default3.POINTERMOVE,
+      this.relayMoveEvent_,
+      this
+    );
     this.boundHandleTouchMove_ = this.handleTouchMove_.bind(this);
-    this.element_.addEventListener(EventType_default.TOUCHMOVE, this.boundHandleTouchMove_, PASSIVE_EVENT_LISTENERS ? { passive: false } : false);
+    this.element_.addEventListener(
+      EventType_default.TOUCHMOVE,
+      this.boundHandleTouchMove_,
+      PASSIVE_EVENT_LISTENERS ? { passive: false } : false
+    );
   }
+  /**
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @private
+   */
   emulateClick_(pointerEvent) {
-    let newEvent = new MapBrowserEvent_default(MapBrowserEventType_default.CLICK, this.map_, pointerEvent);
+    let newEvent = new MapBrowserEvent_default(
+      MapBrowserEventType_default.CLICK,
+      this.map_,
+      pointerEvent
+    );
     this.dispatchEvent(newEvent);
     if (this.clickTimeoutId_ !== void 0) {
       clearTimeout(this.clickTimeoutId_);
       this.clickTimeoutId_ = void 0;
-      newEvent = new MapBrowserEvent_default(MapBrowserEventType_default.DBLCLICK, this.map_, pointerEvent);
+      newEvent = new MapBrowserEvent_default(
+        MapBrowserEventType_default.DBLCLICK,
+        this.map_,
+        pointerEvent
+      );
       this.dispatchEvent(newEvent);
     } else {
       this.clickTimeoutId_ = setTimeout(() => {
         this.clickTimeoutId_ = void 0;
-        const newEvent2 = new MapBrowserEvent_default(MapBrowserEventType_default.SINGLECLICK, this.map_, pointerEvent);
+        const newEvent2 = new MapBrowserEvent_default(
+          MapBrowserEventType_default.SINGLECLICK,
+          this.map_,
+          pointerEvent
+        );
         this.dispatchEvent(newEvent2);
       }, 250);
     }
   }
+  /**
+   * Keeps track on how many pointers are currently active.
+   *
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @private
+   */
   updateActivePointers_(pointerEvent) {
     const event = pointerEvent;
     const id = event.pointerId;
@@ -4744,9 +7191,21 @@ var MapBrowserEventHandler = class extends Target_default {
     }
     this.activePointers_ = Object.values(this.trackedTouches_);
   }
+  /**
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @private
+   */
   handlePointerUp_(pointerEvent) {
     this.updateActivePointers_(pointerEvent);
-    const newEvent = new MapBrowserEvent_default(MapBrowserEventType_default.POINTERUP, this.map_, pointerEvent, void 0, void 0, this.activePointers_);
+    const newEvent = new MapBrowserEvent_default(
+      MapBrowserEventType_default.POINTERUP,
+      this.map_,
+      pointerEvent,
+      void 0,
+      void 0,
+      this.activePointers_
+    );
     this.dispatchEvent(newEvent);
     if (this.emulateClicks_ && !newEvent.defaultPrevented && !this.dragging_ && this.isMouseActionButton_(pointerEvent)) {
       this.emulateClick_(this.down_);
@@ -4758,13 +7217,31 @@ var MapBrowserEventHandler = class extends Target_default {
       this.down_ = null;
     }
   }
+  /**
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @return {boolean} If the left mouse button was pressed.
+   * @private
+   */
   isMouseActionButton_(pointerEvent) {
     return pointerEvent.button === 0;
   }
+  /**
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @private
+   */
   handlePointerDown_(pointerEvent) {
     this.emulateClicks_ = this.activePointers_.length === 0;
     this.updateActivePointers_(pointerEvent);
-    const newEvent = new MapBrowserEvent_default(MapBrowserEventType_default.POINTERDOWN, this.map_, pointerEvent, void 0, void 0, this.activePointers_);
+    const newEvent = new MapBrowserEvent_default(
+      MapBrowserEventType_default.POINTERDOWN,
+      this.map_,
+      pointerEvent,
+      void 0,
+      void 0,
+      this.activePointers_
+    );
     this.dispatchEvent(newEvent);
     this.down_ = new PointerEvent(pointerEvent.type, pointerEvent);
     Object.defineProperty(this.down_, "target", {
@@ -4773,40 +7250,119 @@ var MapBrowserEventHandler = class extends Target_default {
     });
     if (this.dragListenerKeys_.length === 0) {
       const doc = this.map_.getOwnerDocument();
-      this.dragListenerKeys_.push(listen(doc, MapBrowserEventType_default.POINTERMOVE, this.handlePointerMove_, this), listen(doc, MapBrowserEventType_default.POINTERUP, this.handlePointerUp_, this), listen(this.element_, MapBrowserEventType_default.POINTERCANCEL, this.handlePointerUp_, this));
+      this.dragListenerKeys_.push(
+        listen(
+          doc,
+          MapBrowserEventType_default.POINTERMOVE,
+          this.handlePointerMove_,
+          this
+        ),
+        listen(doc, MapBrowserEventType_default.POINTERUP, this.handlePointerUp_, this),
+        /* Note that the listener for `pointercancel is set up on
+         * `pointerEventHandler_` and not `documentPointerEventHandler_` like
+         * the `pointerup` and `pointermove` listeners.
+         *
+         * The reason for this is the following: `TouchSource.vacuumTouches_()`
+         * issues `pointercancel` events, when there was no `touchend` for a
+         * `touchstart`. Now, let's say a first `touchstart` is registered on
+         * `pointerEventHandler_`. The `documentPointerEventHandler_` is set up.
+         * But `documentPointerEventHandler_` doesn't know about the first
+         * `touchstart`. If there is no `touchend` for the `touchstart`, we can
+         * only receive a `touchcancel` from `pointerEventHandler_`, because it is
+         * only registered there.
+         */
+        listen(
+          this.element_,
+          MapBrowserEventType_default.POINTERCANCEL,
+          this.handlePointerUp_,
+          this
+        )
+      );
       if (this.element_.getRootNode && this.element_.getRootNode() !== doc) {
-        this.dragListenerKeys_.push(listen(this.element_.getRootNode(), MapBrowserEventType_default.POINTERUP, this.handlePointerUp_, this));
+        this.dragListenerKeys_.push(
+          listen(
+            this.element_.getRootNode(),
+            MapBrowserEventType_default.POINTERUP,
+            this.handlePointerUp_,
+            this
+          )
+        );
       }
     }
   }
+  /**
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @private
+   */
   handlePointerMove_(pointerEvent) {
     if (this.isMoving_(pointerEvent)) {
       this.updateActivePointers_(pointerEvent);
       this.dragging_ = true;
-      const newEvent = new MapBrowserEvent_default(MapBrowserEventType_default.POINTERDRAG, this.map_, pointerEvent, this.dragging_, void 0, this.activePointers_);
+      const newEvent = new MapBrowserEvent_default(
+        MapBrowserEventType_default.POINTERDRAG,
+        this.map_,
+        pointerEvent,
+        this.dragging_,
+        void 0,
+        this.activePointers_
+      );
       this.dispatchEvent(newEvent);
     }
   }
+  /**
+   * Wrap and relay a pointermove event.
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @private
+   */
   relayMoveEvent_(pointerEvent) {
     this.originalPointerMoveEvent_ = pointerEvent;
     const dragging = !!(this.down_ && this.isMoving_(pointerEvent));
-    this.dispatchEvent(new MapBrowserEvent_default(MapBrowserEventType_default.POINTERMOVE, this.map_, pointerEvent, dragging));
+    this.dispatchEvent(
+      new MapBrowserEvent_default(
+        MapBrowserEventType_default.POINTERMOVE,
+        this.map_,
+        pointerEvent,
+        dragging
+      )
+    );
   }
+  /**
+   * Flexible handling of a `touch-action: none` css equivalent: because calling
+   * `preventDefault()` on a `pointermove` event does not stop native page scrolling
+   * and zooming, we also listen for `touchmove` and call `preventDefault()` on it
+   * when an interaction (currently `DragPan` handles the event.
+   * @param {TouchEvent} event Event.
+   * @private
+   */
   handleTouchMove_(event) {
     const originalEvent = this.originalPointerMoveEvent_;
     if ((!originalEvent || originalEvent.defaultPrevented) && (typeof event.cancelable !== "boolean" || event.cancelable === true)) {
       event.preventDefault();
     }
   }
+  /**
+   * @param {PointerEvent} pointerEvent Pointer
+   * event.
+   * @return {boolean} Is moving.
+   * @private
+   */
   isMoving_(pointerEvent) {
     return this.dragging_ || Math.abs(pointerEvent.clientX - this.down_.clientX) > this.moveTolerance_ || Math.abs(pointerEvent.clientY - this.down_.clientY) > this.moveTolerance_;
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     if (this.relayedListenerKey_) {
       unlistenByKey(this.relayedListenerKey_);
       this.relayedListenerKey_ = null;
     }
-    this.element_.removeEventListener(EventType_default.TOUCHMOVE, this.boundHandleTouchMove_);
+    this.element_.removeEventListener(
+      EventType_default.TOUCHMOVE,
+      this.boundHandleTouchMove_
+    );
     if (this.pointerdownListenerKey_) {
       unlistenByKey(this.pointerdownListenerKey_);
       this.pointerdownListenerKey_ = null;
@@ -4821,10 +7377,35 @@ var MapBrowserEventHandler_default = MapBrowserEventHandler;
 
 // ../node_modules/ol/MapEventType.js
 var MapEventType_default = {
+  /**
+   * Triggered after a map frame is rendered.
+   * @event module:ol/MapEvent~MapEvent#postrender
+   * @api
+   */
   POSTRENDER: "postrender",
+  /**
+   * Triggered when the map starts moving.
+   * @event module:ol/MapEvent~MapEvent#movestart
+   * @api
+   */
   MOVESTART: "movestart",
+  /**
+   * Triggered after the map is moved.
+   * @event module:ol/MapEvent~MapEvent#moveend
+   * @api
+   */
   MOVEEND: "moveend",
+  /**
+   * Triggered when loading of additional map data (tiles, images, features) starts.
+   * @event module:ol/MapEvent~MapEvent#loadstart
+   * @api
+   */
   LOADSTART: "loadstart",
+  /**
+   * Triggered when loading of additional map data has completed.
+   * @event module:ol/MapEvent~MapEvent#loadend
+   * @api
+   */
   LOADEND: "loadend"
 };
 
@@ -4839,6 +7420,10 @@ var MapProperty_default = {
 // ../node_modules/ol/structs/PriorityQueue.js
 var DROP = Infinity;
 var PriorityQueue = class {
+  /**
+   * @param {function(T): number} priorityFunction Priority function.
+   * @param {function(T): string} keyFunction Key function.
+   */
   constructor(priorityFunction, keyFunction) {
     this.priorityFunction_ = priorityFunction;
     this.keyFunction_ = keyFunction;
@@ -4846,11 +7431,18 @@ var PriorityQueue = class {
     this.priorities_ = [];
     this.queuedElements_ = {};
   }
+  /**
+   * FIXME empty description for jsdoc
+   */
   clear() {
     this.elements_.length = 0;
     this.priorities_.length = 0;
     clear(this.queuedElements_);
   }
+  /**
+   * Remove and return the highest-priority element. O(log N).
+   * @return {T} Element.
+   */
   dequeue() {
     const elements = this.elements_;
     const priorities = this.priorities_;
@@ -4867,6 +7459,11 @@ var PriorityQueue = class {
     delete this.queuedElements_[elementKey];
     return element;
   }
+  /**
+   * Enqueue an element. O(log N).
+   * @param {T} element Element.
+   * @return {boolean} The element was added to the queue.
+   */
   enqueue(element) {
     assert(!(this.keyFunction_(element) in this.queuedElements_), 31);
     const priority = this.priorityFunction_(element);
@@ -4879,33 +7476,73 @@ var PriorityQueue = class {
     }
     return false;
   }
+  /**
+   * @return {number} Count.
+   */
   getCount() {
     return this.elements_.length;
   }
+  /**
+   * Gets the index of the left child of the node at the given index.
+   * @param {number} index The index of the node to get the left child for.
+   * @return {number} The index of the left child.
+   * @private
+   */
   getLeftChildIndex_(index) {
     return index * 2 + 1;
   }
+  /**
+   * Gets the index of the right child of the node at the given index.
+   * @param {number} index The index of the node to get the right child for.
+   * @return {number} The index of the right child.
+   * @private
+   */
   getRightChildIndex_(index) {
     return index * 2 + 2;
   }
+  /**
+   * Gets the index of the parent of the node at the given index.
+   * @param {number} index The index of the node to get the parent for.
+   * @return {number} The index of the parent.
+   * @private
+   */
   getParentIndex_(index) {
     return index - 1 >> 1;
   }
+  /**
+   * Make this a heap. O(N).
+   * @private
+   */
   heapify_() {
     let i;
     for (i = (this.elements_.length >> 1) - 1; i >= 0; i--) {
       this.siftUp_(i);
     }
   }
+  /**
+   * @return {boolean} Is empty.
+   */
   isEmpty() {
     return this.elements_.length === 0;
   }
+  /**
+   * @param {string} key Key.
+   * @return {boolean} Is key queued.
+   */
   isKeyQueued(key) {
     return key in this.queuedElements_;
   }
+  /**
+   * @param {T} element Element.
+   * @return {boolean} Is queued.
+   */
   isQueued(element) {
     return this.isKeyQueued(this.keyFunction_(element));
   }
+  /**
+   * @param {number} index The index of the node to move down.
+   * @private
+   */
   siftUp_(index) {
     const elements = this.elements_;
     const priorities = this.priorities_;
@@ -4925,6 +7562,11 @@ var PriorityQueue = class {
     priorities[index] = priority;
     this.siftDown_(startIndex, index);
   }
+  /**
+   * @param {number} startIndex The index of the root.
+   * @param {number} index The index of the node to move up.
+   * @private
+   */
   siftDown_(startIndex, index) {
     const elements = this.elements_;
     const priorities = this.priorities_;
@@ -4943,6 +7585,9 @@ var PriorityQueue = class {
     elements[index] = element;
     priorities[index] = priority;
   }
+  /**
+   * FIXME empty description for jsdoc
+   */
   reprioritize() {
     const priorityFunction = this.priorityFunction_;
     const elements = this.elements_;
@@ -4972,23 +7617,49 @@ var TileState_default = {
   IDLE: 0,
   LOADING: 1,
   LOADED: 2,
+  /**
+   * Indicates that tile loading failed
+   * @type {number}
+   */
   ERROR: 3,
   EMPTY: 4
 };
 
 // ../node_modules/ol/TileQueue.js
 var TileQueue = class extends PriorityQueue_default {
+  /**
+   * @param {PriorityFunction} tilePriorityFunction Tile priority function.
+   * @param {function(): ?} tileChangeCallback Function called on each tile change event.
+   */
   constructor(tilePriorityFunction, tileChangeCallback) {
-    super(function(element) {
-      return tilePriorityFunction.apply(null, element);
-    }, function(element) {
-      return element[0].getKey();
-    });
+    super(
+      /**
+       * @param {Array} element Element.
+       * @return {number} Priority.
+       */
+      function(element) {
+        return tilePriorityFunction.apply(null, element);
+      },
+      /**
+       * @param {Array} element Element.
+       * @return {string} Key.
+       */
+      function(element) {
+        return (
+          /** @type {import("./Tile.js").default} */
+          element[0].getKey()
+        );
+      }
+    );
     this.boundHandleTileChange_ = this.handleTileChange.bind(this);
     this.tileChangeCallback_ = tileChangeCallback;
     this.tilesLoading_ = 0;
     this.tilesLoadingKeys_ = {};
   }
+  /**
+   * @param {Array} element Element.
+   * @return {boolean} The element was added to the queue.
+   */
   enqueue(element) {
     const added = super.enqueue(element);
     if (added) {
@@ -4997,11 +7668,21 @@ var TileQueue = class extends PriorityQueue_default {
     }
     return added;
   }
+  /**
+   * @return {number} Number of tiles loading.
+   */
   getTilesLoading() {
     return this.tilesLoading_;
   }
+  /**
+   * @param {import("./events/Event.js").default} event Event.
+   * @protected
+   */
   handleTileChange(event) {
-    const tile = event.target;
+    const tile = (
+      /** @type {import("./Tile.js").default} */
+      event.target
+    );
     const state = tile.getState();
     if (state === TileState_default.LOADED || state === TileState_default.ERROR || state === TileState_default.EMPTY) {
       if (state !== TileState_default.ERROR) {
@@ -5015,11 +7696,16 @@ var TileQueue = class extends PriorityQueue_default {
       this.tileChangeCallback_();
     }
   }
+  /**
+   * @param {number} maxTotalLoading Maximum number tiles to load simultaneously.
+   * @param {number} maxNewLoads Maximum number of new tiles to load.
+   */
   loadMoreTiles(maxTotalLoading, maxNewLoads) {
     let newLoads = 0;
     let state, tile, tileKey;
     while (this.tilesLoading_ < maxTotalLoading && newLoads < maxNewLoads && this.getCount() > 0) {
-      tile = this.dequeue()[0];
+      tile = /** @type {import("./Tile.js").default} */
+      this.dequeue()[0];
       tileKey = tile.getKey();
       state = tile.getState();
       if (state === TileState_default.IDLE && !(tileKey in this.tilesLoadingKeys_)) {
@@ -5047,6 +7733,9 @@ function getTilePriority(frameState, tile, tileSourceKey, tileCenter, tileResolu
 
 // ../node_modules/ol/control/Control.js
 var Control = class extends Object_default {
+  /**
+   * @param {Options} options Control options.
+   */
   constructor(options) {
     super();
     const element = options.element;
@@ -5064,13 +7753,29 @@ var Control = class extends Object_default {
       this.setTarget(options.target);
     }
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     removeNode(this.element);
     super.disposeInternal();
   }
+  /**
+   * Get the map associated with this control.
+   * @return {import("../Map.js").default|null} Map.
+   * @api
+   */
   getMap() {
     return this.map_;
   }
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Pass `null` to just remove the control from the current map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {import("../Map.js").default|null} map Map.
+   * @api
+   */
   setMap(map) {
     if (this.map_) {
       removeNode(this.element);
@@ -5084,13 +7789,29 @@ var Control = class extends Object_default {
       const target = this.target_ ? this.target_ : map.getOverlayContainerStopEvent();
       target.appendChild(this.element);
       if (this.render !== VOID) {
-        this.listenerKeys.push(listen(map, MapEventType_default.POSTRENDER, this.render, this));
+        this.listenerKeys.push(
+          listen(map, MapEventType_default.POSTRENDER, this.render, this)
+        );
       }
       map.render();
     }
   }
+  /**
+   * Renders the control.
+   * @param {import("../MapEvent.js").default} mapEvent Map event.
+   * @api
+   */
   render(mapEvent) {
   }
+  /**
+   * This function is used to set a target element for the control. It has no
+   * effect if it is called after the control has been added to the map (i.e.
+   * after `setMap` is called on the control). If no `target` is set in the
+   * options passed to the control constructor and if `setTarget` is not called
+   * then the control is added to the map's overlay container.
+   * @param {HTMLElement|string} target Target.
+   * @api
+   */
   setTarget(target) {
     this.target_ = typeof target === "string" ? document.getElementById(target) : target;
   }
@@ -5099,6 +7820,9 @@ var Control_default = Control;
 
 // ../node_modules/ol/control/Attribution.js
 var Attribution = class extends Control_default {
+  /**
+   * @param {Options} [options] Attribution options.
+   */
   constructor(options) {
     options = options ? options : {};
     super({
@@ -5140,7 +7864,11 @@ var Attribution = class extends Control_default {
     this.toggleButton_.setAttribute("aria-expanded", String(!this.collapsed_));
     this.toggleButton_.title = tipLabel;
     this.toggleButton_.appendChild(activeLabel);
-    this.toggleButton_.addEventListener(EventType_default.CLICK, this.handleClick_.bind(this), false);
+    this.toggleButton_.addEventListener(
+      EventType_default.CLICK,
+      this.handleClick_.bind(this),
+      false
+    );
     const cssClasses = className + " " + CLASS_UNSELECTABLE + " " + CLASS_CONTROL + (this.collapsed_ && this.collapsible_ ? " " + CLASS_COLLAPSED : "") + (this.collapsible_ ? "" : " ol-uncollapsible");
     const element = this.element;
     element.className = cssClasses;
@@ -5149,14 +7877,30 @@ var Attribution = class extends Control_default {
     this.renderedAttributions_ = [];
     this.renderedVisible_ = true;
   }
+  /**
+   * Collect a list of visible attributions and set the collapsible state.
+   * @param {import("../Map.js").FrameState} frameState Frame state.
+   * @return {Array<string>} Attributions.
+   * @private
+   */
   collectSourceAttributions_(frameState) {
-    const visibleAttributions = Array.from(new Set(this.getMap().getAllLayers().flatMap((layer) => layer.getAttributions(frameState))));
-    const collapsible = !this.getMap().getAllLayers().some((layer) => layer.getSource() && layer.getSource().getAttributionsCollapsible() === false);
+    const visibleAttributions = Array.from(
+      new Set(
+        this.getMap().getAllLayers().flatMap((layer) => layer.getAttributions(frameState))
+      )
+    );
+    const collapsible = !this.getMap().getAllLayers().some(
+      (layer) => layer.getSource() && layer.getSource().getAttributionsCollapsible() === false
+    );
     if (!this.overrideCollapsible_) {
       this.setCollapsible(collapsible);
     }
     return visibleAttributions;
   }
+  /**
+   * @private
+   * @param {?import("../Map.js").FrameState} frameState Frame state.
+   */
   updateElement_(frameState) {
     if (!frameState) {
       if (this.renderedVisible_) {
@@ -5182,11 +7926,18 @@ var Attribution = class extends Control_default {
     }
     this.renderedAttributions_ = attributions;
   }
+  /**
+   * @param {MouseEvent} event The event to handle
+   * @private
+   */
   handleClick_(event) {
     event.preventDefault();
     this.handleToggle_();
     this.userCollapsed_ = this.collapsed_;
   }
+  /**
+   * @private
+   */
   handleToggle_() {
     this.element.classList.toggle(CLASS_COLLAPSED);
     if (this.collapsed_) {
@@ -5197,9 +7948,19 @@ var Attribution = class extends Control_default {
     this.collapsed_ = !this.collapsed_;
     this.toggleButton_.setAttribute("aria-expanded", String(!this.collapsed_));
   }
+  /**
+   * Return `true` if the attribution is collapsible, `false` otherwise.
+   * @return {boolean} True if the widget is collapsible.
+   * @api
+   */
   getCollapsible() {
     return this.collapsible_;
   }
+  /**
+   * Set whether the attribution should be collapsible.
+   * @param {boolean} collapsible True if the widget is collapsible.
+   * @api
+   */
   setCollapsible(collapsible) {
     if (this.collapsible_ === collapsible) {
       return;
@@ -5210,6 +7971,13 @@ var Attribution = class extends Control_default {
       this.handleToggle_();
     }
   }
+  /**
+   * Collapse or expand the attribution according to the passed parameter. Will
+   * not do anything if the attribution isn't collapsible or if the current
+   * collapsed state is already the one requested.
+   * @param {boolean} collapsed True if the widget is collapsed.
+   * @api
+   */
   setCollapsed(collapsed) {
     this.userCollapsed_ = collapsed;
     if (!this.collapsible_ || this.collapsed_ === collapsed) {
@@ -5217,9 +7985,20 @@ var Attribution = class extends Control_default {
     }
     this.handleToggle_();
   }
+  /**
+   * Return `true` when the attribution is currently collapsed or `false`
+   * otherwise.
+   * @return {boolean} True if the widget is collapsed.
+   * @api
+   */
   getCollapsed() {
     return this.collapsed_;
   }
+  /**
+   * Update the attribution element.
+   * @param {import("../MapEvent.js").default} mapEvent Map event.
+   * @override
+   */
   render(mapEvent) {
     this.updateElement_(mapEvent.frameState);
   }
@@ -5228,6 +8007,9 @@ var Attribution_default = Attribution;
 
 // ../node_modules/ol/control/Rotate.js
 var Rotate = class extends Control_default {
+  /**
+   * @param {Options} [options] Rotate options.
+   */
   constructor(options) {
     options = options ? options : {};
     super({
@@ -5253,7 +8035,11 @@ var Rotate = class extends Control_default {
     button.setAttribute("type", "button");
     button.title = tipLabel;
     button.appendChild(this.label_);
-    button.addEventListener(EventType_default.CLICK, this.handleClick_.bind(this), false);
+    button.addEventListener(
+      EventType_default.CLICK,
+      this.handleClick_.bind(this),
+      false
+    );
     const cssClasses = className + " " + CLASS_UNSELECTABLE + " " + CLASS_CONTROL;
     const element = this.element;
     element.className = cssClasses;
@@ -5266,6 +8052,10 @@ var Rotate = class extends Control_default {
       this.element.classList.add(CLASS_HIDDEN);
     }
   }
+  /**
+   * @param {MouseEvent} event The event to handle
+   * @private
+   */
   handleClick_(event) {
     event.preventDefault();
     if (this.callResetNorth_ !== void 0) {
@@ -5274,6 +8064,9 @@ var Rotate = class extends Control_default {
       this.resetNorth_();
     }
   }
+  /**
+   * @private
+   */
   resetNorth_() {
     const map = this.getMap();
     const view = map.getView();
@@ -5293,6 +8086,11 @@ var Rotate = class extends Control_default {
       }
     }
   }
+  /**
+   * Update the rotate control element.
+   * @param {import("../MapEvent.js").default} mapEvent Map event.
+   * @override
+   */
   render(mapEvent) {
     const frameState = mapEvent.frameState;
     if (!frameState) {
@@ -5318,6 +8116,9 @@ var Rotate_default = Rotate;
 
 // ../node_modules/ol/control/Zoom.js
 var Zoom = class extends Control_default {
+  /**
+   * @param {Options} [options] Zoom options.
+   */
   constructor(options) {
     options = options ? options : {};
     super({
@@ -5336,14 +8137,26 @@ var Zoom = class extends Control_default {
     inElement.className = zoomInClassName;
     inElement.setAttribute("type", "button");
     inElement.title = zoomInTipLabel;
-    inElement.appendChild(typeof zoomInLabel === "string" ? document.createTextNode(zoomInLabel) : zoomInLabel);
-    inElement.addEventListener(EventType_default.CLICK, this.handleClick_.bind(this, delta), false);
+    inElement.appendChild(
+      typeof zoomInLabel === "string" ? document.createTextNode(zoomInLabel) : zoomInLabel
+    );
+    inElement.addEventListener(
+      EventType_default.CLICK,
+      this.handleClick_.bind(this, delta),
+      false
+    );
     const outElement = document.createElement("button");
     outElement.className = zoomOutClassName;
     outElement.setAttribute("type", "button");
     outElement.title = zoomOutTipLabel;
-    outElement.appendChild(typeof zoomOutLabel === "string" ? document.createTextNode(zoomOutLabel) : zoomOutLabel);
-    outElement.addEventListener(EventType_default.CLICK, this.handleClick_.bind(this, -delta), false);
+    outElement.appendChild(
+      typeof zoomOutLabel === "string" ? document.createTextNode(zoomOutLabel) : zoomOutLabel
+    );
+    outElement.addEventListener(
+      EventType_default.CLICK,
+      this.handleClick_.bind(this, -delta),
+      false
+    );
     const cssClasses = className + " " + CLASS_UNSELECTABLE + " " + CLASS_CONTROL;
     const element = this.element;
     element.className = cssClasses;
@@ -5351,10 +8164,19 @@ var Zoom = class extends Control_default {
     element.appendChild(outElement);
     this.duration_ = options.duration !== void 0 ? options.duration : 250;
   }
+  /**
+   * @param {number} delta Zoom delta.
+   * @param {MouseEvent} event The event to handle
+   * @private
+   */
   handleClick_(delta, event) {
     event.preventDefault();
     this.zoomByDelta_(delta);
   }
+  /**
+   * @param {number} delta Zoom delta.
+   * @private
+   */
   zoomByDelta_(delta) {
     const map = this.getMap();
     const view = map.getView();
@@ -5407,6 +8229,9 @@ var Property_default2 = {
 
 // ../node_modules/ol/interaction/Interaction.js
 var Interaction = class extends Object_default {
+  /**
+   * @param {InteractionOptions} [options] Options.
+   */
   constructor(options) {
     super();
     this.on;
@@ -5418,18 +8243,50 @@ var Interaction = class extends Object_default {
     this.map_ = null;
     this.setActive(true);
   }
+  /**
+   * Return whether the interaction is currently active.
+   * @return {boolean} `true` if the interaction is active, `false` otherwise.
+   * @observable
+   * @api
+   */
   getActive() {
-    return this.get(Property_default2.ACTIVE);
+    return (
+      /** @type {boolean} */
+      this.get(Property_default2.ACTIVE)
+    );
   }
+  /**
+   * Get the map associated with this interaction.
+   * @return {import("../Map.js").default|null} Map.
+   * @api
+   */
   getMap() {
     return this.map_;
   }
+  /**
+   * Handles the {@link module:ol/MapBrowserEvent~MapBrowserEvent map browser event}.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Map browser event.
+   * @return {boolean} `false` to stop event propagation.
+   * @api
+   */
   handleEvent(mapBrowserEvent) {
     return true;
   }
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @observable
+   * @api
+   */
   setActive(active) {
     this.set(Property_default2.ACTIVE, active);
   }
+  /**
+   * Remove the interaction from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {import("../Map.js").default|null} map Map.
+   */
   setMap(map) {
     this.map_ = map;
   }
@@ -5466,16 +8323,28 @@ var Interaction_default = Interaction;
 
 // ../node_modules/ol/interaction/DoubleClickZoom.js
 var DoubleClickZoom = class extends Interaction_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     super();
     options = options ? options : {};
     this.delta_ = options.delta ? options.delta : 1;
     this.duration_ = options.duration !== void 0 ? options.duration : 250;
   }
+  /**
+   * Handles the {@link module:ol/MapBrowserEvent~MapBrowserEvent map browser event} (if it was a
+   * doubleclick) and eventually zooms the map.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Map browser event.
+   * @return {boolean} `false` to stop event propagation.
+   */
   handleEvent(mapBrowserEvent) {
     let stopEvent = false;
     if (mapBrowserEvent.type == MapBrowserEventType_default.DBLCLICK) {
-      const browserEvent = mapBrowserEvent.originalEvent;
+      const browserEvent = (
+        /** @type {MouseEvent} */
+        mapBrowserEvent.originalEvent
+      );
       const map = mapBrowserEvent.map;
       const anchor = mapBrowserEvent.coordinate;
       const delta = browserEvent.shiftKey ? -this.delta_ : this.delta_;
@@ -5491,9 +8360,15 @@ var DoubleClickZoom_default = DoubleClickZoom;
 
 // ../node_modules/ol/interaction/Pointer.js
 var PointerInteraction = class extends Interaction_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     options = options ? options : {};
-    super(options);
+    super(
+      /** @type {import("./Interaction.js").InteractionOptions} */
+      options
+    );
     if (options.handleDownEvent) {
       this.handleDownEvent = options.handleDownEvent;
     }
@@ -5512,14 +8387,39 @@ var PointerInteraction = class extends Interaction_default {
     this.handlingDownUpSequence = false;
     this.targetPointers = [];
   }
+  /**
+   * Returns the current number of pointers involved in the interaction,
+   * e.g. `2` when two fingers are used.
+   * @return {number} The number of pointers.
+   * @api
+   */
   getPointerCount() {
     return this.targetPointers.length;
   }
+  /**
+   * Handle pointer down events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   * @protected
+   */
   handleDownEvent(mapBrowserEvent) {
     return false;
   }
+  /**
+   * Handle pointer drag events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @protected
+   */
   handleDragEvent(mapBrowserEvent) {
   }
+  /**
+   * Handles the {@link module:ol/MapBrowserEvent~MapBrowserEvent map browser event} and may call into
+   * other functions, if event sequences like e.g. 'drag' or 'down-up' etc. are
+   * detected.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Map browser event.
+   * @return {boolean} `false` to stop event propagation.
+   * @api
+   */
   handleEvent(mapBrowserEvent) {
     if (!mapBrowserEvent.originalEvent) {
       return true;
@@ -5545,14 +8445,35 @@ var PointerInteraction = class extends Interaction_default {
     }
     return !stopEvent;
   }
+  /**
+   * Handle pointer move events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @protected
+   */
   handleMoveEvent(mapBrowserEvent) {
   }
+  /**
+   * Handle pointer up events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   * @protected
+   */
   handleUpEvent(mapBrowserEvent) {
     return false;
   }
+  /**
+   * This function is used to determine if "down" events should be propagated
+   * to other interactions or should be stopped.
+   * @param {boolean} handled Was the event handled by the interaction?
+   * @return {boolean} Should the `down` event be stopped?
+   */
   stopDown(handled) {
     return handled;
   }
+  /**
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @private
+   */
   updateTrackedPointers_(mapBrowserEvent) {
     if (mapBrowserEvent.activePointers) {
       this.targetPointers = mapBrowserEvent.activePointers;
@@ -5586,7 +8507,10 @@ function all(var_args) {
   };
 }
 var altShiftKeysOnly = function(mapBrowserEvent) {
-  const originalEvent = mapBrowserEvent.originalEvent;
+  const originalEvent = (
+    /** @type {KeyboardEvent|MouseEvent|TouchEvent} */
+    mapBrowserEvent.originalEvent
+  );
   return originalEvent.altKey && !(originalEvent.metaKey || originalEvent.ctrlKey) && originalEvent.shiftKey;
 };
 var focus = function(event) {
@@ -5599,35 +8523,62 @@ var focusWithTabindex = function(event) {
 };
 var always = TRUE;
 var mouseActionButton = function(mapBrowserEvent) {
-  const originalEvent = mapBrowserEvent.originalEvent;
+  const originalEvent = (
+    /** @type {MouseEvent} */
+    mapBrowserEvent.originalEvent
+  );
   return originalEvent.button == 0 && !(WEBKIT && MAC && originalEvent.ctrlKey);
 };
 var noModifierKeys = function(mapBrowserEvent) {
-  const originalEvent = mapBrowserEvent.originalEvent;
+  const originalEvent = (
+    /** @type {KeyboardEvent|MouseEvent|TouchEvent} */
+    mapBrowserEvent.originalEvent
+  );
   return !originalEvent.altKey && !(originalEvent.metaKey || originalEvent.ctrlKey) && !originalEvent.shiftKey;
 };
 var shiftKeyOnly = function(mapBrowserEvent) {
-  const originalEvent = mapBrowserEvent.originalEvent;
+  const originalEvent = (
+    /** @type {KeyboardEvent|MouseEvent|TouchEvent} */
+    mapBrowserEvent.originalEvent
+  );
   return !originalEvent.altKey && !(originalEvent.metaKey || originalEvent.ctrlKey) && originalEvent.shiftKey;
 };
 var targetNotEditable = function(mapBrowserEvent) {
-  const originalEvent = mapBrowserEvent.originalEvent;
-  const tagName = originalEvent.target.tagName;
-  return tagName !== "INPUT" && tagName !== "SELECT" && tagName !== "TEXTAREA" && !originalEvent.target.isContentEditable;
+  const originalEvent = (
+    /** @type {KeyboardEvent|MouseEvent|TouchEvent} */
+    mapBrowserEvent.originalEvent
+  );
+  const tagName = (
+    /** @type {Element} */
+    originalEvent.target.tagName
+  );
+  return tagName !== "INPUT" && tagName !== "SELECT" && tagName !== "TEXTAREA" && // `isContentEditable` is only available on `HTMLElement`, but it may also be a
+  // different type like `SVGElement`.
+  // @ts-ignore
+  !originalEvent.target.isContentEditable;
 };
 var mouseOnly = function(mapBrowserEvent) {
-  const pointerEvent = mapBrowserEvent.originalEvent;
+  const pointerEvent = (
+    /** @type {import("../MapBrowserEvent").default} */
+    mapBrowserEvent.originalEvent
+  );
   assert(pointerEvent !== void 0, 56);
   return pointerEvent.pointerType == "mouse";
 };
 var primaryAction = function(mapBrowserEvent) {
-  const pointerEvent = mapBrowserEvent.originalEvent;
+  const pointerEvent = (
+    /** @type {import("../MapBrowserEvent").default} */
+    mapBrowserEvent.originalEvent
+  );
   assert(pointerEvent !== void 0, 56);
   return pointerEvent.isPrimary && pointerEvent.button === 0;
 };
 
 // ../node_modules/ol/interaction/DragPan.js
 var DragPan = class extends Pointer_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     super({
       stopDown: FALSE
@@ -5641,6 +8592,10 @@ var DragPan = class extends Pointer_default {
     this.condition_ = options.onFocusOnly ? all(focusWithTabindex, condition) : condition;
     this.noKinetic_ = false;
   }
+  /**
+   * Handle pointer drag events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   */
   handleDragEvent(mapBrowserEvent) {
     const map = mapBrowserEvent.map;
     if (!this.panning_) {
@@ -5671,6 +8626,11 @@ var DragPan = class extends Pointer_default {
     this.lastPointersCount_ = targetPointers.length;
     mapBrowserEvent.originalEvent.preventDefault();
   }
+  /**
+   * Handle pointer up events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleUpEvent(mapBrowserEvent) {
     const map = mapBrowserEvent.map;
     const view = map.getView();
@@ -5702,6 +8662,11 @@ var DragPan = class extends Pointer_default {
     this.lastCentroid = null;
     return true;
   }
+  /**
+   * Handle pointer down events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleDownEvent(mapBrowserEvent) {
     if (this.targetPointers.length > 0 && this.condition_(mapBrowserEvent)) {
       const map = mapBrowserEvent.map;
@@ -5723,6 +8688,9 @@ var DragPan_default = DragPan;
 
 // ../node_modules/ol/interaction/DragRotate.js
 var DragRotate = class extends Pointer_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     options = options ? options : {};
     super({
@@ -5732,6 +8700,10 @@ var DragRotate = class extends Pointer_default {
     this.lastAngle_ = void 0;
     this.duration_ = options.duration !== void 0 ? options.duration : 250;
   }
+  /**
+   * Handle pointer drag events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   */
   handleDragEvent(mapBrowserEvent) {
     if (!mouseOnly(mapBrowserEvent)) {
       return;
@@ -5750,6 +8722,11 @@ var DragRotate = class extends Pointer_default {
     }
     this.lastAngle_ = theta;
   }
+  /**
+   * Handle pointer up events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleUpEvent(mapBrowserEvent) {
     if (!mouseOnly(mapBrowserEvent)) {
       return true;
@@ -5759,6 +8736,11 @@ var DragRotate = class extends Pointer_default {
     view.endInteraction(this.duration_);
     return false;
   }
+  /**
+   * Handle pointer down events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleDownEvent(mapBrowserEvent) {
     if (!mouseOnly(mapBrowserEvent)) {
       return false;
@@ -5776,6 +8758,9 @@ var DragRotate_default = DragRotate;
 
 // ../node_modules/ol/render/Box.js
 var RenderBox = class extends Disposable_default {
+  /**
+   * @param {string} className CSS class name.
+   */
   constructor(className) {
     super();
     this.geometry_ = null;
@@ -5787,9 +8772,15 @@ var RenderBox = class extends Disposable_default {
     this.startPixel_ = null;
     this.endPixel_ = null;
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     this.setMap(null);
   }
+  /**
+   * @private
+   */
   render_() {
     const startPixel = this.startPixel_;
     const endPixel = this.endPixel_;
@@ -5800,6 +8791,9 @@ var RenderBox = class extends Disposable_default {
     style.width = Math.abs(endPixel[0] - startPixel[0]) + px;
     style.height = Math.abs(endPixel[1] - startPixel[1]) + px;
   }
+  /**
+   * @param {import("../Map.js").default|null} map Map.
+   */
   setMap(map) {
     if (this.map_) {
       this.map_.getOverlayContainer().removeChild(this.element_);
@@ -5814,12 +8808,19 @@ var RenderBox = class extends Disposable_default {
       this.map_.getOverlayContainer().appendChild(this.element_);
     }
   }
+  /**
+   * @param {import("../pixel.js").Pixel} startPixel Start pixel.
+   * @param {import("../pixel.js").Pixel} endPixel End pixel.
+   */
   setPixels(startPixel, endPixel) {
     this.startPixel_ = startPixel;
     this.endPixel_ = endPixel;
     this.createOrUpdateGeometry();
     this.render_();
   }
+  /**
+   * Creates or updates the cached geometry.
+   */
   createOrUpdateGeometry() {
     const startPixel = this.startPixel_;
     const endPixel = this.endPixel_;
@@ -5829,7 +8830,10 @@ var RenderBox = class extends Disposable_default {
       endPixel,
       [endPixel[0], startPixel[1]]
     ];
-    const coordinates2 = pixels.map(this.map_.getCoordinateFromPixelInternal, this.map_);
+    const coordinates2 = pixels.map(
+      this.map_.getCoordinateFromPixelInternal,
+      this.map_
+    );
     coordinates2[4] = coordinates2[0].slice();
     if (!this.geometry_) {
       this.geometry_ = new Polygon_default([coordinates2]);
@@ -5837,6 +8841,9 @@ var RenderBox = class extends Disposable_default {
       this.geometry_.setCoordinates([coordinates2]);
     }
   }
+  /**
+   * @return {import("../geom/Polygon.js").default} Geometry.
+   */
   getGeometry() {
     return this.geometry_;
   }
@@ -5845,12 +8852,37 @@ var Box_default = RenderBox;
 
 // ../node_modules/ol/interaction/DragBox.js
 var DragBoxEventType = {
+  /**
+   * Triggered upon drag box start.
+   * @event DragBoxEvent#boxstart
+   * @api
+   */
   BOXSTART: "boxstart",
+  /**
+   * Triggered on drag when box is active.
+   * @event DragBoxEvent#boxdrag
+   * @api
+   */
   BOXDRAG: "boxdrag",
+  /**
+   * Triggered upon drag box end.
+   * @event DragBoxEvent#boxend
+   * @api
+   */
   BOXEND: "boxend",
+  /**
+   * Triggered upon drag box canceled.
+   * @event DragBoxEvent#boxcancel
+   * @api
+   */
   BOXCANCEL: "boxcancel"
 };
 var DragBoxEvent = class extends Event_default {
+  /**
+   * @param {string} type The event type.
+   * @param {import("../coordinate.js").Coordinate} coordinate The event coordinate.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Originating event.
+   */
   constructor(type, coordinate, mapBrowserEvent) {
     super(type);
     this.coordinate = coordinate;
@@ -5858,6 +8890,9 @@ var DragBoxEvent = class extends Event_default {
   }
 };
 var DragBox = class extends Pointer_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     super();
     this.on;
@@ -5873,37 +8908,91 @@ var DragBox = class extends Pointer_default {
     this.condition_ = options.condition ? options.condition : mouseActionButton;
     this.boxEndCondition_ = options.boxEndCondition ? options.boxEndCondition : this.defaultBoxEndCondition;
   }
+  /**
+   * The default condition for determining whether the boxend event
+   * should fire.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent The originating MapBrowserEvent
+   *     leading to the box end.
+   * @param {import("../pixel.js").Pixel} startPixel The starting pixel of the box.
+   * @param {import("../pixel.js").Pixel} endPixel The end pixel of the box.
+   * @return {boolean} Whether or not the boxend condition should be fired.
+   */
   defaultBoxEndCondition(mapBrowserEvent, startPixel, endPixel) {
     const width = endPixel[0] - startPixel[0];
     const height = endPixel[1] - startPixel[1];
     return width * width + height * height >= this.minArea_;
   }
+  /**
+   * Returns geometry of last drawn box.
+   * @return {import("../geom/Polygon.js").default} Geometry.
+   * @api
+   */
   getGeometry() {
     return this.box_.getGeometry();
   }
+  /**
+   * Handle pointer drag events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   */
   handleDragEvent(mapBrowserEvent) {
     this.box_.setPixels(this.startPixel_, mapBrowserEvent.pixel);
-    this.dispatchEvent(new DragBoxEvent(DragBoxEventType.BOXDRAG, mapBrowserEvent.coordinate, mapBrowserEvent));
+    this.dispatchEvent(
+      new DragBoxEvent(
+        DragBoxEventType.BOXDRAG,
+        mapBrowserEvent.coordinate,
+        mapBrowserEvent
+      )
+    );
   }
+  /**
+   * Handle pointer up events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleUpEvent(mapBrowserEvent) {
     this.box_.setMap(null);
-    const completeBox = this.boxEndCondition_(mapBrowserEvent, this.startPixel_, mapBrowserEvent.pixel);
+    const completeBox = this.boxEndCondition_(
+      mapBrowserEvent,
+      this.startPixel_,
+      mapBrowserEvent.pixel
+    );
     if (completeBox) {
       this.onBoxEnd(mapBrowserEvent);
     }
-    this.dispatchEvent(new DragBoxEvent(completeBox ? DragBoxEventType.BOXEND : DragBoxEventType.BOXCANCEL, mapBrowserEvent.coordinate, mapBrowserEvent));
+    this.dispatchEvent(
+      new DragBoxEvent(
+        completeBox ? DragBoxEventType.BOXEND : DragBoxEventType.BOXCANCEL,
+        mapBrowserEvent.coordinate,
+        mapBrowserEvent
+      )
+    );
     return false;
   }
+  /**
+   * Handle pointer down events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleDownEvent(mapBrowserEvent) {
     if (this.condition_(mapBrowserEvent)) {
       this.startPixel_ = mapBrowserEvent.pixel;
       this.box_.setMap(mapBrowserEvent.map);
       this.box_.setPixels(this.startPixel_, this.startPixel_);
-      this.dispatchEvent(new DragBoxEvent(DragBoxEventType.BOXSTART, mapBrowserEvent.coordinate, mapBrowserEvent));
+      this.dispatchEvent(
+        new DragBoxEvent(
+          DragBoxEventType.BOXSTART,
+          mapBrowserEvent.coordinate,
+          mapBrowserEvent
+        )
+      );
       return true;
     }
     return false;
   }
+  /**
+   * Function to execute just before `onboxend` is fired
+   * @param {import("../MapBrowserEvent.js").default} event Event.
+   */
   onBoxEnd(event) {
   }
 };
@@ -5911,6 +9000,9 @@ var DragBox_default = DragBox;
 
 // ../node_modules/ol/interaction/DragZoom.js
 var DragZoom = class extends DragBox_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     options = options ? options : {};
     const condition = options.condition ? options.condition : shiftKeyOnly;
@@ -5922,9 +9014,16 @@ var DragZoom = class extends DragBox_default {
     this.duration_ = options.duration !== void 0 ? options.duration : 200;
     this.out_ = options.out !== void 0 ? options.out : false;
   }
+  /**
+   * Function to execute just before `onboxend` is fired
+   * @param {import("../MapBrowserEvent.js").default} event Event.
+   */
   onBoxEnd(event) {
     const map = this.getMap();
-    const view = map.getView();
+    const view = (
+      /** @type {!import("../View.js").default} */
+      map.getView()
+    );
     let geometry = this.getGeometry();
     if (this.out_) {
       const rotatedExtent = view.rotatedExtentForGeometry(geometry);
@@ -5951,6 +9050,9 @@ var KeyCode_default = {
 
 // ../node_modules/ol/interaction/KeyboardPan.js
 var KeyboardPan = class extends Interaction_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     super();
     options = options || {};
@@ -5961,10 +9063,20 @@ var KeyboardPan = class extends Interaction_default {
     this.duration_ = options.duration !== void 0 ? options.duration : 100;
     this.pixelDelta_ = options.pixelDelta !== void 0 ? options.pixelDelta : 128;
   }
+  /**
+   * Handles the {@link module:ol/MapBrowserEvent~MapBrowserEvent map browser event} if it was a
+   * `KeyEvent`, and decides the direction to pan to (if an arrow key was
+   * pressed).
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Map browser event.
+   * @return {boolean} `false` to stop event propagation.
+   */
   handleEvent(mapBrowserEvent) {
     let stopEvent = false;
     if (mapBrowserEvent.type == EventType_default.KEYDOWN) {
-      const keyEvent = mapBrowserEvent.originalEvent;
+      const keyEvent = (
+        /** @type {KeyboardEvent} */
+        mapBrowserEvent.originalEvent
+      );
       const keyCode = keyEvent.keyCode;
       if (this.condition_(mapBrowserEvent) && (keyCode == KeyCode_default.DOWN || keyCode == KeyCode_default.LEFT || keyCode == KeyCode_default.RIGHT || keyCode == KeyCode_default.UP)) {
         const map = mapBrowserEvent.map;
@@ -5994,6 +9106,9 @@ var KeyboardPan_default = KeyboardPan;
 
 // ../node_modules/ol/interaction/KeyboardZoom.js
 var KeyboardZoom = class extends Interaction_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     super();
     options = options ? options : {};
@@ -6001,10 +9116,20 @@ var KeyboardZoom = class extends Interaction_default {
     this.delta_ = options.delta ? options.delta : 1;
     this.duration_ = options.duration !== void 0 ? options.duration : 100;
   }
+  /**
+   * Handles the {@link module:ol/MapBrowserEvent~MapBrowserEvent map browser event} if it was a
+   * `KeyEvent`, and decides whether to zoom in or out (depending on whether the
+   * key pressed was '+' or '-').
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Map browser event.
+   * @return {boolean} `false` to stop event propagation.
+   */
   handleEvent(mapBrowserEvent) {
     let stopEvent = false;
     if (mapBrowserEvent.type == EventType_default.KEYDOWN || mapBrowserEvent.type == EventType_default.KEYPRESS) {
-      const keyEvent = mapBrowserEvent.originalEvent;
+      const keyEvent = (
+        /** @type {KeyboardEvent} */
+        mapBrowserEvent.originalEvent
+      );
       const key = keyEvent.key;
       if (this.condition_(mapBrowserEvent) && (key === "+" || key === "-")) {
         const map = mapBrowserEvent.map;
@@ -6022,6 +9147,12 @@ var KeyboardZoom_default = KeyboardZoom;
 
 // ../node_modules/ol/Kinetic.js
 var Kinetic = class {
+  /**
+   * @param {number} decay Rate of decay (must be negative).
+   * @param {number} minVelocity Minimum velocity (pixels/millisecond).
+   * @param {number} delay Delay to consider to calculate the kinetic
+   *     initial values (milliseconds).
+   */
   constructor(decay, minVelocity, delay) {
     this.decay_ = decay;
     this.minVelocity_ = minVelocity;
@@ -6030,14 +9161,24 @@ var Kinetic = class {
     this.angle_ = 0;
     this.initialVelocity_ = 0;
   }
+  /**
+   * FIXME empty description for jsdoc
+   */
   begin() {
     this.points_.length = 0;
     this.angle_ = 0;
     this.initialVelocity_ = 0;
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   */
   update(x, y) {
     this.points_.push(x, y, Date.now());
   }
+  /**
+   * @return {boolean} Whether we should do kinetic animation.
+   */
   end() {
     if (this.points_.length < 6) {
       return false;
@@ -6061,9 +9202,15 @@ var Kinetic = class {
     this.initialVelocity_ = Math.sqrt(dx * dx + dy * dy) / duration;
     return this.initialVelocity_ > this.minVelocity_;
   }
+  /**
+   * @return {number} Total distance travelled (pixels).
+   */
   getDistance() {
     return (this.minVelocity_ - this.initialVelocity_) / this.decay_;
   }
+  /**
+   * @return {number} Angle of the kinetic panning animation (radians).
+   */
   getAngle() {
     return this.angle_;
   }
@@ -6072,9 +9219,15 @@ var Kinetic_default = Kinetic;
 
 // ../node_modules/ol/interaction/MouseWheelZoom.js
 var MouseWheelZoom = class extends Interaction_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     options = options ? options : {};
-    super(options);
+    super(
+      /** @type {import("./Interaction.js").InteractionOptions} */
+      options
+    );
     this.totalDelta_ = 0;
     this.lastDelta_ = 0;
     this.maxDelta_ = options.maxDelta !== void 0 ? options.maxDelta : 1;
@@ -6092,6 +9245,9 @@ var MouseWheelZoom = class extends Interaction_default {
     this.trackpadTimeoutId_;
     this.deltaPerZoom_ = 300;
   }
+  /**
+   * @private
+   */
   endInteraction_() {
     this.trackpadTimeoutId_ = void 0;
     const map = this.getMap();
@@ -6099,8 +9255,18 @@ var MouseWheelZoom = class extends Interaction_default {
       return;
     }
     const view = map.getView();
-    view.endInteraction(void 0, this.lastDelta_ ? this.lastDelta_ > 0 ? 1 : -1 : 0, this.lastAnchor_);
+    view.endInteraction(
+      void 0,
+      this.lastDelta_ ? this.lastDelta_ > 0 ? 1 : -1 : 0,
+      this.lastAnchor_
+    );
   }
+  /**
+   * Handles the {@link module:ol/MapBrowserEvent~MapBrowserEvent map browser event} (if it was a mousewheel-event) and eventually
+   * zooms the map.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Map browser event.
+   * @return {boolean} `false` to stop event propagation.
+   */
   handleEvent(mapBrowserEvent) {
     if (!this.condition_(mapBrowserEvent)) {
       return true;
@@ -6110,7 +9276,10 @@ var MouseWheelZoom = class extends Interaction_default {
       return true;
     }
     const map = mapBrowserEvent.map;
-    const wheelEvent = mapBrowserEvent.originalEvent;
+    const wheelEvent = (
+      /** @type {WheelEvent} */
+      mapBrowserEvent.originalEvent
+    );
     wheelEvent.preventDefault();
     if (this.useAnchor_) {
       this.lastAnchor_ = mapBrowserEvent.coordinate;
@@ -6146,7 +9315,10 @@ var MouseWheelZoom = class extends Interaction_default {
         }
         view.beginInteraction();
       }
-      this.trackpadTimeoutId_ = setTimeout(this.endInteraction_.bind(this), this.timeout_);
+      this.trackpadTimeoutId_ = setTimeout(
+        this.endInteraction_.bind(this),
+        this.timeout_
+      );
       view.adjustZoom(-delta / this.deltaPerZoom_, this.lastAnchor_);
       this.startTime_ = now;
       return false;
@@ -6154,15 +9326,26 @@ var MouseWheelZoom = class extends Interaction_default {
     this.totalDelta_ += delta;
     const timeLeft = Math.max(this.timeout_ - (now - this.startTime_), 0);
     clearTimeout(this.timeoutId_);
-    this.timeoutId_ = setTimeout(this.handleWheelZoom_.bind(this, map), timeLeft);
+    this.timeoutId_ = setTimeout(
+      this.handleWheelZoom_.bind(this, map),
+      timeLeft
+    );
     return false;
   }
+  /**
+   * @private
+   * @param {import("../Map.js").default} map Map.
+   */
   handleWheelZoom_(map) {
     const view = map.getView();
     if (view.getAnimating()) {
       view.cancelAnimations();
     }
-    let delta = -clamp(this.totalDelta_, -this.maxDelta_ * this.deltaPerZoom_, this.maxDelta_ * this.deltaPerZoom_) / this.deltaPerZoom_;
+    let delta = -clamp(
+      this.totalDelta_,
+      -this.maxDelta_ * this.deltaPerZoom_,
+      this.maxDelta_ * this.deltaPerZoom_
+    ) / this.deltaPerZoom_;
     if (view.getConstrainResolution() || this.constrainResolution_) {
       delta = delta ? delta > 0 ? 1 : -1 : 0;
     }
@@ -6173,6 +9356,12 @@ var MouseWheelZoom = class extends Interaction_default {
     this.startTime_ = void 0;
     this.timeoutId_ = void 0;
   }
+  /**
+   * Enable or disable using the mouse's location as an anchor when zooming
+   * @param {boolean} useAnchor true to zoom to the mouse's location, false
+   * to zoom to the center of the map
+   * @api
+   */
   setMouseAnchor(useAnchor) {
     this.useAnchor_ = useAnchor;
     if (!useAnchor) {
@@ -6184,9 +9373,15 @@ var MouseWheelZoom_default = MouseWheelZoom;
 
 // ../node_modules/ol/interaction/PinchRotate.js
 var PinchRotate = class extends Pointer_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     options = options ? options : {};
-    const pointerOptions = options;
+    const pointerOptions = (
+      /** @type {import("./Pointer.js").Options} */
+      options
+    );
     if (!pointerOptions.stopDown) {
       pointerOptions.stopDown = FALSE;
     }
@@ -6198,11 +9393,18 @@ var PinchRotate = class extends Pointer_default {
     this.threshold_ = options.threshold !== void 0 ? options.threshold : 0.3;
     this.duration_ = options.duration !== void 0 ? options.duration : 250;
   }
+  /**
+   * Handle pointer drag events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   */
   handleDragEvent(mapBrowserEvent) {
     let rotationDelta = 0;
     const touch0 = this.targetPointers[0];
     const touch1 = this.targetPointers[1];
-    const angle = Math.atan2(touch1.clientY - touch0.clientY, touch1.clientX - touch0.clientX);
+    const angle = Math.atan2(
+      touch1.clientY - touch0.clientY,
+      touch1.clientX - touch0.clientX
+    );
     if (this.lastAngle_ !== void 0) {
       const delta = angle - this.lastAngle_;
       this.rotationDelta_ += delta;
@@ -6217,12 +9419,19 @@ var PinchRotate = class extends Pointer_default {
     if (view.getConstraints().rotation === disable) {
       return;
     }
-    this.anchor_ = map.getCoordinateFromPixelInternal(map.getEventPixel(centroid(this.targetPointers)));
+    this.anchor_ = map.getCoordinateFromPixelInternal(
+      map.getEventPixel(centroid(this.targetPointers))
+    );
     if (this.rotating_) {
       map.render();
       view.adjustRotationInternal(rotationDelta, this.anchor_);
     }
   }
+  /**
+   * Handle pointer up events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleUpEvent(mapBrowserEvent) {
     if (this.targetPointers.length < 2) {
       const map = mapBrowserEvent.map;
@@ -6232,6 +9441,11 @@ var PinchRotate = class extends Pointer_default {
     }
     return true;
   }
+  /**
+   * Handle pointer down events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleDownEvent(mapBrowserEvent) {
     if (this.targetPointers.length >= 2) {
       const map = mapBrowserEvent.map;
@@ -6251,9 +9465,15 @@ var PinchRotate_default = PinchRotate;
 
 // ../node_modules/ol/interaction/PinchZoom.js
 var PinchZoom = class extends Pointer_default {
+  /**
+   * @param {Options} [options] Options.
+   */
   constructor(options) {
     options = options ? options : {};
-    const pointerOptions = options;
+    const pointerOptions = (
+      /** @type {import("./Pointer.js").Options} */
+      options
+    );
     if (!pointerOptions.stopDown) {
       pointerOptions.stopDown = FALSE;
     }
@@ -6263,6 +9483,10 @@ var PinchZoom = class extends Pointer_default {
     this.lastDistance_ = void 0;
     this.lastScaleDelta_ = 1;
   }
+  /**
+   * Handle pointer drag events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   */
   handleDragEvent(mapBrowserEvent) {
     let scaleDelta = 1;
     const touch0 = this.targetPointers[0];
@@ -6279,10 +9503,17 @@ var PinchZoom = class extends Pointer_default {
     if (scaleDelta != 1) {
       this.lastScaleDelta_ = scaleDelta;
     }
-    this.anchor_ = map.getCoordinateFromPixelInternal(map.getEventPixel(centroid(this.targetPointers)));
+    this.anchor_ = map.getCoordinateFromPixelInternal(
+      map.getEventPixel(centroid(this.targetPointers))
+    );
     map.render();
     view.adjustResolutionInternal(scaleDelta, this.anchor_);
   }
+  /**
+   * Handle pointer up events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleUpEvent(mapBrowserEvent) {
     if (this.targetPointers.length < 2) {
       const map = mapBrowserEvent.map;
@@ -6293,6 +9524,11 @@ var PinchZoom = class extends Pointer_default {
     }
     return true;
   }
+  /**
+   * Handle pointer down events.
+   * @param {import("../MapBrowserEvent.js").default} mapBrowserEvent Event.
+   * @return {boolean} If the event was consumed.
+   */
   handleDownEvent(mapBrowserEvent) {
     if (this.targetPointers.length >= 2) {
       const map = mapBrowserEvent.map;
@@ -6320,17 +9556,21 @@ function defaults2(options) {
   }
   const doubleClickZoom = options.doubleClickZoom !== void 0 ? options.doubleClickZoom : true;
   if (doubleClickZoom) {
-    interactions.push(new DoubleClickZoom_default({
-      delta: options.zoomDelta,
-      duration: options.zoomDuration
-    }));
+    interactions.push(
+      new DoubleClickZoom_default({
+        delta: options.zoomDelta,
+        duration: options.zoomDuration
+      })
+    );
   }
   const dragPan = options.dragPan !== void 0 ? options.dragPan : true;
   if (dragPan) {
-    interactions.push(new DragPan_default({
-      onFocusOnly: options.onFocusOnly,
-      kinetic
-    }));
+    interactions.push(
+      new DragPan_default({
+        onFocusOnly: options.onFocusOnly,
+        kinetic
+      })
+    );
   }
   const pinchRotate = options.pinchRotate !== void 0 ? options.pinchRotate : true;
   if (pinchRotate) {
@@ -6338,30 +9578,38 @@ function defaults2(options) {
   }
   const pinchZoom = options.pinchZoom !== void 0 ? options.pinchZoom : true;
   if (pinchZoom) {
-    interactions.push(new PinchZoom_default({
-      duration: options.zoomDuration
-    }));
+    interactions.push(
+      new PinchZoom_default({
+        duration: options.zoomDuration
+      })
+    );
   }
   const keyboard = options.keyboard !== void 0 ? options.keyboard : true;
   if (keyboard) {
     interactions.push(new KeyboardPan_default());
-    interactions.push(new KeyboardZoom_default({
-      delta: options.zoomDelta,
-      duration: options.zoomDuration
-    }));
+    interactions.push(
+      new KeyboardZoom_default({
+        delta: options.zoomDelta,
+        duration: options.zoomDuration
+      })
+    );
   }
   const mouseWheelZoom = options.mouseWheelZoom !== void 0 ? options.mouseWheelZoom : true;
   if (mouseWheelZoom) {
-    interactions.push(new MouseWheelZoom_default({
-      onFocusOnly: options.onFocusOnly,
-      duration: options.zoomDuration
-    }));
+    interactions.push(
+      new MouseWheelZoom_default({
+        onFocusOnly: options.onFocusOnly,
+        duration: options.zoomDuration
+      })
+    );
   }
   const shiftDragZoom = options.shiftDragZoom !== void 0 ? options.shiftDragZoom : true;
   if (shiftDragZoom) {
-    interactions.push(new DragZoom_default({
-      duration: options.zoomDuration
-    }));
+    interactions.push(
+      new DragZoom_default({
+        duration: options.zoomDuration
+      })
+    );
   }
   return interactions;
 }
@@ -6394,6 +9642,9 @@ function setLayerMapProperty(layer, map) {
   }
 }
 var Map = class extends Object_default {
+  /**
+   * @param {MapOptions} [options] Map options.
+   */
   constructor(options) {
     super();
     options = options || {};
@@ -6453,8 +9704,14 @@ var Map = class extends Object_default {
     this.overlayIdIndex_ = {};
     this.renderer_ = null;
     this.postRenderFunctions_ = [];
-    this.tileQueue_ = new TileQueue_default(this.getTilePriority.bind(this), this.handleTileChange_.bind(this));
-    this.addChangeListener(MapProperty_default.LAYERGROUP, this.handleLayerGroupChanged_);
+    this.tileQueue_ = new TileQueue_default(
+      this.getTilePriority.bind(this),
+      this.handleTileChange_.bind(this)
+    );
+    this.addChangeListener(
+      MapProperty_default.LAYERGROUP,
+      this.handleLayerGroupChanged_
+    );
     this.addChangeListener(MapProperty_default.VIEW, this.handleViewChanged_);
     this.addChangeListener(MapProperty_default.SIZE, this.handleSizeChanged_);
     this.addChangeListener(MapProperty_default.TARGET, this.handleTargetChanged_);
@@ -6465,52 +9722,133 @@ var Map = class extends Object_default {
         map.setView(new View_default(viewOptions));
       });
     }
-    this.controls.addEventListener(CollectionEventType_default.ADD, (event) => {
-      event.element.setMap(this);
-    });
-    this.controls.addEventListener(CollectionEventType_default.REMOVE, (event) => {
-      event.element.setMap(null);
-    });
-    this.interactions.addEventListener(CollectionEventType_default.ADD, (event) => {
-      event.element.setMap(this);
-    });
-    this.interactions.addEventListener(CollectionEventType_default.REMOVE, (event) => {
-      event.element.setMap(null);
-    });
-    this.overlays_.addEventListener(CollectionEventType_default.ADD, (event) => {
-      this.addOverlayInternal_(event.element);
-    });
-    this.overlays_.addEventListener(CollectionEventType_default.REMOVE, (event) => {
-      const id = event.element.getId();
-      if (id !== void 0) {
-        delete this.overlayIdIndex_[id.toString()];
+    this.controls.addEventListener(
+      CollectionEventType_default.ADD,
+      /**
+       * @param {import("./Collection.js").CollectionEvent<import("./control/Control.js").default>} event CollectionEvent
+       */
+      (event) => {
+        event.element.setMap(this);
       }
-      event.element.setMap(null);
-    });
-    this.controls.forEach((control) => {
-      control.setMap(this);
-    });
-    this.interactions.forEach((interaction) => {
-      interaction.setMap(this);
-    });
+    );
+    this.controls.addEventListener(
+      CollectionEventType_default.REMOVE,
+      /**
+       * @param {import("./Collection.js").CollectionEvent<import("./control/Control.js").default>} event CollectionEvent.
+       */
+      (event) => {
+        event.element.setMap(null);
+      }
+    );
+    this.interactions.addEventListener(
+      CollectionEventType_default.ADD,
+      /**
+       * @param {import("./Collection.js").CollectionEvent<import("./interaction/Interaction.js").default>} event CollectionEvent.
+       */
+      (event) => {
+        event.element.setMap(this);
+      }
+    );
+    this.interactions.addEventListener(
+      CollectionEventType_default.REMOVE,
+      /**
+       * @param {import("./Collection.js").CollectionEvent<import("./interaction/Interaction.js").default>} event CollectionEvent.
+       */
+      (event) => {
+        event.element.setMap(null);
+      }
+    );
+    this.overlays_.addEventListener(
+      CollectionEventType_default.ADD,
+      /**
+       * @param {import("./Collection.js").CollectionEvent<import("./Overlay.js").default>} event CollectionEvent.
+       */
+      (event) => {
+        this.addOverlayInternal_(event.element);
+      }
+    );
+    this.overlays_.addEventListener(
+      CollectionEventType_default.REMOVE,
+      /**
+       * @param {import("./Collection.js").CollectionEvent<import("./Overlay.js").default>} event CollectionEvent.
+       */
+      (event) => {
+        const id = event.element.getId();
+        if (id !== void 0) {
+          delete this.overlayIdIndex_[id.toString()];
+        }
+        event.element.setMap(null);
+      }
+    );
+    this.controls.forEach(
+      /**
+       * @param {import("./control/Control.js").default} control Control.
+       */
+      (control) => {
+        control.setMap(this);
+      }
+    );
+    this.interactions.forEach(
+      /**
+       * @param {import("./interaction/Interaction.js").default} interaction Interaction.
+       */
+      (interaction) => {
+        interaction.setMap(this);
+      }
+    );
     this.overlays_.forEach(this.addOverlayInternal_.bind(this));
   }
+  /**
+   * Add the given control to the map.
+   * @param {import("./control/Control.js").default} control Control.
+   * @api
+   */
   addControl(control) {
     this.getControls().push(control);
   }
+  /**
+   * Add the given interaction to the map. If you want to add an interaction
+   * at another point of the collection use `getInteractions()` and the methods
+   * available on {@link module:ol/Collection~Collection}. This can be used to
+   * stop the event propagation from the handleEvent function. The interactions
+   * get to handle the events in the reverse order of this collection.
+   * @param {import("./interaction/Interaction.js").default} interaction Interaction to add.
+   * @api
+   */
   addInteraction(interaction) {
     this.getInteractions().push(interaction);
   }
+  /**
+   * Adds the given layer to the top of this map. If you want to add a layer
+   * elsewhere in the stack, use `getLayers()` and the methods available on
+   * {@link module:ol/Collection~Collection}.
+   * @param {import("./layer/Base.js").default} layer Layer.
+   * @api
+   */
   addLayer(layer) {
     const layers = this.getLayerGroup().getLayers();
     layers.push(layer);
   }
+  /**
+   * @param {import("./layer/Group.js").GroupEvent} event The layer add event.
+   * @private
+   */
   handleLayerAdd_(event) {
     setLayerMapProperty(event.layer, this);
   }
+  /**
+   * Add the given overlay to the map.
+   * @param {import("./Overlay.js").default} overlay Overlay.
+   * @api
+   */
   addOverlay(overlay) {
     this.getOverlays().push(overlay);
   }
+  /**
+   * This deals with map's overlay collection changes.
+   * @param {import("./Overlay.js").default} overlay Overlay.
+   * @private
+   */
   addOverlayInternal_(overlay) {
     const id = overlay.getId();
     if (id !== void 0) {
@@ -6518,6 +9856,10 @@ var Map = class extends Object_default {
     }
     overlay.setMap(this);
   }
+  /**
+   *
+   * Clean up.
+   */
   disposeInternal() {
     this.controls.clear();
     this.interactions.clear();
@@ -6526,6 +9868,24 @@ var Map = class extends Object_default {
     this.setTarget(null);
     super.disposeInternal();
   }
+  /**
+   * Detect features that intersect a pixel on the viewport, and execute a
+   * callback with each intersecting feature. Layers included in the detection can
+   * be configured through the `layerFilter` option in `options`.
+   * @param {import("./pixel.js").Pixel} pixel Pixel.
+   * @param {function(import("./Feature.js").FeatureLike, import("./layer/Layer.js").default<import("./source/Source").default>, import("./geom/SimpleGeometry.js").default): T} callback Feature callback. The callback will be
+   *     called with two arguments. The first argument is one
+   *     {@link module:ol/Feature~Feature feature} or
+   *     {@link module:ol/render/Feature~RenderFeature render feature} at the pixel, the second is
+   *     the {@link module:ol/layer/Layer~Layer layer} of the feature and will be null for
+   *     unmanaged layers. To stop detection, callback functions can return a
+   *     truthy value.
+   * @param {AtPixelOptions} [options] Optional options.
+   * @return {T|undefined} Callback result, i.e. the return value of last
+   * callback execution, or the first truthy callback return value.
+   * @template T
+   * @api
+   */
   forEachFeatureAtPixel(pixel, callback, options) {
     if (!this.frameState_ || !this.renderer_) {
       return;
@@ -6535,15 +9895,41 @@ var Map = class extends Object_default {
     const hitTolerance = options.hitTolerance !== void 0 ? options.hitTolerance : 0;
     const layerFilter = options.layerFilter !== void 0 ? options.layerFilter : TRUE;
     const checkWrapped = options.checkWrapped !== false;
-    return this.renderer_.forEachFeatureAtCoordinate(coordinate, this.frameState_, hitTolerance, checkWrapped, callback, null, layerFilter, null);
+    return this.renderer_.forEachFeatureAtCoordinate(
+      coordinate,
+      this.frameState_,
+      hitTolerance,
+      checkWrapped,
+      callback,
+      null,
+      layerFilter,
+      null
+    );
   }
+  /**
+   * Get all features that intersect a pixel on the viewport.
+   * @param {import("./pixel.js").Pixel} pixel Pixel.
+   * @param {AtPixelOptions} [options] Optional options.
+   * @return {Array<import("./Feature.js").FeatureLike>} The detected features or
+   * an empty array if none were found.
+   * @api
+   */
   getFeaturesAtPixel(pixel, options) {
     const features = [];
-    this.forEachFeatureAtPixel(pixel, function(feature) {
-      features.push(feature);
-    }, options);
+    this.forEachFeatureAtPixel(
+      pixel,
+      function(feature) {
+        features.push(feature);
+      },
+      options
+    );
     return features;
   }
+  /**
+   * Get all layers from all layer groups.
+   * @return {Array<import("./layer/Layer.js").default>} Layers.
+   * @api
+   */
   getAllLayers() {
     const layers = [];
     function addLayersFrom(layerGroup) {
@@ -6558,6 +9944,14 @@ var Map = class extends Object_default {
     addLayersFrom(this.getLayers());
     return layers;
   }
+  /**
+   * Detect if features intersect a pixel on the viewport. Layers included in the
+   * detection can be configured through the `layerFilter` option.
+   * @param {import("./pixel.js").Pixel} pixel Pixel.
+   * @param {AtPixelOptions} [options] Optional options.
+   * @return {boolean} Is there a feature at the given pixel?
+   * @api
+   */
   hasFeatureAtPixel(pixel, options) {
     if (!this.frameState_ || !this.renderer_) {
       return false;
@@ -6567,35 +9961,103 @@ var Map = class extends Object_default {
     const layerFilter = options.layerFilter !== void 0 ? options.layerFilter : TRUE;
     const hitTolerance = options.hitTolerance !== void 0 ? options.hitTolerance : 0;
     const checkWrapped = options.checkWrapped !== false;
-    return this.renderer_.hasFeatureAtCoordinate(coordinate, this.frameState_, hitTolerance, checkWrapped, layerFilter, null);
+    return this.renderer_.hasFeatureAtCoordinate(
+      coordinate,
+      this.frameState_,
+      hitTolerance,
+      checkWrapped,
+      layerFilter,
+      null
+    );
   }
+  /**
+   * Returns the coordinate in user projection for a browser event.
+   * @param {MouseEvent} event Event.
+   * @return {import("./coordinate.js").Coordinate} Coordinate.
+   * @api
+   */
   getEventCoordinate(event) {
     return this.getCoordinateFromPixel(this.getEventPixel(event));
   }
+  /**
+   * Returns the coordinate in view projection for a browser event.
+   * @param {MouseEvent} event Event.
+   * @return {import("./coordinate.js").Coordinate} Coordinate.
+   */
   getEventCoordinateInternal(event) {
     return this.getCoordinateFromPixelInternal(this.getEventPixel(event));
   }
+  /**
+   * Returns the map pixel position for a browser event relative to the viewport.
+   * @param {UIEvent|{clientX: number, clientY: number}} event Event.
+   * @return {import("./pixel.js").Pixel} Pixel.
+   * @api
+   */
   getEventPixel(event) {
     const viewport = this.viewport_;
     const viewportPosition = viewport.getBoundingClientRect();
     const viewportSize = this.getSize();
     const scaleX = viewportPosition.width / viewportSize[0];
     const scaleY = viewportPosition.height / viewportSize[1];
-    const eventPosition = "changedTouches" in event ? event.changedTouches[0] : event;
+    const eventPosition = (
+      //FIXME Are we really calling this with a TouchEvent anywhere?
+      "changedTouches" in event ? (
+        /** @type {TouchEvent} */
+        event.changedTouches[0]
+      ) : (
+        /** @type {MouseEvent} */
+        event
+      )
+    );
     return [
       (eventPosition.clientX - viewportPosition.left) / scaleX,
       (eventPosition.clientY - viewportPosition.top) / scaleY
     ];
   }
+  /**
+   * Get the target in which this map is rendered.
+   * Note that this returns what is entered as an option or in setTarget:
+   * if that was an element, it returns an element; if a string, it returns that.
+   * @return {HTMLElement|string|undefined} The Element or id of the Element that the
+   *     map is rendered in.
+   * @observable
+   * @api
+   */
   getTarget() {
-    return this.get(MapProperty_default.TARGET);
+    return (
+      /** @type {HTMLElement|string|undefined} */
+      this.get(MapProperty_default.TARGET)
+    );
   }
+  /**
+   * Get the DOM element into which this map is rendered. In contrast to
+   * `getTarget` this method always return an `Element`, or `null` if the
+   * map has no target.
+   * @return {HTMLElement} The element that the map is rendered in.
+   * @api
+   */
   getTargetElement() {
     return this.targetElement_;
   }
+  /**
+   * Get the coordinate for a given pixel.  This returns a coordinate in the
+   * user projection.
+   * @param {import("./pixel.js").Pixel} pixel Pixel position in the map viewport.
+   * @return {import("./coordinate.js").Coordinate} The coordinate for the pixel position.
+   * @api
+   */
   getCoordinateFromPixel(pixel) {
-    return toUserCoordinate(this.getCoordinateFromPixelInternal(pixel), this.getView().getProjection());
+    return toUserCoordinate(
+      this.getCoordinateFromPixelInternal(pixel),
+      this.getView().getProjection()
+    );
   }
+  /**
+   * Get the coordinate for a given pixel.  This returns a coordinate in the
+   * map view projection.
+   * @param {import("./pixel.js").Pixel} pixel Pixel position in the map viewport.
+   * @return {import("./coordinate.js").Coordinate} The coordinate for the pixel position.
+   */
   getCoordinateFromPixelInternal(pixel) {
     const frameState = this.frameState_;
     if (!frameState) {
@@ -6603,22 +10065,64 @@ var Map = class extends Object_default {
     }
     return apply(frameState.pixelToCoordinateTransform, pixel.slice());
   }
+  /**
+   * Get the map controls. Modifying this collection changes the controls
+   * associated with the map.
+   * @return {Collection<import("./control/Control.js").default>} Controls.
+   * @api
+   */
   getControls() {
     return this.controls;
   }
+  /**
+   * Get the map overlays. Modifying this collection changes the overlays
+   * associated with the map.
+   * @return {Collection<import("./Overlay.js").default>} Overlays.
+   * @api
+   */
   getOverlays() {
     return this.overlays_;
   }
+  /**
+   * Get an overlay by its identifier (the value returned by overlay.getId()).
+   * Note that the index treats string and numeric identifiers as the same. So
+   * `map.getOverlayById(2)` will return an overlay with id `'2'` or `2`.
+   * @param {string|number} id Overlay identifier.
+   * @return {import("./Overlay.js").default} Overlay.
+   * @api
+   */
   getOverlayById(id) {
     const overlay = this.overlayIdIndex_[id.toString()];
     return overlay !== void 0 ? overlay : null;
   }
+  /**
+   * Get the map interactions. Modifying this collection changes the interactions
+   * associated with the map.
+   *
+   * Interactions are used for e.g. pan, zoom and rotate.
+   * @return {Collection<import("./interaction/Interaction.js").default>} Interactions.
+   * @api
+   */
   getInteractions() {
     return this.interactions;
   }
+  /**
+   * Get the layergroup associated with this map.
+   * @return {LayerGroup} A layer group containing the layers in this map.
+   * @observable
+   * @api
+   */
   getLayerGroup() {
-    return this.get(MapProperty_default.LAYERGROUP);
+    return (
+      /** @type {LayerGroup} */
+      this.get(MapProperty_default.LAYERGROUP)
+    );
   }
+  /**
+   * Clear any existing layers and add layers to the map.
+   * @param {Array<import("./layer/Base.js").default>|Collection<import("./layer/Base.js").default>} layers The layers to be added to the map.
+   * @api
+   */
   setLayers(layers) {
     const group = this.getLayerGroup();
     if (layers instanceof Collection_default) {
@@ -6629,10 +10133,18 @@ var Map = class extends Object_default {
     collection.clear();
     collection.extend(layers);
   }
+  /**
+   * Get the collection of layers associated with this map.
+   * @return {!Collection<import("./layer/Base.js").default>} Layers.
+   * @api
+   */
   getLayers() {
     const layers = this.getLayerGroup().getLayers();
     return layers;
   }
+  /**
+   * @return {boolean} Layers have sources that are still loading.
+   */
   getLoadingOrNotReady() {
     const layerStatesArray = this.getLayerGroup().getLayerStatesArray();
     for (let i = 0, ii = layerStatesArray.length; i < ii; ++i) {
@@ -6651,58 +10163,156 @@ var Map = class extends Object_default {
     }
     return false;
   }
+  /**
+   * Get the pixel for a coordinate.  This takes a coordinate in the user
+   * projection and returns the corresponding pixel.
+   * @param {import("./coordinate.js").Coordinate} coordinate A map coordinate.
+   * @return {import("./pixel.js").Pixel} A pixel position in the map viewport.
+   * @api
+   */
   getPixelFromCoordinate(coordinate) {
-    const viewCoordinate = fromUserCoordinate(coordinate, this.getView().getProjection());
+    const viewCoordinate = fromUserCoordinate(
+      coordinate,
+      this.getView().getProjection()
+    );
     return this.getPixelFromCoordinateInternal(viewCoordinate);
   }
+  /**
+   * Get the pixel for a coordinate.  This takes a coordinate in the map view
+   * projection and returns the corresponding pixel.
+   * @param {import("./coordinate.js").Coordinate} coordinate A map coordinate.
+   * @return {import("./pixel.js").Pixel} A pixel position in the map viewport.
+   */
   getPixelFromCoordinateInternal(coordinate) {
     const frameState = this.frameState_;
     if (!frameState) {
       return null;
     }
-    return apply(frameState.coordinateToPixelTransform, coordinate.slice(0, 2));
+    return apply(
+      frameState.coordinateToPixelTransform,
+      coordinate.slice(0, 2)
+    );
   }
+  /**
+   * Get the map renderer.
+   * @return {import("./renderer/Map.js").default|null} Renderer
+   */
   getRenderer() {
     return this.renderer_;
   }
+  /**
+   * Get the size of this map.
+   * @return {import("./size.js").Size|undefined} The size in pixels of the map in the DOM.
+   * @observable
+   * @api
+   */
   getSize() {
-    return this.get(MapProperty_default.SIZE);
+    return (
+      /** @type {import("./size.js").Size|undefined} */
+      this.get(MapProperty_default.SIZE)
+    );
   }
+  /**
+   * Get the view associated with this map. A view manages properties such as
+   * center and resolution.
+   * @return {View} The view that controls this map.
+   * @observable
+   * @api
+   */
   getView() {
-    return this.get(MapProperty_default.VIEW);
+    return (
+      /** @type {View} */
+      this.get(MapProperty_default.VIEW)
+    );
   }
+  /**
+   * Get the element that serves as the map viewport.
+   * @return {HTMLElement} Viewport.
+   * @api
+   */
   getViewport() {
     return this.viewport_;
   }
+  /**
+   * Get the element that serves as the container for overlays.  Elements added to
+   * this container will let mousedown and touchstart events through to the map,
+   * so clicks and gestures on an overlay will trigger {@link module:ol/MapBrowserEvent~MapBrowserEvent}
+   * events.
+   * @return {!HTMLElement} The map's overlay container.
+   */
   getOverlayContainer() {
     return this.overlayContainer_;
   }
+  /**
+   * Get the element that serves as a container for overlays that don't allow
+   * event propagation. Elements added to this container won't let mousedown and
+   * touchstart events through to the map, so clicks and gestures on an overlay
+   * don't trigger any {@link module:ol/MapBrowserEvent~MapBrowserEvent}.
+   * @return {!HTMLElement} The map's overlay container that stops events.
+   */
   getOverlayContainerStopEvent() {
     return this.overlayContainerStopEvent_;
   }
+  /**
+   * @return {!Document} The document where the map is displayed.
+   */
   getOwnerDocument() {
     const targetElement = this.getTargetElement();
     return targetElement ? targetElement.ownerDocument : document;
   }
+  /**
+   * @param {import("./Tile.js").default} tile Tile.
+   * @param {string} tileSourceKey Tile source key.
+   * @param {import("./coordinate.js").Coordinate} tileCenter Tile center.
+   * @param {number} tileResolution Tile resolution.
+   * @return {number} Tile priority.
+   */
   getTilePriority(tile, tileSourceKey, tileCenter, tileResolution) {
-    return getTilePriority(this.frameState_, tile, tileSourceKey, tileCenter, tileResolution);
+    return getTilePriority(
+      this.frameState_,
+      tile,
+      tileSourceKey,
+      tileCenter,
+      tileResolution
+    );
   }
+  /**
+   * @param {UIEvent} browserEvent Browser event.
+   * @param {string} [type] Type.
+   */
   handleBrowserEvent(browserEvent, type) {
     type = type || browserEvent.type;
     const mapBrowserEvent = new MapBrowserEvent_default(type, this, browserEvent);
     this.handleMapBrowserEvent(mapBrowserEvent);
   }
+  /**
+   * @param {MapBrowserEvent} mapBrowserEvent The event to handle.
+   */
   handleMapBrowserEvent(mapBrowserEvent) {
     if (!this.frameState_) {
       return;
     }
-    const originalEvent = mapBrowserEvent.originalEvent;
+    const originalEvent = (
+      /** @type {PointerEvent} */
+      mapBrowserEvent.originalEvent
+    );
     const eventType = originalEvent.type;
     if (eventType === EventType_default3.POINTERDOWN || eventType === EventType_default.WHEEL || eventType === EventType_default.KEYDOWN) {
       const doc = this.getOwnerDocument();
       const rootNode = this.viewport_.getRootNode ? this.viewport_.getRootNode() : doc;
-      const target = originalEvent.target;
-      if (this.overlayContainerStopEvent_.contains(target) || !(rootNode === doc ? doc.documentElement : rootNode).contains(target)) {
+      const target = (
+        /** @type {Node} */
+        originalEvent.target
+      );
+      if (
+        // Abort if the target is a child of the container for elements whose events are not meant
+        // to be handled by map interactions.
+        this.overlayContainerStopEvent_.contains(target) || // Abort if the event target is a child of the container that is no longer in the page.
+        // It's possible for the target to no longer be in the page if it has been removed in an
+        // event listener, this might happen in a Control that recreates it's content based on
+        // user interaction either manually or via a render in something like https://reactjs.org/
+        !(rootNode === doc ? doc.documentElement : rootNode).contains(target)
+      ) {
         return;
       }
     }
@@ -6721,6 +10331,9 @@ var Map = class extends Object_default {
       }
     }
   }
+  /**
+   * @protected
+   */
   handlePostRender() {
     const frameState = this.frameState_;
     const tileQueue = this.tileQueue_;
@@ -6743,15 +10356,22 @@ var Map = class extends Object_default {
     if (frameState && this.renderer_ && !frameState.animate) {
       if (this.renderComplete_ === true) {
         if (this.hasListener(EventType_default2.RENDERCOMPLETE)) {
-          this.renderer_.dispatchRenderEvent(EventType_default2.RENDERCOMPLETE, frameState);
+          this.renderer_.dispatchRenderEvent(
+            EventType_default2.RENDERCOMPLETE,
+            frameState
+          );
         }
         if (this.loaded_ === false) {
           this.loaded_ = true;
-          this.dispatchEvent(new MapEvent_default(MapEventType_default.LOADEND, this, frameState));
+          this.dispatchEvent(
+            new MapEvent_default(MapEventType_default.LOADEND, this, frameState)
+          );
         }
       } else if (this.loaded_ === true) {
         this.loaded_ = false;
-        this.dispatchEvent(new MapEvent_default(MapEventType_default.LOADSTART, this, frameState));
+        this.dispatchEvent(
+          new MapEvent_default(MapEventType_default.LOADSTART, this, frameState)
+        );
       }
     }
     const postRenderFunctions = this.postRenderFunctions_;
@@ -6760,20 +10380,32 @@ var Map = class extends Object_default {
     }
     postRenderFunctions.length = 0;
   }
+  /**
+   * @private
+   */
   handleSizeChanged_() {
     if (this.getView() && !this.getView().getAnimating()) {
       this.getView().resolveConstraints(0);
     }
     this.render();
   }
+  /**
+   * @private
+   */
   handleTargetChanged_() {
     if (this.mapBrowserEventHandler_) {
       for (let i = 0, ii = this.targetChangeHandlerKeys_.length; i < ii; ++i) {
         unlistenByKey(this.targetChangeHandlerKeys_[i]);
       }
       this.targetChangeHandlerKeys_ = null;
-      this.viewport_.removeEventListener(EventType_default.CONTEXTMENU, this.boundHandleBrowserEvent_);
-      this.viewport_.removeEventListener(EventType_default.WHEEL, this.boundHandleBrowserEvent_);
+      this.viewport_.removeEventListener(
+        EventType_default.CONTEXTMENU,
+        this.boundHandleBrowserEvent_
+      );
+      this.viewport_.removeEventListener(
+        EventType_default.WHEEL,
+        this.boundHandleBrowserEvent_
+      );
       this.mapBrowserEventHandler_.dispose();
       this.mapBrowserEventHandler_ = null;
       removeNode(this.viewport_);
@@ -6805,16 +10437,40 @@ var Map = class extends Object_default {
       if (!this.renderer_) {
         this.renderer_ = new Composite_default(this);
       }
-      this.mapBrowserEventHandler_ = new MapBrowserEventHandler_default(this, this.moveTolerance_);
+      this.mapBrowserEventHandler_ = new MapBrowserEventHandler_default(
+        this,
+        this.moveTolerance_
+      );
       for (const key in MapBrowserEventType_default) {
-        this.mapBrowserEventHandler_.addEventListener(MapBrowserEventType_default[key], this.handleMapBrowserEvent.bind(this));
+        this.mapBrowserEventHandler_.addEventListener(
+          MapBrowserEventType_default[key],
+          this.handleMapBrowserEvent.bind(this)
+        );
       }
-      this.viewport_.addEventListener(EventType_default.CONTEXTMENU, this.boundHandleBrowserEvent_, false);
-      this.viewport_.addEventListener(EventType_default.WHEEL, this.boundHandleBrowserEvent_, PASSIVE_EVENT_LISTENERS ? { passive: false } : false);
+      this.viewport_.addEventListener(
+        EventType_default.CONTEXTMENU,
+        this.boundHandleBrowserEvent_,
+        false
+      );
+      this.viewport_.addEventListener(
+        EventType_default.WHEEL,
+        this.boundHandleBrowserEvent_,
+        PASSIVE_EVENT_LISTENERS ? { passive: false } : false
+      );
       const keyboardEventTarget = !this.keyboardEventTarget_ ? targetElement : this.keyboardEventTarget_;
       this.targetChangeHandlerKeys_ = [
-        listen(keyboardEventTarget, EventType_default.KEYDOWN, this.handleBrowserEvent, this),
-        listen(keyboardEventTarget, EventType_default.KEYPRESS, this.handleBrowserEvent, this)
+        listen(
+          keyboardEventTarget,
+          EventType_default.KEYDOWN,
+          this.handleBrowserEvent,
+          this
+        ),
+        listen(
+          keyboardEventTarget,
+          EventType_default.KEYPRESS,
+          this.handleBrowserEvent,
+          this
+        )
       ];
       const rootNode = targetElement.getRootNode();
       if (rootNode instanceof ShadowRoot) {
@@ -6824,12 +10480,21 @@ var Map = class extends Object_default {
     }
     this.updateSize();
   }
+  /**
+   * @private
+   */
   handleTileChange_() {
     this.render();
   }
+  /**
+   * @private
+   */
   handleViewPropertyChanged_() {
     this.render();
   }
+  /**
+   * @private
+   */
   handleViewChanged_() {
     if (this.viewPropertyListenerKey_) {
       unlistenByKey(this.viewPropertyListenerKey_);
@@ -6842,12 +10507,25 @@ var Map = class extends Object_default {
     const view = this.getView();
     if (view) {
       this.updateViewportSize_();
-      this.viewPropertyListenerKey_ = listen(view, ObjectEventType_default.PROPERTYCHANGE, this.handleViewPropertyChanged_, this);
-      this.viewChangeListenerKey_ = listen(view, EventType_default.CHANGE, this.handleViewPropertyChanged_, this);
+      this.viewPropertyListenerKey_ = listen(
+        view,
+        ObjectEventType_default.PROPERTYCHANGE,
+        this.handleViewPropertyChanged_,
+        this
+      );
+      this.viewChangeListenerKey_ = listen(
+        view,
+        EventType_default.CHANGE,
+        this.handleViewPropertyChanged_,
+        this
+      );
       view.resolveConstraints(0);
     }
     this.render();
   }
+  /**
+   * @private
+   */
   handleLayerGroupChanged_() {
     if (this.layerGroupPropertyListenerKeys_) {
       this.layerGroupPropertyListenerKeys_.forEach(unlistenByKey);
@@ -6865,19 +10543,32 @@ var Map = class extends Object_default {
     }
     this.render();
   }
+  /**
+   * @return {boolean} Is rendered.
+   */
   isRendered() {
     return !!this.frameState_;
   }
+  /**
+   * @private
+   */
   animationDelay_() {
     this.animationDelayKey_ = void 0;
     this.renderFrame_(Date.now());
   }
+  /**
+   * Requests an immediate render in a synchronous manner.
+   * @api
+   */
   renderSync() {
     if (this.animationDelayKey_) {
       cancelAnimationFrame(this.animationDelayKey_);
     }
     this.animationDelay_();
   }
+  /**
+   * Redraws all text after new fonts have loaded
+   */
   redrawText() {
     const layerStates = this.getLayerGroup().getLayerStatesArray();
     for (let i = 0, ii = layerStates.length; i < ii; ++i) {
@@ -6887,40 +10578,87 @@ var Map = class extends Object_default {
       }
     }
   }
+  /**
+   * Request a map rendering (at the next animation frame).
+   * @api
+   */
   render() {
     if (this.renderer_ && this.animationDelayKey_ === void 0) {
       this.animationDelayKey_ = requestAnimationFrame(this.animationDelay_);
     }
   }
+  /**
+   * Remove the given control from the map.
+   * @param {import("./control/Control.js").default} control Control.
+   * @return {import("./control/Control.js").default|undefined} The removed control (or undefined
+   *     if the control was not found).
+   * @api
+   */
   removeControl(control) {
     return this.getControls().remove(control);
   }
+  /**
+   * Remove the given interaction from the map.
+   * @param {import("./interaction/Interaction.js").default} interaction Interaction to remove.
+   * @return {import("./interaction/Interaction.js").default|undefined} The removed interaction (or
+   *     undefined if the interaction was not found).
+   * @api
+   */
   removeInteraction(interaction) {
     return this.getInteractions().remove(interaction);
   }
+  /**
+   * Removes the given layer from the map.
+   * @param {import("./layer/Base.js").default} layer Layer.
+   * @return {import("./layer/Base.js").default|undefined} The removed layer (or undefined if the
+   *     layer was not found).
+   * @api
+   */
   removeLayer(layer) {
     const layers = this.getLayerGroup().getLayers();
     return layers.remove(layer);
   }
+  /**
+   * @param {import("./layer/Group.js").GroupEvent} event The layer remove event.
+   * @private
+   */
   handleLayerRemove_(event) {
     removeLayerMapProperty(event.layer);
   }
+  /**
+   * Remove the given overlay from the map.
+   * @param {import("./Overlay.js").default} overlay Overlay.
+   * @return {import("./Overlay.js").default|undefined} The removed overlay (or undefined
+   *     if the overlay was not found).
+   * @api
+   */
   removeOverlay(overlay) {
     return this.getOverlays().remove(overlay);
   }
+  /**
+   * @param {number} time Time.
+   * @private
+   */
   renderFrame_(time) {
     const size = this.getSize();
     const view = this.getView();
     const previousFrameState = this.frameState_;
     let frameState = null;
     if (size !== void 0 && hasArea(size) && view && view.isDef()) {
-      const viewHints = view.getHints(this.frameState_ ? this.frameState_.viewHints : void 0);
+      const viewHints = view.getHints(
+        this.frameState_ ? this.frameState_.viewHints : void 0
+      );
       const viewState = view.getState();
       frameState = {
         animate: false,
         coordinateToPixelTransform: this.coordinateToPixelTransform_,
         declutterTree: null,
-        extent: getForViewAndSize(viewState.center, viewState.resolution, viewState.rotation, size),
+        extent: getForViewAndSize(
+          viewState.center,
+          viewState.resolution,
+          viewState.rotation,
+          size
+        ),
         index: this.frameIndex_++,
         layerIndex: 0,
         layerStatesArray: this.getLayerGroup().getLayerStatesArray(),
@@ -6939,7 +10677,12 @@ var Map = class extends Object_default {
       };
       if (viewState.nextCenter && viewState.nextResolution) {
         const rotation = isNaN(viewState.nextRotation) ? viewState.rotation : viewState.nextRotation;
-        frameState.nextExtent = getForViewAndSize(viewState.nextCenter, viewState.nextResolution, rotation, size);
+        frameState.nextExtent = getForViewAndSize(
+          viewState.nextCenter,
+          viewState.nextResolution,
+          rotation,
+          size
+        );
       }
     }
     this.frameState_ = frameState;
@@ -6948,17 +10691,24 @@ var Map = class extends Object_default {
       if (frameState.animate) {
         this.render();
       }
-      Array.prototype.push.apply(this.postRenderFunctions_, frameState.postRenderFunctions);
+      Array.prototype.push.apply(
+        this.postRenderFunctions_,
+        frameState.postRenderFunctions
+      );
       if (previousFrameState) {
         const moveStart = !this.previousExtent_ || !isEmpty2(this.previousExtent_) && !equals2(frameState.extent, this.previousExtent_);
         if (moveStart) {
-          this.dispatchEvent(new MapEvent_default(MapEventType_default.MOVESTART, this, previousFrameState));
+          this.dispatchEvent(
+            new MapEvent_default(MapEventType_default.MOVESTART, this, previousFrameState)
+          );
           this.previousExtent_ = createOrUpdateEmpty(this.previousExtent_);
         }
       }
       const idle = this.previousExtent_ && !frameState.viewHints[ViewHint_default.ANIMATING] && !frameState.viewHints[ViewHint_default.INTERACTING] && !equals2(frameState.extent, this.previousExtent_);
       if (idle) {
-        this.dispatchEvent(new MapEvent_default(MapEventType_default.MOVEEND, this, frameState));
+        this.dispatchEvent(
+          new MapEvent_default(MapEventType_default.MOVEEND, this, frameState)
+        );
         clone(frameState.extent, this.previousExtent_);
       }
     }
@@ -6971,6 +10721,12 @@ var Map = class extends Object_default {
       }, 0);
     }
   }
+  /**
+   * Sets the layergroup of this map.
+   * @param {LayerGroup} layerGroup A layer group containing the layers in this map.
+   * @observable
+   * @api
+   */
   setLayerGroup(layerGroup) {
     const oldLayerGroup = this.getLayerGroup();
     if (oldLayerGroup) {
@@ -6978,12 +10734,34 @@ var Map = class extends Object_default {
     }
     this.set(MapProperty_default.LAYERGROUP, layerGroup);
   }
+  /**
+   * Set the size of this map.
+   * @param {import("./size.js").Size|undefined} size The size in pixels of the map in the DOM.
+   * @observable
+   * @api
+   */
   setSize(size) {
     this.set(MapProperty_default.SIZE, size);
   }
+  /**
+   * Set the target element to render this map into.
+   * @param {HTMLElement|string} [target] The Element or id of the Element
+   *     that the map is rendered in.
+   * @observable
+   * @api
+   */
   setTarget(target) {
     this.set(MapProperty_default.TARGET, target);
   }
+  /**
+   * Set the view for this map.
+   * @param {View|Promise<import("./View.js").ViewOptions>} view The view that controls this map.
+   * It is also possible to pass a promise that resolves to options for constructing a view.  This
+   * alternative allows view properties to be resolved by sources or other components that load
+   * view-related metadata.
+   * @observable
+   * @api
+   */
   setView(view) {
     if (!view || view instanceof View_default) {
       this.set(MapProperty_default.VIEW, view);
@@ -6995,6 +10773,11 @@ var Map = class extends Object_default {
       map.setView(new View_default(viewOptions));
     });
   }
+  /**
+   * Force a recalculation of the map viewport size.  This should be called when
+   * third-party code changes the size of the map viewport.
+   * @api
+   */
   updateSize() {
     const targetElement = this.getTargetElement();
     let size = void 0;
@@ -7005,7 +10788,9 @@ var Map = class extends Object_default {
       if (!isNaN(width) && !isNaN(height)) {
         size = [width, height];
         if (!hasArea(size) && !!(targetElement.offsetWidth || targetElement.offsetHeight || targetElement.getClientRects().length)) {
-          warn("No map visible because the map container's width or height are 0.");
+          warn(
+            "No map visible because the map container's width or height are 0."
+          );
         }
       }
     }
@@ -7015,6 +10800,10 @@ var Map = class extends Object_default {
       this.updateViewportSize_();
     }
   }
+  /**
+   * Recomputes the viewport size and save it on the view object (if any)
+   * @private
+   */
   updateViewportSize_() {
     const view = this.getView();
     if (view) {
@@ -7036,8 +10825,15 @@ function createOptionsInternal(options) {
     keyboardEventTarget = typeof options.keyboardEventTarget === "string" ? document.getElementById(options.keyboardEventTarget) : options.keyboardEventTarget;
   }
   const values = {};
-  const layerGroup = options.layers && typeof options.layers.getLayers === "function" ? options.layers : new Group_default({
-    layers: options.layers
+  const layerGroup = options.layers && typeof /** @type {?} */
+  options.layers.getLayers === "function" ? (
+    /** @type {LayerGroup} */
+    options.layers
+  ) : new Group_default({
+    layers: (
+      /** @type {Collection<import("./layer/Base.js").default>|Array<import("./layer/Base.js").default>} */
+      options.layers
+    )
   });
   values[MapProperty_default.LAYERGROUP] = layerGroup;
   values[MapProperty_default.TARGET] = options.target;
@@ -7047,7 +10843,11 @@ function createOptionsInternal(options) {
     if (Array.isArray(options.controls)) {
       controls = new Collection_default(options.controls.slice());
     } else {
-      assert(typeof options.controls.getArray === "function", 47);
+      assert(
+        typeof /** @type {?} */
+        options.controls.getArray === "function",
+        47
+      );
       controls = options.controls;
     }
   }
@@ -7056,7 +10856,11 @@ function createOptionsInternal(options) {
     if (Array.isArray(options.interactions)) {
       interactions = new Collection_default(options.interactions.slice());
     } else {
-      assert(typeof options.interactions.getArray === "function", 48);
+      assert(
+        typeof /** @type {?} */
+        options.interactions.getArray === "function",
+        48
+      );
       interactions = options.interactions;
     }
   }
@@ -7065,7 +10869,11 @@ function createOptionsInternal(options) {
     if (Array.isArray(options.overlays)) {
       overlays = new Collection_default(options.overlays.slice());
     } else {
-      assert(typeof options.overlays.getArray === "function", 49);
+      assert(
+        typeof /** @type {?} */
+        options.overlays.getArray === "function",
+        49
+      );
       overlays = options.overlays;
     }
   } else {

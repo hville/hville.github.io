@@ -1,34 +1,48 @@
 // ../node_modules/sample-distribution/index.js
 var D = class {
+  /**
+   * @param {Float64Array|number} [size] number of random variables or buffer to fill
+   */
   constructor(size = 32) {
     const vs = size.buffer ? new Float64Array(size.buffer, size.byteOffset, size.length) : new Float64Array(size * 2), rs = new Float64Array(vs.buffer, vs.byteOffset + (vs.byteLength >> 1), vs.length >> 1);
     Object.defineProperties(this, { vs: { value: vs }, rs: { value: rs } });
   }
+  // for transfers and copies
   get data() {
     return this.vs;
   }
+  // Number of samples
   get N() {
     return this.rs[this.rs.length - 1];
   }
+  // Expected Value
   get E() {
     return this.\u03A3(1) / this.N;
   }
+  // Sample Variance
   get V() {
     const N = this.N;
     return (this.\u03A3(2) - this.\u03A3(1) ** 2 / N) / (N - 1);
   }
+  // Sample Standard Deviation
   get S() {
     const v = this.V;
     return v < 0 ? 0 : Math.sqrt(v);
   }
+  /**
+   * Σ(X**p)
+   * exact when there is no compression
+   * with compression, range between values treated as a uniform distribution
+   *
+   * @param {number} order
+   * @return {number} Σ( X^pow )
+   */
   \u03A3(pow) {
     const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), Mm = M - 1, Op = pow + 1;
-    if (pow === 0)
-      return rs[Mm];
+    if (pow === 0) return rs[Mm];
     if (pow === 1) {
       let sum2 = vs[0] + vs[Mm];
-      for (let i = 0; i < Mm; ++i)
-        sum2 += (vs[i + 1] + vs[i]) * (rs[i + 1] - rs[i]);
+      for (let i = 0; i < Mm; ++i) sum2 += (vs[i + 1] + vs[i]) * (rs[i + 1] - rs[i]);
       return sum2 / Op;
     }
     let sum = vs[0] ** pow;
@@ -37,34 +51,65 @@ var D = class {
     }
     return sum;
   }
+  /**
+   * Origin Moments
+   * https://en.wikipedia.org/wiki/Continuous_uniform_distribution#Moments
+   *
+   * @param {number} order
+   * @return {number} E( X^order )
+   */
   M(order) {
     return this.\u03A3(order) / this.N;
   }
+  /**
+   * Quantile function, provide the value for a given probability
+   * @param {number} prob - probability or array of probabilities
+   * @return {number} value or array of values
+   */
   Q(prob) {
     const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), h = rs[M - 1] * prob + 0.5, j = topIndex(rs, h, M), i = j - 1;
     return j === 0 ? vs[0] : j === M ? vs[M - 1] : vs[i] + (vs[j] - vs[i]) * (h - rs[i]) / (rs[j] - rs[i]);
   }
+  /**
+   * @param {number} x - probability or array of probabilities
+   * @return {number} value or array of values
+   */
   F(x) {
     const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), N = rs[M - 1], j = topIndex(vs, x, M), i = j - 1;
     return (j === 0 ? 0.5 : j === M ? N - 0.5 : rs[i] - 0.5 + (rs[j] - rs[i]) * (x - vs[i]) / (vs[j] - vs[i])) / N;
   }
+  /**
+   * @param {number} x - probability or array of probabilities
+   * @return {number} value or array of values
+   */
   f(x) {
     const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]), N = rs[M - 1];
-    if (x === vs[0] || x === vs[M - 1])
-      return 0.5 / N;
+    if (x === vs[0] || x === vs[M - 1]) return 0.5 / N;
     const j = topIndex(vs, x, M);
     return j === 0 || j === M ? 0 : (rs[j] - rs[j - 1]) / (vs[j] - vs[j - 1]) / N;
   }
+  /**
+   * @param {Object} ctx - canvas 2D context
+   * @param {number} vMin
+   * @param {number} vMax
+   * @return {void}
+   */
   plotF(ctx, vMin = this.vs[0], vMax = this.vs[this.rs.length - 1]) {
     const rs = this.rs, vs = this.vs, xScale = (ctx.canvas.width - 1) / (vMax - vMin), yScale = (ctx.canvas.height - 1) / rs[rs.length - 1], H = ctx.canvas.height, getX = (v) => 0.5 + Math.round((v - vMin) * xScale), getY = (r) => H - 0.5 - Math.round(r * yScale);
     ctx.beginPath();
     ctx.moveTo(getX(Math.min(vs[0], vMin)), H - 0.5);
     ctx.lineTo(getX(vs[0]), H - 0.5);
-    for (let i = 0; i < rs.length; ++i)
-      ctx.lineTo(getX(vs[i]), getY(rs[i]));
+    for (let i = 0; i < rs.length; ++i) ctx.lineTo(getX(vs[i]), getY(rs[i]));
     ctx.lineTo(getX(vs[rs.length - 1]), 0.5);
     ctx.lineTo(getX(Math.max(vs[rs.length - 1], vMax)), 0.5);
   }
+  /**
+   * @param {Object} ctx - canvas 2D context
+   * @param {number} vMin
+   * @param {number} vMax
+   * @param {number} yMax
+   * @return {void}
+   */
   plotf(ctx, vMin = this.vs[0], vMax = this.vs[this.rs.length - 1], yMax = 1 / (this.Q(0.75) - this.Q(0.25))) {
     const rs = this.rs, vs = this.vs, xScale = (ctx.canvas.width - 1) / (vMax - vMin), yScale = (ctx.canvas.height - 1) / yMax / rs[rs.length - 1], H = ctx.canvas.height, getX = (v) => 0.5 + Math.round((v - vMin) * xScale), getY = (drdv) => H - 0.5 - Math.round(drdv * yScale);
     let x = getX(Math.min(vs[0], vMin)), y = H;
@@ -78,6 +123,10 @@ var D = class {
     ctx.lineTo(x, H - 0.5);
     ctx.lineTo(getX(Math.max(vs[rs.length - 1], vMax)), H - 0.5);
   }
+  /**
+   * Adds a value, compressed only if buffer full
+   * @param {number} x
+   */
   push(x) {
     const vs = this.vs, rs = this.rs, M = Math.min(rs.length, rs[rs.length - 1]);
     let j = topIndex(this.vs, x, M);
@@ -88,8 +137,7 @@ var D = class {
       }
       rs[j] = j ? rs[j - 1] + 1 : 1;
       vs[j] = x;
-      if (M !== rs.length - 1)
-        ++rs[rs.length - 1];
+      if (M !== rs.length - 1) ++rs[rs.length - 1];
     } else if (j === M) {
       --j;
       const i = j - 1, h = i - 1, \u0394wv = vs[j] - vs[i], \u0394xu = x - vs[h], rjh = rs[i] * (vs[j] - vs[h]);
@@ -98,8 +146,7 @@ var D = class {
         if (r_v < rs[h] || vs[i] + vs[j] < vs[h] + x && r_w < rs[j] + 1) {
           vs[i] = vs[j];
           rs[i] = r_w;
-        } else
-          rs[i] = r_v;
+        } else rs[i] = r_v;
         vs[j] = x;
       }
       ++rs[j];
@@ -110,41 +157,35 @@ var D = class {
         if (u + vs[1] > x + vs[2] && r_u > rs[0] || r_v > rs[2] + 1) {
           vs[1] = u;
           rs[1] = r_u;
-        } else
-          rs[1] = r_v;
+        } else rs[1] = r_v;
         vs[0] = x;
       }
-      for (let ir = 2; ir < rs.length; ++ir)
-        ++rs[ir];
+      for (let ir = 2; ir < rs.length; ++ir) ++rs[ir];
     } else if (j !== 1 && (j === M - 1 || 2 * x < vs[j + 1] + vs[j - 2])) {
       --j;
       let k = j + 1, i = j - 1;
       const w = vs[k], v = vs[j], \u0394wu = w - vs[i];
       if (\u0394wu !== 0) {
         const r_x\u0394wu = rs[j] * \u0394wu + (w - x + (x - v) * (rs[k] - rs[i]));
-        if (vs[i] + w < v + x || r_x\u0394wu >= (rs[k] + 1) * \u0394wu)
-          rs[j] += (w + v - 2 * x) / \u0394wu;
+        if (vs[i] + w < v + x || r_x\u0394wu >= (rs[k] + 1) * \u0394wu) rs[j] += (w + v - 2 * x) / \u0394wu;
         else {
           rs[j] = r_x\u0394wu / \u0394wu;
           vs[j] = x;
         }
       }
-      while (++j < rs.length)
-        ++rs[j];
+      while (++j < rs.length) ++rs[j];
     } else {
       let k = j + 1, i = j - 1;
       const w = vs[k], v = vs[j], \u0394wu = w - vs[i];
       if (\u0394wu !== 0) {
         const r_x\u0394wu = rs[j] * \u0394wu + (w - x + (x - v) * (rs[k] - rs[i]));
-        if (x + v < vs[i] + w || r_x\u0394wu <= rs[i] * \u0394wu)
-          rs[j] += (w + v - 2 * x) / \u0394wu;
+        if (x + v < vs[i] + w || r_x\u0394wu <= rs[i] * \u0394wu) rs[j] += (w + v - 2 * x) / \u0394wu;
         else {
           rs[j] = r_x\u0394wu / \u0394wu;
           vs[j] = x;
         }
       }
-      while (++j < rs.length)
-        ++rs[j];
+      while (++j < rs.length) ++rs[j];
     }
   }
 };
@@ -152,10 +193,8 @@ function topIndex(arr, v, max) {
   let low = 0;
   while (low < max) {
     const mid = low + max >>> 1;
-    if (arr[mid] < v)
-      low = mid + 1;
-    else
-      max = mid;
+    if (arr[mid] < v) low = mid + 1;
+    else max = mid;
   }
   return max;
 }

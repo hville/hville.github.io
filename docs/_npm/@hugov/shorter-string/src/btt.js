@@ -10,8 +10,7 @@ var HASH = QUERY + "#'/?";
 var MTF = ` ${LOWER},.'":;-?()[]{}
 !${DIGIT}+/*=_~<>^\`#%	$&@|\\${UPPER}\v\f\r${chars(0, 8) + chars(14, 31)}\x7F`;
 function chars(i, j, s = "") {
-  while (i <= j)
-    s += String.fromCharCode(i++);
+  while (i <= j) s += String.fromCharCode(i++);
   return s;
 }
 

@@ -1,14 +1,26 @@
 // ../node_modules/ol/events/Event.js
 var BaseEvent = class {
+  /**
+   * @param {string} type Type.
+   */
   constructor(type) {
     this.propagationStopped;
     this.defaultPrevented;
     this.type = type;
     this.target = null;
   }
+  /**
+   * Prevent default. This means that no emulated `click`, `singleclick` or `doubleclick` events
+   * will be fired.
+   * @api
+   */
   preventDefault() {
     this.defaultPrevented = true;
   }
+  /**
+   * Stop event propagation.
+   * @api
+   */
   stopPropagation() {
     this.propagationStopped = true;
   }
@@ -17,6 +29,11 @@ var Event_default = BaseEvent;
 
 // ../node_modules/ol/ObjectEventType.js
 var ObjectEventType_default = {
+  /**
+   * Triggered when a property is changed.
+   * @event module:ol/Object.ObjectEvent#propertychange
+   * @api
+   */
   PROPERTYCHANGE: "propertychange"
 };
 
@@ -25,12 +42,19 @@ var Disposable = class {
   constructor() {
     this.disposed = false;
   }
+  /**
+   * Clean up.
+   */
   dispose() {
     if (!this.disposed) {
       this.disposed = true;
       this.disposeInternal();
     }
   }
+  /**
+   * Extension point for disposable objects.
+   * @protected
+   */
   disposeInternal() {
   }
 };
@@ -135,6 +159,9 @@ function isEmpty(object) {
 
 // ../node_modules/ol/events/Target.js
 var Target = class extends Disposable_default {
+  /**
+   * @param {*} [target] Default event target for dispatched events.
+   */
   constructor(target) {
     super();
     this.eventTarget_ = target;
@@ -142,6 +169,10 @@ var Target = class extends Disposable_default {
     this.dispatching_ = null;
     this.listeners_ = null;
   }
+  /**
+   * @param {string} type Type.
+   * @param {import("../events.js").Listener} listener Listener.
+   */
   addEventListener(type, listener) {
     if (!type || !listener) {
       return;
@@ -152,6 +183,16 @@ var Target = class extends Disposable_default {
       listenersForType.push(listener);
     }
   }
+  /**
+   * Dispatches an event and calls all listeners listening for events
+   * of this type. The event parameter can either be a string or an
+   * Object with a `type` property.
+   *
+   * @param {import("./Event.js").default|string} event Event object.
+   * @return {boolean|undefined} `false` if anyone called preventDefault on the
+   *     event object or if any of the listeners returned false.
+   * @api
+   */
   dispatchEvent(event) {
     const isString = typeof event === "string";
     const type = isString ? event : event.type;
@@ -159,7 +200,10 @@ var Target = class extends Disposable_default {
     if (!listeners) {
       return;
     }
-    const evt = isString ? new Event_default(event) : event;
+    const evt = isString ? new Event_default(event) : (
+      /** @type {Event} */
+      event
+    );
     if (!evt.target) {
       evt.target = this.eventTarget_ || this;
     }
@@ -173,9 +217,11 @@ var Target = class extends Disposable_default {
     let propagate;
     for (let i = 0, ii = listeners.length; i < ii; ++i) {
       if ("handleEvent" in listeners[i]) {
-        propagate = listeners[i].handleEvent(evt);
+        propagate = /** @type {import("../events.js").ListenerObject} */
+        listeners[i].handleEvent(evt);
       } else {
-        propagate = listeners[i].call(this, evt);
+        propagate = /** @type {import("../events.js").ListenerFunction} */
+        listeners[i].call(this, evt);
       }
       if (propagate === false || evt.propagationStopped) {
         propagate = false;
@@ -192,18 +238,37 @@ var Target = class extends Disposable_default {
     }
     return propagate;
   }
+  /**
+   * Clean up.
+   */
   disposeInternal() {
     this.listeners_ && clear(this.listeners_);
   }
+  /**
+   * Get the listeners for a specified event type. Listeners are returned in the
+   * order that they will be called in.
+   *
+   * @param {string} type Type.
+   * @return {Array<import("../events.js").Listener>|undefined} Listeners.
+   */
   getListeners(type) {
     return this.listeners_ && this.listeners_[type] || void 0;
   }
+  /**
+   * @param {string} [type] Type. If not provided,
+   *     `true` will be returned if this event target has any listeners.
+   * @return {boolean} Has listeners.
+   */
   hasListener(type) {
     if (!this.listeners_) {
       return false;
     }
     return type ? type in this.listeners_ : Object.keys(this.listeners_).length > 0;
   }
+  /**
+   * @param {string} type Type.
+   * @param {import("../events.js").Listener} listener Listener.
+   */
   removeEventListener(type, listener) {
     const listeners = this.listeners_ && this.listeners_[type];
     if (listeners) {
@@ -226,7 +291,17 @@ var Target_default = Target;
 
 // ../node_modules/ol/events/EventType.js
 var EventType_default = {
+  /**
+   * Generic change event. Triggered when the revision counter is increased.
+   * @event module:ol/events/Event~BaseEvent#change
+   * @api
+   */
   CHANGE: "change",
+  /**
+   * Generic error event. Triggered when an error occurs.
+   * @event module:ol/events/Event~BaseEvent#error
+   * @api
+   */
   ERROR: "error",
   BLUR: "blur",
   CLEAR: "clear",
@@ -279,18 +354,37 @@ function unlistenByKey(key) {
 var Observable = class extends Target_default {
   constructor() {
     super();
-    this.on = this.onInternal;
-    this.once = this.onceInternal;
-    this.un = this.unInternal;
+    this.on = /** @type {ObservableOnSignature<import("./events").EventsKey>} */
+    this.onInternal;
+    this.once = /** @type {ObservableOnSignature<import("./events").EventsKey>} */
+    this.onceInternal;
+    this.un = /** @type {ObservableOnSignature<void>} */
+    this.unInternal;
     this.revision_ = 0;
   }
+  /**
+   * Increases the revision counter and dispatches a 'change' event.
+   * @api
+   */
   changed() {
     ++this.revision_;
     this.dispatchEvent(EventType_default.CHANGE);
   }
+  /**
+   * Get the version number for this object.  Each time the object is modified,
+   * its version number will be incremented.
+   * @return {number} Revision.
+   * @api
+   */
   getRevision() {
     return this.revision_;
   }
+  /**
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @return {import("./events.js").EventsKey|Array<import("./events.js").EventsKey>} Event key.
+   * @protected
+   */
   onInternal(type, listener) {
     if (Array.isArray(type)) {
       const len = type.length;
@@ -300,8 +394,19 @@ var Observable = class extends Target_default {
       }
       return keys;
     }
-    return listen(this, type, listener);
+    return listen(
+      this,
+      /** @type {string} */
+      type,
+      listener
+    );
   }
+  /**
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @return {import("./events.js").EventsKey|Array<import("./events.js").EventsKey>} Event key.
+   * @protected
+   */
   onceInternal(type, listener) {
     let key;
     if (Array.isArray(type)) {
@@ -311,13 +416,27 @@ var Observable = class extends Target_default {
         key[i] = listenOnce(this, type[i], listener);
       }
     } else {
-      key = listenOnce(this, type, listener);
+      key = listenOnce(
+        this,
+        /** @type {string} */
+        type,
+        listener
+      );
     }
     listener.ol_key = key;
     return key;
   }
+  /**
+   * Unlisten for a certain type of event.
+   * @param {string|Array<string>} type Type.
+   * @param {function((Event|import("./events/Event").default)): ?} listener Listener.
+   * @protected
+   */
   unInternal(type, listener) {
-    const key = listener.ol_key;
+    const key = (
+      /** @type {Object} */
+      listener.ol_key
+    );
     if (key) {
       unByKey(key);
     } else if (Array.isArray(type)) {
@@ -338,7 +457,10 @@ function unByKey(key) {
       unlistenByKey(key[i]);
     }
   } else {
-    unlistenByKey(key);
+    unlistenByKey(
+      /** @type {import("./events.js").EventsKey} */
+      key
+    );
   }
 }
 var Observable_default = Observable;
@@ -354,6 +476,11 @@ function getUid(obj) {
 
 // ../node_modules/ol/Object.js
 var ObjectEvent = class extends Event_default {
+  /**
+   * @param {string} type The event type.
+   * @param {string} key The property name.
+   * @param {*} oldValue The old value for `key`.
+   */
   constructor(type, key, oldValue) {
     super(type);
     this.key = key;
@@ -361,6 +488,9 @@ var ObjectEvent = class extends Event_default {
   }
 };
 var BaseObject = class extends Observable_default {
+  /**
+   * @param {Object<string, *>} [values] An object with key-value pairs.
+   */
   constructor(values) {
     super();
     this.on;
@@ -372,6 +502,12 @@ var BaseObject = class extends Observable_default {
       this.setProperties(values);
     }
   }
+  /**
+   * Gets a value.
+   * @param {string} key Key name.
+   * @return {*} Value.
+   * @api
+   */
   get(key) {
     let value;
     if (this.values_ && this.values_.hasOwnProperty(key)) {
@@ -379,15 +515,32 @@ var BaseObject = class extends Observable_default {
     }
     return value;
   }
+  /**
+   * Get a list of object property names.
+   * @return {Array<string>} List of property names.
+   * @api
+   */
   getKeys() {
     return this.values_ && Object.keys(this.values_) || [];
   }
+  /**
+   * Get an object of all property names and values.
+   * @return {Object<string, *>} Object.
+   * @api
+   */
   getProperties() {
     return this.values_ && Object.assign({}, this.values_) || {};
   }
+  /**
+   * @return {boolean} The object has properties.
+   */
   hasProperties() {
     return !!this.values_;
   }
+  /**
+   * @param {string} key Key name.
+   * @param {*} oldValue Old value.
+   */
   notify(key, oldValue) {
     let eventType;
     eventType = `change:${key}`;
@@ -399,12 +552,27 @@ var BaseObject = class extends Observable_default {
       this.dispatchEvent(new ObjectEvent(eventType, key, oldValue));
     }
   }
+  /**
+   * @param {string} key Key name.
+   * @param {import("./events.js").Listener} listener Listener.
+   */
   addChangeListener(key, listener) {
     this.addEventListener(`change:${key}`, listener);
   }
+  /**
+   * @param {string} key Key name.
+   * @param {import("./events.js").Listener} listener Listener.
+   */
   removeChangeListener(key, listener) {
     this.removeEventListener(`change:${key}`, listener);
   }
+  /**
+   * Sets a value.
+   * @param {string} key Key name.
+   * @param {*} value Value.
+   * @param {boolean} [silent] Update without triggering an event.
+   * @api
+   */
   set(key, value, silent) {
     const values = this.values_ || (this.values_ = {});
     if (silent) {
@@ -417,17 +585,35 @@ var BaseObject = class extends Observable_default {
       }
     }
   }
+  /**
+   * Sets a collection of key-value pairs.  Note that this changes any existing
+   * properties and adds new ones (it does not remove any existing properties).
+   * @param {Object<string, *>} values Values.
+   * @param {boolean} [silent] Update without triggering an event.
+   * @api
+   */
   setProperties(values, silent) {
     for (const key in values) {
       this.set(key, values[key], silent);
     }
   }
+  /**
+   * Apply any properties from another object without triggering events.
+   * @param {BaseObject} source The source object.
+   * @protected
+   */
   applyProperties(source) {
     if (!source.values_) {
       return;
     }
     Object.assign(this.values_ || (this.values_ = {}), source.values_);
   }
+  /**
+   * Unsets a property.
+   * @param {string} key Key name.
+   * @param {boolean} [silent] Unset without triggering an event.
+   * @api
+   */
   unset(key, silent) {
     if (this.values_ && key in this.values_) {
       const oldValue = this.values_[key];
@@ -461,6 +647,7 @@ var DEFAULT_TILE_SIZE = 256;
 
 // ../node_modules/ol/proj/Units.js
 var METERS_PER_UNIT = {
+  // use the radius of the Normal sphere
   "radians": 6370997 / (2 * Math.PI),
   "degrees": 2 * Math.PI * 6370997 / 360,
   "ft": 0.3048,
@@ -470,9 +657,13 @@ var METERS_PER_UNIT = {
 
 // ../node_modules/ol/proj/Projection.js
 var Projection = class {
+  /**
+   * @param {Options} options Projection options.
+   */
   constructor(options) {
     this.code_ = options.code;
-    this.units_ = options.units;
+    this.units_ = /** @type {import("./Units.js").Units} */
+    options.units;
     this.extent_ = options.extent !== void 0 ? options.extent : null;
     this.worldExtent_ = options.worldExtent !== void 0 ? options.worldExtent : null;
     this.axisOrientation_ = options.axisOrientation !== void 0 ? options.axisOrientation : "enu";
@@ -482,50 +673,129 @@ var Projection = class {
     this.defaultTileGrid_ = null;
     this.metersPerUnit_ = options.metersPerUnit;
   }
+  /**
+   * @return {boolean} The projection is suitable for wrapping the x-axis
+   */
   canWrapX() {
     return this.canWrapX_;
   }
+  /**
+   * Get the code for this projection, e.g. 'EPSG:4326'.
+   * @return {string} Code.
+   * @api
+   */
   getCode() {
     return this.code_;
   }
+  /**
+   * Get the validity extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getExtent() {
     return this.extent_;
   }
+  /**
+   * Get the units of this projection.
+   * @return {import("./Units.js").Units} Units.
+   * @api
+   */
   getUnits() {
     return this.units_;
   }
+  /**
+   * Get the amount of meters per unit of this projection.  If the projection is
+   * not configured with `metersPerUnit` or a units identifier, the return is
+   * `undefined`.
+   * @return {number|undefined} Meters.
+   * @api
+   */
   getMetersPerUnit() {
     return this.metersPerUnit_ || METERS_PER_UNIT[this.units_];
   }
+  /**
+   * Get the world extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getWorldExtent() {
     return this.worldExtent_;
   }
+  /**
+   * Get the axis orientation of this projection.
+   * Example values are:
+   * enu - the default easting, northing, elevation.
+   * neu - northing, easting, up - useful for "lat/long" geographic coordinates,
+   *     or south orientated transverse mercator.
+   * wnu - westing, northing, up - some planetary coordinate systems have
+   *     "west positive" coordinate systems
+   * @return {string} Axis orientation.
+   * @api
+   */
   getAxisOrientation() {
     return this.axisOrientation_;
   }
+  /**
+   * Is this projection a global projection which spans the whole world?
+   * @return {boolean} Whether the projection is global.
+   * @api
+   */
   isGlobal() {
     return this.global_;
   }
+  /**
+   * Set if the projection is a global projection which spans the whole world
+   * @param {boolean} global Whether the projection is global.
+   * @api
+   */
   setGlobal(global) {
     this.global_ = global;
     this.canWrapX_ = !!(global && this.extent_);
   }
+  /**
+   * @return {import("../tilegrid/TileGrid.js").default} The default tile grid.
+   */
   getDefaultTileGrid() {
     return this.defaultTileGrid_;
   }
+  /**
+   * @param {import("../tilegrid/TileGrid.js").default} tileGrid The default tile grid.
+   */
   setDefaultTileGrid(tileGrid) {
     this.defaultTileGrid_ = tileGrid;
   }
+  /**
+   * Set the validity extent for this projection.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @api
+   */
   setExtent(extent) {
     this.extent_ = extent;
     this.canWrapX_ = !!(this.global_ && extent);
   }
+  /**
+   * Set the world extent for this projection.
+   * @param {import("../extent.js").Extent} worldExtent World extent
+   *     [minlon, minlat, maxlon, maxlat].
+   * @api
+   */
   setWorldExtent(worldExtent) {
     this.worldExtent_ = worldExtent;
   }
+  /**
+   * Set the getPointResolution function (see {@link module:ol/proj.getPointResolution}
+   * for this projection.
+   * @param {function(number, import("../coordinate.js").Coordinate):number} func Function
+   * @api
+   */
   setGetPointResolution(func) {
     this.getPointResolutionFunc_ = func;
   }
+  /**
+   * Get the custom point resolution function for this projection (if set).
+   * @return {function(number, import("../coordinate.js").Coordinate):number|undefined} The custom point
+   * resolution function (if set).
+   */
   getPointResolutionFunc() {
     return this.getPointResolutionFunc_;
   }
@@ -539,6 +809,9 @@ var EXTENT = [-HALF_SIZE, -HALF_SIZE, HALF_SIZE, HALF_SIZE];
 var WORLD_EXTENT = [-180, -85, 180, 85];
 var MAX_SAFE_Y = RADIUS * Math.log(Math.tan(Math.PI / 2));
 var EPSG3857Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   */
   constructor(code) {
     super({
       code,
@@ -604,6 +877,10 @@ var RADIUS2 = 6378137;
 var EXTENT2 = [-180, -90, 180, 90];
 var METERS_PER_UNIT2 = Math.PI * RADIUS2 / 180;
 var EPSG4326Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   * @param {string} [axisOrientation] Axis orientation.
+   */
   constructor(code, axisOrientation) {
     super({
       code,
@@ -724,6 +1001,9 @@ var messages = {
   69: "`width` or `height` cannot be provided together with `scale`"
 };
 var AssertionError = class extends Error {
+  /**
+   * @param {number} code Error code.
+   */
   constructor(code) {
     const message = messages[code];
     super(message);
@@ -863,8 +1143,19 @@ function getCenter(extent) {
   return [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2];
 }
 function getForViewAndSize(center, resolution, rotation, size, dest) {
-  const [x0, y0, x1, y1, x2, y2, x3, y3] = getRotatedViewport(center, resolution, rotation, size);
-  return createOrUpdate(Math.min(x0, x1, x2, x3), Math.min(y0, y1, y2, y3), Math.max(x0, x1, x2, x3), Math.max(y0, y1, y2, y3), dest);
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = getRotatedViewport(
+    center,
+    resolution,
+    rotation,
+    size
+  );
+  return createOrUpdate(
+    Math.min(x0, x1, x2, x3),
+    Math.min(y0, y1, y2, y3),
+    Math.max(x0, x1, x2, x3),
+    Math.max(y0, y1, y2, y3),
+    dest
+  );
 }
 function getRotatedViewport(center, resolution, rotation, size) {
   const dx = resolution * size[0] / 2;
@@ -960,7 +1251,16 @@ function applyTransform(extent, transformFn, dest, stops) {
     const width = extent[2] - extent[0];
     const height = extent[3] - extent[1];
     for (let i = 0; i < stops; ++i) {
-      coordinates2.push(extent[0] + width * i / stops, extent[1], extent[2], extent[1] + height * i / stops, extent[2] - width * i / stops, extent[3], extent[0], extent[3] - height * i / stops);
+      coordinates2.push(
+        extent[0] + width * i / stops,
+        extent[1],
+        extent[2],
+        extent[1] + height * i / stops,
+        extent[2] - width * i / stops,
+        extent[3],
+        extent[0],
+        extent[3] - height * i / stops
+      );
     }
   } else {
     coordinates2 = [
@@ -1094,7 +1394,13 @@ function addProjections(projections) {
   projections.forEach(addProjection);
 }
 function get3(projectionLike) {
-  return typeof projectionLike === "string" ? get(projectionLike) : projectionLike || null;
+  return typeof projectionLike === "string" ? get(
+    /** @type {string} */
+    projectionLike
+  ) : (
+    /** @type {Projection} */
+    projectionLike || null
+  );
 }
 function addEquivalentProjections(projections) {
   addProjections(projections);
@@ -1120,7 +1426,10 @@ function createProjection(projection, defaultCode) {
   } else if (typeof projection === "string") {
     return get3(projection);
   }
-  return projection;
+  return (
+    /** @type {Projection} */
+    projection
+  );
 }
 function getTransformFromProjections(sourceProjection, destinationProjection) {
   const sourceCode = sourceProjection.getCode();
@@ -1158,7 +1467,9 @@ function fromUserCoordinate(coordinate, destProjection) {
   if (!userProjection) {
     if (showCoordinateWarning && !equals2(coordinate, [0, 0]) && coordinate[0] >= -180 && coordinate[0] <= 180 && coordinate[1] >= -90 && coordinate[1] <= 90) {
       showCoordinateWarning = false;
-      warn("Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates.");
+      warn(
+        "Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates."
+      );
     }
     return coordinate;
   }
@@ -1179,44 +1490,59 @@ function fromUserExtent(extent, destProjection) {
 function addCommon() {
   addEquivalentProjections(PROJECTIONS);
   addEquivalentProjections(PROJECTIONS2);
-  addEquivalentTransforms(PROJECTIONS2, PROJECTIONS, fromEPSG4326, toEPSG4326);
+  addEquivalentTransforms(
+    PROJECTIONS2,
+    PROJECTIONS,
+    fromEPSG4326,
+    toEPSG4326
+  );
 }
 addCommon();
 
 // ../node_modules/ol/centerconstraint.js
 function createExtent(extent, onlyCenter, smooth) {
-  return function(center, resolution, size, isMoving, centerShift) {
-    if (!center) {
-      return void 0;
+  return (
+    /**
+     * @param {import("./coordinate.js").Coordinate|undefined} center Center.
+     * @param {number|undefined} resolution Resolution.
+     * @param {import("./size.js").Size} size Viewport size; unused if `onlyCenter` was specified.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @param {Array<number>} [centerShift] Shift between map center and viewport center.
+     * @return {import("./coordinate.js").Coordinate|undefined} Center.
+     */
+    function(center, resolution, size, isMoving, centerShift) {
+      if (!center) {
+        return void 0;
+      }
+      if (!resolution && !onlyCenter) {
+        return center;
+      }
+      const viewWidth = onlyCenter ? 0 : size[0] * resolution;
+      const viewHeight = onlyCenter ? 0 : size[1] * resolution;
+      const shiftX = centerShift ? centerShift[0] : 0;
+      const shiftY = centerShift ? centerShift[1] : 0;
+      let minX = extent[0] + viewWidth / 2 + shiftX;
+      let maxX = extent[2] - viewWidth / 2 + shiftX;
+      let minY = extent[1] + viewHeight / 2 + shiftY;
+      let maxY = extent[3] - viewHeight / 2 + shiftY;
+      if (minX > maxX) {
+        minX = (maxX + minX) / 2;
+        maxX = minX;
+      }
+      if (minY > maxY) {
+        minY = (maxY + minY) / 2;
+        maxY = minY;
+      }
+      let x = clamp(center[0], minX, maxX);
+      let y = clamp(center[1], minY, maxY);
+      if (isMoving && smooth && resolution) {
+        const ratio = 30 * resolution;
+        x += -ratio * Math.log(1 + Math.max(0, minX - center[0]) / ratio) + ratio * Math.log(1 + Math.max(0, center[0] - maxX) / ratio);
+        y += -ratio * Math.log(1 + Math.max(0, minY - center[1]) / ratio) + ratio * Math.log(1 + Math.max(0, center[1] - maxY) / ratio);
+      }
+      return [x, y];
     }
-    if (!resolution && !onlyCenter) {
-      return center;
-    }
-    const viewWidth = onlyCenter ? 0 : size[0] * resolution;
-    const viewHeight = onlyCenter ? 0 : size[1] * resolution;
-    const shiftX = centerShift ? centerShift[0] : 0;
-    const shiftY = centerShift ? centerShift[1] : 0;
-    let minX = extent[0] + viewWidth / 2 + shiftX;
-    let maxX = extent[2] - viewWidth / 2 + shiftX;
-    let minY = extent[1] + viewHeight / 2 + shiftY;
-    let maxY = extent[3] - viewHeight / 2 + shiftY;
-    if (minX > maxX) {
-      minX = (maxX + minX) / 2;
-      maxX = minX;
-    }
-    if (minY > maxY) {
-      minY = (maxY + minY) / 2;
-      maxY = minY;
-    }
-    let x = clamp(center[0], minX, maxX);
-    let y = clamp(center[1], minY, maxY);
-    if (isMoving && smooth && resolution) {
-      const ratio = 30 * resolution;
-      x += -ratio * Math.log(1 + Math.max(0, minX - center[0]) / ratio) + ratio * Math.log(1 + Math.max(0, center[0] - maxX) / ratio);
-      y += -ratio * Math.log(1 + Math.max(0, minY - center[1]) / ratio) + ratio * Math.log(1 + Math.max(0, center[1] - maxY) / ratio);
-    }
-    return [x, y];
-  };
+  );
 }
 function none(center) {
   return center;
@@ -1243,63 +1569,121 @@ function getSmoothClampedResolution(resolution, maxResolution, minResolution) {
 }
 function createSnapToResolutions(resolutions, smooth, maxExtent, showFullExtent) {
   smooth = smooth !== void 0 ? smooth : true;
-  return function(resolution, direction, size, isMoving) {
-    if (resolution !== void 0) {
-      const maxResolution = resolutions[0];
-      const minResolution = resolutions[resolutions.length - 1];
-      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
-      if (isMoving) {
-        if (!smooth) {
-          return clamp(resolution, minResolution, cappedMaxRes);
+  return (
+    /**
+     * @param {number|undefined} resolution Resolution.
+     * @param {number} direction Direction.
+     * @param {import("./size.js").Size} size Viewport size.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Resolution.
+     */
+    function(resolution, direction, size, isMoving) {
+      if (resolution !== void 0) {
+        const maxResolution = resolutions[0];
+        const minResolution = resolutions[resolutions.length - 1];
+        const cappedMaxRes = maxExtent ? getViewportClampedResolution(
+          maxResolution,
+          maxExtent,
+          size,
+          showFullExtent
+        ) : maxResolution;
+        if (isMoving) {
+          if (!smooth) {
+            return clamp(resolution, minResolution, cappedMaxRes);
+          }
+          return getSmoothClampedResolution(
+            resolution,
+            cappedMaxRes,
+            minResolution
+          );
         }
-        return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
+        const capped = Math.min(cappedMaxRes, resolution);
+        const z = Math.floor(linearFindNearest(resolutions, capped, direction));
+        if (resolutions[z] > cappedMaxRes && z < resolutions.length - 1) {
+          return resolutions[z + 1];
+        }
+        return resolutions[z];
       }
-      const capped = Math.min(cappedMaxRes, resolution);
-      const z = Math.floor(linearFindNearest(resolutions, capped, direction));
-      if (resolutions[z] > cappedMaxRes && z < resolutions.length - 1) {
-        return resolutions[z + 1];
-      }
-      return resolutions[z];
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 function createSnapToPower(power, maxResolution, minResolution, smooth, maxExtent, showFullExtent) {
   smooth = smooth !== void 0 ? smooth : true;
   minResolution = minResolution !== void 0 ? minResolution : 0;
-  return function(resolution, direction, size, isMoving) {
-    if (resolution !== void 0) {
-      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
-      if (isMoving) {
-        if (!smooth) {
-          return clamp(resolution, minResolution, cappedMaxRes);
+  return (
+    /**
+     * @param {number|undefined} resolution Resolution.
+     * @param {number} direction Direction.
+     * @param {import("./size.js").Size} size Viewport size.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Resolution.
+     */
+    function(resolution, direction, size, isMoving) {
+      if (resolution !== void 0) {
+        const cappedMaxRes = maxExtent ? getViewportClampedResolution(
+          maxResolution,
+          maxExtent,
+          size,
+          showFullExtent
+        ) : maxResolution;
+        if (isMoving) {
+          if (!smooth) {
+            return clamp(resolution, minResolution, cappedMaxRes);
+          }
+          return getSmoothClampedResolution(
+            resolution,
+            cappedMaxRes,
+            minResolution
+          );
         }
-        return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
+        const tolerance = 1e-9;
+        const minZoomLevel = Math.ceil(
+          Math.log(maxResolution / cappedMaxRes) / Math.log(power) - tolerance
+        );
+        const offset = -direction * (0.5 - tolerance) + 0.5;
+        const capped = Math.min(cappedMaxRes, resolution);
+        const cappedZoomLevel = Math.floor(
+          Math.log(maxResolution / capped) / Math.log(power) + offset
+        );
+        const zoomLevel = Math.max(minZoomLevel, cappedZoomLevel);
+        const newResolution = maxResolution / Math.pow(power, zoomLevel);
+        return clamp(newResolution, minResolution, cappedMaxRes);
       }
-      const tolerance = 1e-9;
-      const minZoomLevel = Math.ceil(Math.log(maxResolution / cappedMaxRes) / Math.log(power) - tolerance);
-      const offset = -direction * (0.5 - tolerance) + 0.5;
-      const capped = Math.min(cappedMaxRes, resolution);
-      const cappedZoomLevel = Math.floor(Math.log(maxResolution / capped) / Math.log(power) + offset);
-      const zoomLevel = Math.max(minZoomLevel, cappedZoomLevel);
-      const newResolution = maxResolution / Math.pow(power, zoomLevel);
-      return clamp(newResolution, minResolution, cappedMaxRes);
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 function createMinMaxResolution(maxResolution, minResolution, smooth, maxExtent, showFullExtent) {
   smooth = smooth !== void 0 ? smooth : true;
-  return function(resolution, direction, size, isMoving) {
-    if (resolution !== void 0) {
-      const cappedMaxRes = maxExtent ? getViewportClampedResolution(maxResolution, maxExtent, size, showFullExtent) : maxResolution;
-      if (!smooth || !isMoving) {
-        return clamp(resolution, minResolution, cappedMaxRes);
+  return (
+    /**
+     * @param {number|undefined} resolution Resolution.
+     * @param {number} direction Direction.
+     * @param {import("./size.js").Size} size Viewport size.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Resolution.
+     */
+    function(resolution, direction, size, isMoving) {
+      if (resolution !== void 0) {
+        const cappedMaxRes = maxExtent ? getViewportClampedResolution(
+          maxResolution,
+          maxExtent,
+          size,
+          showFullExtent
+        ) : maxResolution;
+        if (!smooth || !isMoving) {
+          return clamp(resolution, minResolution, cappedMaxRes);
+        }
+        return getSmoothClampedResolution(
+          resolution,
+          cappedMaxRes,
+          minResolution
+        );
       }
-      return getSmoothClampedResolution(resolution, cappedMaxRes, minResolution);
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 
 // ../node_modules/ol/rotationconstraint.js
@@ -1317,31 +1701,45 @@ function none2(rotation) {
 }
 function createSnapToN(n) {
   const theta = 2 * Math.PI / n;
-  return function(rotation, isMoving) {
-    if (isMoving) {
-      return rotation;
+  return (
+    /**
+     * @param {number|undefined} rotation Rotation.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Rotation.
+     */
+    function(rotation, isMoving) {
+      if (isMoving) {
+        return rotation;
+      }
+      if (rotation !== void 0) {
+        rotation = Math.floor(rotation / theta + 0.5) * theta;
+        return rotation;
+      }
+      return void 0;
     }
-    if (rotation !== void 0) {
-      rotation = Math.floor(rotation / theta + 0.5) * theta;
-      return rotation;
-    }
-    return void 0;
-  };
+  );
 }
 function createSnapToZero(tolerance) {
   tolerance = tolerance || toRadians(5);
-  return function(rotation, isMoving) {
-    if (isMoving) {
-      return rotation;
-    }
-    if (rotation !== void 0) {
-      if (Math.abs(rotation) <= tolerance) {
-        return 0;
+  return (
+    /**
+     * @param {number|undefined} rotation Rotation.
+     * @param {boolean} [isMoving] True if an interaction or animation is in progress.
+     * @return {number|undefined} Rotation.
+     */
+    function(rotation, isMoving) {
+      if (isMoving) {
+        return rotation;
       }
-      return rotation;
+      if (rotation !== void 0) {
+        if (Math.abs(rotation) <= tolerance) {
+          return 0;
+        }
+        return rotation;
+      }
+      return void 0;
     }
-    return void 0;
-  };
+  );
 }
 
 // ../node_modules/ol/easing.js
@@ -1461,30 +1859,86 @@ var Geometry = class extends Object_default {
       return clone.getSimplifiedGeometry(squaredTolerance);
     });
   }
+  /**
+   * Get a transformed and simplified version of the geometry.
+   * @abstract
+   * @param {number} squaredTolerance Squared tolerance.
+   * @param {import("../proj.js").TransformFunction} [transform] Optional transform function.
+   * @return {Geometry} Simplified geometry.
+   */
   simplifyTransformed(squaredTolerance, transform2) {
-    return this.simplifyTransformedInternal(this.getRevision(), squaredTolerance, transform2);
+    return this.simplifyTransformedInternal(
+      this.getRevision(),
+      squaredTolerance,
+      transform2
+    );
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @abstract
+   * @return {!Geometry} Clone.
+   */
   clone() {
     return abstract();
   }
+  /**
+   * @abstract
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     return abstract();
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @return {boolean} Contains (x, y).
+   */
   containsXY(x, y) {
     const coord = this.getClosestPoint([x, y]);
     return coord[0] === x && coord[1] === y;
   }
+  /**
+   * Return the closest point of the geometry to the passed point as
+   * {@link module:ol/coordinate~Coordinate coordinate}.
+   * @param {import("../coordinate.js").Coordinate} point Point.
+   * @param {import("../coordinate.js").Coordinate} [closestPoint] Closest point.
+   * @return {import("../coordinate.js").Coordinate} Closest point.
+   * @api
+   */
   getClosestPoint(point, closestPoint) {
     closestPoint = closestPoint ? closestPoint : [NaN, NaN];
     this.closestPointXY(point[0], point[1], closestPoint, Infinity);
     return closestPoint;
   }
+  /**
+   * Returns true if this geometry includes the specified coordinate. If the
+   * coordinate is on the boundary of the geometry, returns false.
+   * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+   * @return {boolean} Contains coordinate.
+   * @api
+   */
   intersectsCoordinate(coordinate) {
     return this.containsXY(coordinate[0], coordinate[1]);
   }
+  /**
+   * @abstract
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @protected
+   * @return {import("../extent.js").Extent} extent Extent.
+   */
   computeExtent(extent) {
     return abstract();
   }
+  /**
+   * Get the extent of the geometry.
+   * @param {import("../extent.js").Extent} [extent] Extent.
+   * @return {import("../extent.js").Extent} extent Extent.
+   * @api
+   */
   getExtent(extent) {
     if (this.extentRevision_ != this.getRevision()) {
       const extent2 = this.computeExtent(this.extent_);
@@ -1495,39 +1949,137 @@ var Geometry = class extends Object_default {
     }
     return returnOrUpdate(this.extent_, extent);
   }
+  /**
+   * Rotate the geometry around a given coordinate. This modifies the geometry
+   * coordinates in place.
+   * @abstract
+   * @param {number} angle Rotation angle in radians.
+   * @param {import("../coordinate.js").Coordinate} anchor The rotation center.
+   * @api
+   */
   rotate(angle, anchor) {
     abstract();
   }
+  /**
+   * Scale the geometry (with an optional origin).  This modifies the geometry
+   * coordinates in place.
+   * @abstract
+   * @param {number} sx The scaling factor in the x-direction.
+   * @param {number} [sy] The scaling factor in the y-direction (defaults to sx).
+   * @param {import("../coordinate.js").Coordinate} [anchor] The scale origin (defaults to the center
+   *     of the geometry extent).
+   * @api
+   */
   scale(sx, sy, anchor) {
     abstract();
   }
+  /**
+   * Create a simplified version of this geometry.  For linestrings, this uses
+   * the [Douglas Peucker](https://en.wikipedia.org/wiki/Ramer-Douglas-Peucker_algorithm)
+   * algorithm.  For polygons, a quantization-based
+   * simplification is used to preserve topology.
+   * @param {number} tolerance The tolerance distance for simplification.
+   * @return {Geometry} A new, simplified version of the original geometry.
+   * @api
+   */
   simplify(tolerance) {
     return this.getSimplifiedGeometry(tolerance * tolerance);
   }
+  /**
+   * Create a simplified version of this geometry using the Douglas Peucker
+   * algorithm.
+   * See https://en.wikipedia.org/wiki/Ramer-Douglas-Peucker_algorithm.
+   * @abstract
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {Geometry} Simplified geometry.
+   */
   getSimplifiedGeometry(squaredTolerance) {
     return abstract();
   }
+  /**
+   * Get the type of this geometry.
+   * @abstract
+   * @return {Type} Geometry type.
+   */
   getType() {
     return abstract();
   }
+  /**
+   * Apply a transform function to the coordinates of the geometry.
+   * The geometry is modified in place.
+   * If you do not want the geometry modified in place, first `clone()` it and
+   * then use this function on the clone.
+   * @abstract
+   * @param {import("../proj.js").TransformFunction} transformFn Transform function.
+   * Called with a flat array of geometry coordinates.
+   */
   applyTransform(transformFn) {
     abstract();
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @abstract
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   */
   intersectsExtent(extent) {
     return abstract();
   }
+  /**
+   * Translate the geometry.  This modifies the geometry coordinates in place.  If
+   * instead you want a new geometry, first `clone()` this geometry.
+   * @abstract
+   * @param {number} deltaX Delta X.
+   * @param {number} deltaY Delta Y.
+   * @api
+   */
   translate(deltaX, deltaY) {
     abstract();
   }
+  /**
+   * Transform each coordinate of the geometry from one coordinate reference
+   * system to another. The geometry is modified in place.
+   * For example, a line will be transformed to a line and a circle to a circle.
+   * If you do not want the geometry modified in place, first `clone()` it and
+   * then use this function on the clone.
+   *
+   * @param {import("../proj.js").ProjectionLike} source The current projection.  Can be a
+   *     string identifier or a {@link module:ol/proj/Projection~Projection} object.
+   * @param {import("../proj.js").ProjectionLike} destination The desired projection.  Can be a
+   *     string identifier or a {@link module:ol/proj/Projection~Projection} object.
+   * @return {Geometry} This geometry.  Note that original geometry is
+   *     modified in place.
+   * @api
+   */
   transform(source, destination) {
     const sourceProj = get3(source);
     const transformFn = sourceProj.getUnits() == "tile-pixels" ? function(inCoordinates, outCoordinates, stride) {
       const pixelExtent = sourceProj.getExtent();
       const projectedExtent = sourceProj.getWorldExtent();
       const scale2 = getHeight(projectedExtent) / getHeight(pixelExtent);
-      compose(tmpTransform, projectedExtent[0], projectedExtent[3], scale2, -scale2, 0, 0, 0);
-      transform2D(inCoordinates, 0, inCoordinates.length, stride, tmpTransform, outCoordinates);
-      return getTransform(sourceProj, destination)(inCoordinates, outCoordinates, stride);
+      compose(
+        tmpTransform,
+        projectedExtent[0],
+        projectedExtent[3],
+        scale2,
+        -scale2,
+        0,
+        0,
+        0
+      );
+      transform2D(
+        inCoordinates,
+        0,
+        inCoordinates.length,
+        stride,
+        tmpTransform,
+        outCoordinates
+      );
+      return getTransform(sourceProj, destination)(
+        inCoordinates,
+        outCoordinates,
+        stride
+      );
     } : getTransform(sourceProj, destination);
     this.applyTransform(transformFn);
     return this;
@@ -1543,24 +2095,64 @@ var SimpleGeometry = class extends Geometry_default {
     this.stride = 2;
     this.flatCoordinates = null;
   }
+  /**
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @protected
+   * @return {import("../extent.js").Extent} extent Extent.
+   */
   computeExtent(extent) {
-    return createOrUpdateFromFlatCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, extent);
+    return createOrUpdateFromFlatCoordinates(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride,
+      extent
+    );
   }
+  /**
+   * @abstract
+   * @return {Array<*> | null} Coordinates.
+   */
   getCoordinates() {
     return abstract();
   }
+  /**
+   * Return the first coordinate of the geometry.
+   * @return {import("../coordinate.js").Coordinate} First coordinate.
+   * @api
+   */
   getFirstCoordinate() {
     return this.flatCoordinates.slice(0, this.stride);
   }
+  /**
+   * @return {Array<number>} Flat coordinates.
+   */
   getFlatCoordinates() {
     return this.flatCoordinates;
   }
+  /**
+   * Return the last coordinate of the geometry.
+   * @return {import("../coordinate.js").Coordinate} Last point.
+   * @api
+   */
   getLastCoordinate() {
-    return this.flatCoordinates.slice(this.flatCoordinates.length - this.stride);
+    return this.flatCoordinates.slice(
+      this.flatCoordinates.length - this.stride
+    );
   }
+  /**
+   * Return the {@link import("./Geometry.js").GeometryLayout layout} of the geometry.
+   * @return {import("./Geometry.js").GeometryLayout} Layout.
+   * @api
+   */
   getLayout() {
     return this.layout;
   }
+  /**
+   * Create a simplified version of this geometry using the Douglas Peucker algorithm.
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {SimpleGeometry} Simplified geometry.
+   */
   getSimplifiedGeometry(squaredTolerance) {
     if (this.simplifiedGeometryRevision !== this.getRevision()) {
       this.simplifiedGeometryMaxMinSquaredTolerance = 0;
@@ -1577,20 +2169,43 @@ var SimpleGeometry = class extends Geometry_default {
     this.simplifiedGeometryMaxMinSquaredTolerance = squaredTolerance;
     return this;
   }
+  /**
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {SimpleGeometry} Simplified geometry.
+   * @protected
+   */
   getSimplifiedGeometryInternal(squaredTolerance) {
     return this;
   }
+  /**
+   * @return {number} Stride.
+   */
   getStride() {
     return this.stride;
   }
+  /**
+   * @param {import("./Geometry.js").GeometryLayout} layout Layout.
+   * @param {Array<number>} flatCoordinates Flat coordinates.
+   */
   setFlatCoordinates(layout, flatCoordinates) {
     this.stride = getStrideForLayout(layout);
     this.layout = layout;
     this.flatCoordinates = flatCoordinates;
   }
+  /**
+   * @abstract
+   * @param {!Array<*>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   */
   setCoordinates(coordinates2, layout) {
     abstract();
   }
+  /**
+   * @param {import("./Geometry.js").GeometryLayout|undefined} layout Layout.
+   * @param {Array<*>} coordinates Coordinates.
+   * @param {number} nesting Nesting.
+   * @protected
+   */
   setLayout(layout, coordinates2, nesting) {
     let stride;
     if (layout) {
@@ -1602,7 +2217,8 @@ var SimpleGeometry = class extends Geometry_default {
           this.stride = 2;
           return;
         }
-        coordinates2 = coordinates2[0];
+        coordinates2 = /** @type {Array} */
+        coordinates2[0];
       }
       stride = coordinates2.length;
       layout = getLayoutForStride(stride);
@@ -1610,20 +2226,53 @@ var SimpleGeometry = class extends Geometry_default {
     this.layout = layout;
     this.stride = stride;
   }
+  /**
+   * Apply a transform function to the coordinates of the geometry.
+   * The geometry is modified in place.
+   * If you do not want the geometry modified in place, first `clone()` it and
+   * then use this function on the clone.
+   * @param {import("../proj.js").TransformFunction} transformFn Transform function.
+   * Called with a flat array of geometry coordinates.
+   * @api
+   */
   applyTransform(transformFn) {
     if (this.flatCoordinates) {
       transformFn(this.flatCoordinates, this.flatCoordinates, this.stride);
       this.changed();
     }
   }
+  /**
+   * Rotate the geometry around a given coordinate. This modifies the geometry
+   * coordinates in place.
+   * @param {number} angle Rotation angle in counter-clockwise radians.
+   * @param {import("../coordinate.js").Coordinate} anchor The rotation center.
+   * @api
+   */
   rotate(angle, anchor) {
     const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
       const stride = this.getStride();
-      rotate2(flatCoordinates, 0, flatCoordinates.length, stride, angle, anchor, flatCoordinates);
+      rotate2(
+        flatCoordinates,
+        0,
+        flatCoordinates.length,
+        stride,
+        angle,
+        anchor,
+        flatCoordinates
+      );
       this.changed();
     }
   }
+  /**
+   * Scale the geometry (with an optional origin).  This modifies the geometry
+   * coordinates in place.
+   * @param {number} sx The scaling factor in the x-direction.
+   * @param {number} [sy] The scaling factor in the y-direction (defaults to sx).
+   * @param {import("../coordinate.js").Coordinate} [anchor] The scale origin (defaults to the center
+   *     of the geometry extent).
+   * @api
+   */
   scale(sx, sy, anchor) {
     if (sy === void 0) {
       sy = sx;
@@ -1634,15 +2283,39 @@ var SimpleGeometry = class extends Geometry_default {
     const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
       const stride = this.getStride();
-      scale(flatCoordinates, 0, flatCoordinates.length, stride, sx, sy, anchor, flatCoordinates);
+      scale(
+        flatCoordinates,
+        0,
+        flatCoordinates.length,
+        stride,
+        sx,
+        sy,
+        anchor,
+        flatCoordinates
+      );
       this.changed();
     }
   }
+  /**
+   * Translate the geometry.  This modifies the geometry coordinates in place.  If
+   * instead you want a new geometry, first `clone()` this geometry.
+   * @param {number} deltaX Delta X.
+   * @param {number} deltaY Delta Y.
+   * @api
+   */
   translate(deltaX, deltaY) {
     const flatCoordinates = this.getFlatCoordinates();
     if (flatCoordinates) {
       const stride = this.getStride();
-      translate(flatCoordinates, 0, flatCoordinates.length, stride, deltaX, deltaY, flatCoordinates);
+      translate(
+        flatCoordinates,
+        0,
+        flatCoordinates.length,
+        stride,
+        deltaX,
+        deltaY,
+        flatCoordinates
+      );
       this.changed();
     }
   }
@@ -1656,7 +2329,10 @@ function getLayoutForStride(stride) {
   } else if (stride == 4) {
     layout = "XYZM";
   }
-  return layout;
+  return (
+    /** @type {import("./Geometry.js").GeometryLayout} */
+    layout
+  );
 }
 function getStrideForLayout(layout) {
   let stride;
@@ -1667,7 +2343,10 @@ function getStrideForLayout(layout) {
   } else if (layout == "XYZM") {
     stride = 4;
   }
-  return stride;
+  return (
+    /** @type {number} */
+    stride
+  );
 }
 var SimpleGeometry_default = SimpleGeometry;
 
@@ -1686,7 +2365,11 @@ function assignClosest(flatCoordinates, offset1, offset2, stride, x, y, closestP
       offset = offset2;
     } else if (t > 0) {
       for (let i = 0; i < stride; ++i) {
-        closestPoint[i] = lerp(flatCoordinates[offset1 + i], flatCoordinates[offset2 + i], t);
+        closestPoint[i] = lerp(
+          flatCoordinates[offset1 + i],
+          flatCoordinates[offset2 + i],
+          t
+        );
       }
       closestPoint.length = stride;
       return;
@@ -1728,7 +2411,12 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
   }
   let i, squaredDistance2;
   if (maxDelta === 0) {
-    squaredDistance2 = squaredDistance(x, y, flatCoordinates[offset], flatCoordinates[offset + 1]);
+    squaredDistance2 = squaredDistance(
+      x,
+      y,
+      flatCoordinates[offset],
+      flatCoordinates[offset + 1]
+    );
     if (squaredDistance2 < minSquaredDistance) {
       for (i = 0; i < stride; ++i) {
         closestPoint[i] = flatCoordinates[offset + i];
@@ -1741,7 +2429,15 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
   tmpPoint = tmpPoint ? tmpPoint : [NaN, NaN];
   let index = offset + stride;
   while (index < end) {
-    assignClosest(flatCoordinates, index - stride, index, stride, x, y, tmpPoint);
+    assignClosest(
+      flatCoordinates,
+      index - stride,
+      index,
+      stride,
+      x,
+      y,
+      tmpPoint
+    );
     squaredDistance2 = squaredDistance(x, y, tmpPoint[0], tmpPoint[1]);
     if (squaredDistance2 < minSquaredDistance) {
       minSquaredDistance = squaredDistance2;
@@ -1751,11 +2447,22 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
       closestPoint.length = stride;
       index += stride;
     } else {
-      index += stride * Math.max((Math.sqrt(squaredDistance2) - Math.sqrt(minSquaredDistance)) / maxDelta | 0, 1);
+      index += stride * Math.max(
+        (Math.sqrt(squaredDistance2) - Math.sqrt(minSquaredDistance)) / maxDelta | 0,
+        1
+      );
     }
   }
   if (isRing) {
-    assignClosest(flatCoordinates, end - stride, offset, stride, x, y, tmpPoint);
+    assignClosest(
+      flatCoordinates,
+      end - stride,
+      offset,
+      stride,
+      x,
+      y,
+      tmpPoint
+    );
     squaredDistance2 = squaredDistance(x, y, tmpPoint[0], tmpPoint[1]);
     if (squaredDistance2 < minSquaredDistance) {
       minSquaredDistance = squaredDistance2;
@@ -1771,7 +2478,19 @@ function assignClosestArrayPoint(flatCoordinates, offset, ends, stride, maxDelta
   tmpPoint = tmpPoint ? tmpPoint : [NaN, NaN];
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    minSquaredDistance = assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, tmpPoint);
+    minSquaredDistance = assignClosestPoint(
+      flatCoordinates,
+      offset,
+      end,
+      stride,
+      maxDelta,
+      isRing,
+      x,
+      y,
+      closestPoint,
+      minSquaredDistance,
+      tmpPoint
+    );
     offset = end;
   }
   return minSquaredDistance;
@@ -1797,7 +2516,12 @@ function deflateCoordinatesArray(flatCoordinates, offset, coordinatess, stride, 
   ends = ends ? ends : [];
   let i = 0;
   for (let j = 0, jj = coordinatess.length; j < jj; ++j) {
-    const end = deflateCoordinates(flatCoordinates, offset, coordinatess[j], stride);
+    const end = deflateCoordinates(
+      flatCoordinates,
+      offset,
+      coordinatess[j],
+      stride
+    );
     ends[i++] = end;
     offset = end;
   }
@@ -1908,7 +2632,15 @@ function quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFla
 function quantizeArray(flatCoordinates, offset, ends, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset, simplifiedEnds) {
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    simplifiedOffset = quantize(flatCoordinates, offset, end, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset);
+    simplifiedOffset = quantize(
+      flatCoordinates,
+      offset,
+      end,
+      stride,
+      tolerance,
+      simplifiedFlatCoordinates,
+      simplifiedOffset
+    );
     simplifiedEnds.push(simplifiedOffset);
     offset = end;
   }
@@ -1930,7 +2662,13 @@ function inflateCoordinatesArray(flatCoordinates, offset, ends, stride, coordina
   let i = 0;
   for (let j = 0, jj = ends.length; j < jj; ++j) {
     const end = ends[j];
-    coordinatess[i++] = inflateCoordinates(flatCoordinates, offset, end, stride, coordinatess[i]);
+    coordinatess[i++] = inflateCoordinates(
+      flatCoordinates,
+      offset,
+      end,
+      stride,
+      coordinatess[i]
+    );
     offset = end;
   }
   coordinatess.length = i;
@@ -1962,72 +2700,192 @@ function linearRings(flatCoordinates, offset, ends, stride) {
 }
 
 // ../node_modules/ol/geom/LinearRing.js
-var LinearRing = class extends SimpleGeometry_default {
+var LinearRing = class _LinearRing extends SimpleGeometry_default {
+  /**
+   * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
+   *     For internal use, flat coordinates in combination with `layout` are also accepted.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   */
   constructor(coordinates2, layout) {
     super();
     this.maxDelta_ = -1;
     this.maxDeltaRevision_ = -1;
     if (layout !== void 0 && !Array.isArray(coordinates2[0])) {
-      this.setFlatCoordinates(layout, coordinates2);
+      this.setFlatCoordinates(
+        layout,
+        /** @type {Array<number>} */
+        coordinates2
+      );
     } else {
-      this.setCoordinates(coordinates2, layout);
+      this.setCoordinates(
+        /** @type {Array<import("../coordinate.js").Coordinate>} */
+        coordinates2,
+        layout
+      );
     }
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @return {!LinearRing} Clone.
+   * @api
+   */
   clone() {
-    return new LinearRing(this.flatCoordinates.slice(), this.layout);
+    return new _LinearRing(this.flatCoordinates.slice(), this.layout);
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
       return minSquaredDistance;
     }
     if (this.maxDeltaRevision_ != this.getRevision()) {
-      this.maxDelta_ = Math.sqrt(maxSquaredDelta(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, 0));
+      this.maxDelta_ = Math.sqrt(
+        maxSquaredDelta(
+          this.flatCoordinates,
+          0,
+          this.flatCoordinates.length,
+          this.stride,
+          0
+        )
+      );
       this.maxDeltaRevision_ = this.getRevision();
     }
-    return assignClosestPoint(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, this.maxDelta_, true, x, y, closestPoint, minSquaredDistance);
+    return assignClosestPoint(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride,
+      this.maxDelta_,
+      true,
+      x,
+      y,
+      closestPoint,
+      minSquaredDistance
+    );
   }
+  /**
+   * Return the area of the linear ring on projected plane.
+   * @return {number} Area (on projected plane).
+   * @api
+   */
   getArea() {
-    return linearRing(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+    return linearRing(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride
+    );
   }
+  /**
+   * Return the coordinates of the linear ring.
+   * @return {Array<import("../coordinate.js").Coordinate>} Coordinates.
+   * @api
+   */
   getCoordinates() {
-    return inflateCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+    return inflateCoordinates(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride
+    );
   }
+  /**
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {LinearRing} Simplified LinearRing.
+   * @protected
+   */
   getSimplifiedGeometryInternal(squaredTolerance) {
     const simplifiedFlatCoordinates = [];
-    simplifiedFlatCoordinates.length = douglasPeucker(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, squaredTolerance, simplifiedFlatCoordinates, 0);
-    return new LinearRing(simplifiedFlatCoordinates, "XY");
+    simplifiedFlatCoordinates.length = douglasPeucker(
+      this.flatCoordinates,
+      0,
+      this.flatCoordinates.length,
+      this.stride,
+      squaredTolerance,
+      simplifiedFlatCoordinates,
+      0
+    );
+    return new _LinearRing(simplifiedFlatCoordinates, "XY");
   }
+  /**
+   * Get the type of this geometry.
+   * @return {import("./Geometry.js").Type} Geometry type.
+   * @api
+   */
   getType() {
     return "LinearRing";
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   * @api
+   */
   intersectsExtent(extent) {
     return false;
   }
+  /**
+   * Set the coordinates of the linear ring.
+   * @param {!Array<import("../coordinate.js").Coordinate>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @api
+   */
   setCoordinates(coordinates2, layout) {
     this.setLayout(layout, coordinates2, 1);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
-    this.flatCoordinates.length = deflateCoordinates(this.flatCoordinates, 0, coordinates2, this.stride);
+    this.flatCoordinates.length = deflateCoordinates(
+      this.flatCoordinates,
+      0,
+      coordinates2,
+      this.stride
+    );
     this.changed();
   }
 };
 var LinearRing_default = LinearRing;
 
 // ../node_modules/ol/geom/Point.js
-var Point = class extends SimpleGeometry_default {
+var Point = class _Point extends SimpleGeometry_default {
+  /**
+   * @param {import("../coordinate.js").Coordinate} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   */
   constructor(coordinates2, layout) {
     super();
     this.setCoordinates(coordinates2, layout);
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @return {!Point} Clone.
+   * @api
+   */
   clone() {
-    const point = new Point(this.flatCoordinates.slice(), this.layout);
+    const point = new _Point(this.flatCoordinates.slice(), this.layout);
     point.applyProperties(this);
     return point;
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     const flatCoordinates = this.flatCoordinates;
-    const squaredDistance2 = squaredDistance(x, y, flatCoordinates[0], flatCoordinates[1]);
+    const squaredDistance2 = squaredDistance(
+      x,
+      y,
+      flatCoordinates[0],
+      flatCoordinates[1]
+    );
     if (squaredDistance2 < minSquaredDistance) {
       const stride = this.stride;
       for (let i = 0; i < stride; ++i) {
@@ -2038,24 +2896,55 @@ var Point = class extends SimpleGeometry_default {
     }
     return minSquaredDistance;
   }
+  /**
+   * Return the coordinate of the point.
+   * @return {import("../coordinate.js").Coordinate} Coordinates.
+   * @api
+   */
   getCoordinates() {
     return !this.flatCoordinates ? [] : this.flatCoordinates.slice();
   }
+  /**
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @protected
+   * @return {import("../extent.js").Extent} extent Extent.
+   */
   computeExtent(extent) {
     return createOrUpdateFromCoordinate(this.flatCoordinates, extent);
   }
+  /**
+   * Get the type of this geometry.
+   * @return {import("./Geometry.js").Type} Geometry type.
+   * @api
+   */
   getType() {
     return "Point";
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   * @api
+   */
   intersectsExtent(extent) {
     return containsXY(extent, this.flatCoordinates[0], this.flatCoordinates[1]);
   }
+  /**
+   * @param {!Array<*>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @api
+   */
   setCoordinates(coordinates2, layout) {
     this.setLayout(layout, coordinates2, 0);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
-    this.flatCoordinates.length = deflateCoordinate(this.flatCoordinates, 0, coordinates2, this.stride);
+    this.flatCoordinates.length = deflateCoordinate(
+      this.flatCoordinates,
+      0,
+      coordinates2,
+      this.stride
+    );
     this.changed();
   }
 };
@@ -2063,9 +2952,23 @@ var Point_default = Point;
 
 // ../node_modules/ol/geom/flat/contains.js
 function linearRingContainsExtent(flatCoordinates, offset, end, stride, extent) {
-  const outside = forEachCorner(extent, function(coordinate) {
-    return !linearRingContainsXY(flatCoordinates, offset, end, stride, coordinate[0], coordinate[1]);
-  });
+  const outside = forEachCorner(
+    extent,
+    /**
+     * @param {import("../../coordinate.js").Coordinate} coordinate Coordinate.
+     * @return {boolean} Contains (x, y).
+     */
+    function(coordinate) {
+      return !linearRingContainsXY(
+        flatCoordinates,
+        offset,
+        end,
+        stride,
+        coordinate[0],
+        coordinate[1]
+      );
+    }
+  );
   return !outside;
 }
 function linearRingContainsXY(flatCoordinates, offset, end, stride, x, y) {
@@ -2153,7 +3056,10 @@ function forEach(flatCoordinates, offset, end, stride, callback) {
   let ret;
   offset += stride;
   for (; offset < end; offset += stride) {
-    ret = callback(flatCoordinates.slice(offset - stride, offset), flatCoordinates.slice(offset, offset + stride));
+    ret = callback(
+      flatCoordinates.slice(offset - stride, offset),
+      flatCoordinates.slice(offset, offset + stride)
+    );
     if (ret) {
       return ret;
     }
@@ -2163,7 +3069,13 @@ function forEach(flatCoordinates, offset, end, stride, callback) {
 
 // ../node_modules/ol/geom/flat/intersectsextent.js
 function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
-  const coordinatesExtent = extendFlatCoordinates(createEmpty(), flatCoordinates, offset, end, stride);
+  const coordinatesExtent = extendFlatCoordinates(
+    createEmpty(),
+    flatCoordinates,
+    offset,
+    end,
+    stride
+  );
   if (!intersects(extent, coordinatesExtent)) {
     return false;
   }
@@ -2176,24 +3088,64 @@ function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
   if (coordinatesExtent[1] >= extent[1] && coordinatesExtent[3] <= extent[3]) {
     return true;
   }
-  return forEach(flatCoordinates, offset, end, stride, function(point1, point2) {
-    return intersectsSegment(extent, point1, point2);
-  });
+  return forEach(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    /**
+     * @param {import("../../coordinate.js").Coordinate} point1 Start point.
+     * @param {import("../../coordinate.js").Coordinate} point2 End point.
+     * @return {boolean} `true` if the segment and the extent intersect,
+     *     `false` otherwise.
+     */
+    function(point1, point2) {
+      return intersectsSegment(extent, point1, point2);
+    }
+  );
 }
 function intersectsLinearRing(flatCoordinates, offset, end, stride, extent) {
   if (intersectsLineString(flatCoordinates, offset, end, stride, extent)) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[0], extent[1])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[0],
+    extent[1]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[0], extent[3])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[0],
+    extent[3]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[2], extent[1])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[2],
+    extent[1]
+  )) {
     return true;
   }
-  if (linearRingContainsXY(flatCoordinates, offset, end, stride, extent[2], extent[3])) {
+  if (linearRingContainsXY(
+    flatCoordinates,
+    offset,
+    end,
+    stride,
+    extent[2],
+    extent[3]
+  )) {
     return true;
   }
   return false;
@@ -2206,8 +3158,20 @@ function intersectsLinearRingArray(flatCoordinates, offset, ends, stride, extent
     return true;
   }
   for (let i = 1, ii = ends.length; i < ii; ++i) {
-    if (linearRingContainsExtent(flatCoordinates, ends[i - 1], ends[i], stride, extent)) {
-      if (!intersectsLineString(flatCoordinates, ends[i - 1], ends[i], stride, extent)) {
+    if (linearRingContainsExtent(
+      flatCoordinates,
+      ends[i - 1],
+      ends[i],
+      stride,
+      extent
+    )) {
+      if (!intersectsLineString(
+        flatCoordinates,
+        ends[i - 1],
+        ends[i],
+        stride,
+        extent
+      )) {
         return false;
       }
     }
@@ -2246,7 +3210,12 @@ function linearRingsAreOriented(flatCoordinates, offset, ends, stride, right) {
   right = right !== void 0 ? right : false;
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    const isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
+    const isClockwise = linearRingIsClockwise(
+      flatCoordinates,
+      offset,
+      end,
+      stride
+    );
     if (i === 0) {
       if (right && isClockwise || !right && !isClockwise) {
         return false;
@@ -2264,7 +3233,12 @@ function orientLinearRings(flatCoordinates, offset, ends, stride, right) {
   right = right !== void 0 ? right : false;
   for (let i = 0, ii = ends.length; i < ii; ++i) {
     const end = ends[i];
-    const isClockwise = linearRingIsClockwise(flatCoordinates, offset, end, stride);
+    const isClockwise = linearRingIsClockwise(
+      flatCoordinates,
+      offset,
+      end,
+      stride
+    );
     const reverse = i === 0 ? right && isClockwise || !right && !isClockwise : right && !isClockwise || !right && isClockwise;
     if (reverse) {
       coordinates(flatCoordinates, offset, end, stride);
@@ -2275,7 +3249,18 @@ function orientLinearRings(flatCoordinates, offset, ends, stride, right) {
 }
 
 // ../node_modules/ol/geom/Polygon.js
-var Polygon = class extends SimpleGeometry_default {
+var Polygon = class _Polygon extends SimpleGeometry_default {
+  /**
+   * @param {!Array<Array<import("../coordinate.js").Coordinate>>|!Array<number>} coordinates
+   *     Array of linear rings that define the polygon. The first linear ring of the
+   *     array defines the outer-boundary or surface of the polygon. Each subsequent
+   *     linear ring defines a hole in the surface of the polygon. A linear ring is
+   *     an array of vertices' coordinates where the first coordinate and the last are
+   *     equivalent. (For internal use, flat coordinates in combination with
+   *     `layout` and `ends` are also accepted.)
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @param {Array<number>} [ends] Ends (for internal use with flat coordinates).
+   */
   constructor(coordinates2, layout, ends) {
     super();
     this.ends_ = [];
@@ -2286,12 +3271,25 @@ var Polygon = class extends SimpleGeometry_default {
     this.orientedRevision_ = -1;
     this.orientedFlatCoordinates_ = null;
     if (layout !== void 0 && ends) {
-      this.setFlatCoordinates(layout, coordinates2);
+      this.setFlatCoordinates(
+        layout,
+        /** @type {Array<number>} */
+        coordinates2
+      );
       this.ends_ = ends;
     } else {
-      this.setCoordinates(coordinates2, layout);
+      this.setCoordinates(
+        /** @type {Array<Array<import("../coordinate.js").Coordinate>>} */
+        coordinates2,
+        layout
+      );
     }
   }
+  /**
+   * Append the passed linear ring to this polygon.
+   * @param {LinearRing} linearRing Linear ring.
+   * @api
+   */
   appendLinearRing(linearRing2) {
     if (!this.flatCoordinates) {
       this.flatCoordinates = linearRing2.getFlatCoordinates().slice();
@@ -2301,27 +3299,97 @@ var Polygon = class extends SimpleGeometry_default {
     this.ends_.push(this.flatCoordinates.length);
     this.changed();
   }
+  /**
+   * Make a complete copy of the geometry.
+   * @return {!Polygon} Clone.
+   * @api
+   */
   clone() {
-    const polygon = new Polygon(this.flatCoordinates.slice(), this.layout, this.ends_.slice());
+    const polygon = new _Polygon(
+      this.flatCoordinates.slice(),
+      this.layout,
+      this.ends_.slice()
+    );
     polygon.applyProperties(this);
     return polygon;
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+   * @param {number} minSquaredDistance Minimum squared distance.
+   * @return {number} Minimum squared distance.
+   */
   closestPointXY(x, y, closestPoint, minSquaredDistance) {
     if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
       return minSquaredDistance;
     }
     if (this.maxDeltaRevision_ != this.getRevision()) {
-      this.maxDelta_ = Math.sqrt(arrayMaxSquaredDelta(this.flatCoordinates, 0, this.ends_, this.stride, 0));
+      this.maxDelta_ = Math.sqrt(
+        arrayMaxSquaredDelta(
+          this.flatCoordinates,
+          0,
+          this.ends_,
+          this.stride,
+          0
+        )
+      );
       this.maxDeltaRevision_ = this.getRevision();
     }
-    return assignClosestArrayPoint(this.flatCoordinates, 0, this.ends_, this.stride, this.maxDelta_, true, x, y, closestPoint, minSquaredDistance);
+    return assignClosestArrayPoint(
+      this.flatCoordinates,
+      0,
+      this.ends_,
+      this.stride,
+      this.maxDelta_,
+      true,
+      x,
+      y,
+      closestPoint,
+      minSquaredDistance
+    );
   }
+  /**
+   * @param {number} x X.
+   * @param {number} y Y.
+   * @return {boolean} Contains (x, y).
+   */
   containsXY(x, y) {
-    return linearRingsContainsXY(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, x, y);
+    return linearRingsContainsXY(
+      this.getOrientedFlatCoordinates(),
+      0,
+      this.ends_,
+      this.stride,
+      x,
+      y
+    );
   }
+  /**
+   * Return the area of the polygon on projected plane.
+   * @return {number} Area (on projected plane).
+   * @api
+   */
   getArea() {
-    return linearRings(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride);
+    return linearRings(
+      this.getOrientedFlatCoordinates(),
+      0,
+      this.ends_,
+      this.stride
+    );
   }
+  /**
+   * Get the coordinate array for this geometry.  This array has the structure
+   * of a GeoJSON coordinate array for polygons.
+   *
+   * @param {boolean} [right] Orient coordinates according to the right-hand
+   *     rule (counter-clockwise for exterior and clockwise for interior rings).
+   *     If `false`, coordinates will be oriented according to the left-hand rule
+   *     (clockwise for exterior and counter-clockwise for interior rings).
+   *     By default, coordinate orientation will depend on how the geometry was
+   *     constructed.
+   * @return {Array<Array<import("../coordinate.js").Coordinate>>} Coordinates.
+   * @api
+   */
   getCoordinates(right) {
     let flatCoordinates;
     if (right !== void 0) {
@@ -2332,29 +3400,76 @@ var Polygon = class extends SimpleGeometry_default {
     }
     return inflateCoordinatesArray(flatCoordinates, 0, this.ends_, this.stride);
   }
+  /**
+   * @return {Array<number>} Ends.
+   */
   getEnds() {
     return this.ends_;
   }
+  /**
+   * @return {Array<number>} Interior point.
+   */
   getFlatInteriorPoint() {
     if (this.flatInteriorPointRevision_ != this.getRevision()) {
       const flatCenter = getCenter(this.getExtent());
-      this.flatInteriorPoint_ = getInteriorPointOfArray(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, flatCenter, 0);
+      this.flatInteriorPoint_ = getInteriorPointOfArray(
+        this.getOrientedFlatCoordinates(),
+        0,
+        this.ends_,
+        this.stride,
+        flatCenter,
+        0
+      );
       this.flatInteriorPointRevision_ = this.getRevision();
     }
     return this.flatInteriorPoint_;
   }
+  /**
+   * Return an interior point of the polygon.
+   * @return {Point} Interior point as XYM coordinate, where M is the
+   * length of the horizontal intersection that the point belongs to.
+   * @api
+   */
   getInteriorPoint() {
     return new Point_default(this.getFlatInteriorPoint(), "XYM");
   }
+  /**
+   * Return the number of rings of the polygon,  this includes the exterior
+   * ring and any interior rings.
+   *
+   * @return {number} Number of rings.
+   * @api
+   */
   getLinearRingCount() {
     return this.ends_.length;
   }
+  /**
+   * Return the Nth linear ring of the polygon geometry. Return `null` if the
+   * given index is out of range.
+   * The exterior linear ring is available at index `0` and the interior rings
+   * at index `1` and beyond.
+   *
+   * @param {number} index Index.
+   * @return {LinearRing|null} Linear ring.
+   * @api
+   */
   getLinearRing(index) {
     if (index < 0 || this.ends_.length <= index) {
       return null;
     }
-    return new LinearRing_default(this.flatCoordinates.slice(index === 0 ? 0 : this.ends_[index - 1], this.ends_[index]), this.layout);
+    return new LinearRing_default(
+      this.flatCoordinates.slice(
+        index === 0 ? 0 : this.ends_[index - 1],
+        this.ends_[index]
+      ),
+      this.layout
+    );
   }
+  /**
+   * Return the linear rings of the polygon.
+   * @return {Array<LinearRing>} Linear rings.
+   * @api
+   */
   getLinearRings() {
     const layout = this.layout;
     const flatCoordinates = this.flatCoordinates;
@@ -2363,12 +3478,18 @@ var Polygon = class extends SimpleGeometry_default {
     let offset = 0;
     for (let i = 0, ii = ends.length; i < ii; ++i) {
       const end = ends[i];
-      const linearRing2 = new LinearRing_default(flatCoordinates.slice(offset, end), layout);
+      const linearRing2 = new LinearRing_default(
+        flatCoordinates.slice(offset, end),
+        layout
+      );
       linearRings2.push(linearRing2);
       offset = end;
     }
     return linearRings2;
   }
+  /**
+   * @return {Array<number>} Oriented flat coordinates.
+   */
   getOrientedFlatCoordinates() {
     if (this.orientedRevision_ != this.getRevision()) {
       const flatCoordinates = this.flatCoordinates;
@@ -2376,30 +3497,78 @@ var Polygon = class extends SimpleGeometry_default {
         this.orientedFlatCoordinates_ = flatCoordinates;
       } else {
         this.orientedFlatCoordinates_ = flatCoordinates.slice();
-        this.orientedFlatCoordinates_.length = orientLinearRings(this.orientedFlatCoordinates_, 0, this.ends_, this.stride);
+        this.orientedFlatCoordinates_.length = orientLinearRings(
+          this.orientedFlatCoordinates_,
+          0,
+          this.ends_,
+          this.stride
+        );
       }
       this.orientedRevision_ = this.getRevision();
     }
     return this.orientedFlatCoordinates_;
   }
+  /**
+   * @param {number} squaredTolerance Squared tolerance.
+   * @return {Polygon} Simplified Polygon.
+   * @protected
+   */
   getSimplifiedGeometryInternal(squaredTolerance) {
     const simplifiedFlatCoordinates = [];
     const simplifiedEnds = [];
-    simplifiedFlatCoordinates.length = quantizeArray(this.flatCoordinates, 0, this.ends_, this.stride, Math.sqrt(squaredTolerance), simplifiedFlatCoordinates, 0, simplifiedEnds);
-    return new Polygon(simplifiedFlatCoordinates, "XY", simplifiedEnds);
+    simplifiedFlatCoordinates.length = quantizeArray(
+      this.flatCoordinates,
+      0,
+      this.ends_,
+      this.stride,
+      Math.sqrt(squaredTolerance),
+      simplifiedFlatCoordinates,
+      0,
+      simplifiedEnds
+    );
+    return new _Polygon(simplifiedFlatCoordinates, "XY", simplifiedEnds);
   }
+  /**
+   * Get the type of this geometry.
+   * @return {import("./Geometry.js").Type} Geometry type.
+   * @api
+   */
   getType() {
     return "Polygon";
   }
+  /**
+   * Test if the geometry and the passed extent intersect.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @return {boolean} `true` if the geometry and the extent intersect.
+   * @api
+   */
   intersectsExtent(extent) {
-    return intersectsLinearRingArray(this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, extent);
+    return intersectsLinearRingArray(
+      this.getOrientedFlatCoordinates(),
+      0,
+      this.ends_,
+      this.stride,
+      extent
+    );
   }
+  /**
+   * Set the coordinates of the polygon.
+   * @param {!Array<Array<import("../coordinate.js").Coordinate>>} coordinates Coordinates.
+   * @param {import("./Geometry.js").GeometryLayout} [layout] Layout.
+   * @api
+   */
   setCoordinates(coordinates2, layout) {
     this.setLayout(layout, coordinates2, 2);
     if (!this.flatCoordinates) {
       this.flatCoordinates = [];
     }
-    const ends = deflateCoordinatesArray(this.flatCoordinates, 0, coordinates2, this.stride, this.ends_);
+    const ends = deflateCoordinatesArray(
+      this.flatCoordinates,
+      0,
+      coordinates2,
+      this.stride,
+      this.ends_
+    );
     this.flatCoordinates.length = ends.length === 0 ? 0 : ends[ends.length - 1];
     this.changed();
   }
@@ -2427,6 +3596,9 @@ function fromExtent(extent) {
 // ../node_modules/ol/View.js
 var DEFAULT_MIN_ZOOM = 0;
 var View = class extends Object_default {
+  /**
+   * @param {ViewOptions} [options] View options.
+   */
   constructor(options) {
     super();
     this.on;
@@ -2456,6 +3628,10 @@ var View = class extends Object_default {
     }
     this.applyOptions_(options);
   }
+  /**
+   * Set up the view with the given options.
+   * @param {ViewOptions} options View options.
+   */
   applyOptions_(options) {
     const properties = Object.assign({}, options);
     for (const key in ViewProperty_default) {
@@ -2478,13 +3654,24 @@ var View = class extends Object_default {
       rotation: rotationConstraint
     };
     this.setRotation(options.rotation !== void 0 ? options.rotation : 0);
-    this.setCenterInternal(options.center !== void 0 ? options.center : null);
+    this.setCenterInternal(
+      options.center !== void 0 ? options.center : null
+    );
     if (options.resolution !== void 0) {
       this.setResolution(options.resolution);
     } else if (options.zoom !== void 0) {
       this.setZoom(options.zoom);
     }
   }
+  /**
+   * Padding (in css pixels).
+   * If the map viewport is partially covered with other content (overlays) along
+   * its edges, this setting allows to shift the center of the viewport away from that
+   * content. The order of the values in the array is top, right, bottom, left.
+   * The default is no padding, which is equivalent to `[0, 0, 0, 0]`.
+   * @type {Array<number>|undefined}
+   * @api
+   */
   get padding() {
     return this.padding_;
   }
@@ -2501,6 +3688,14 @@ var View = class extends Object_default {
       this.setCenterInternal([center[0] + offsetX, center[1] - offsetY]);
     }
   }
+  /**
+   * Get an updated version of the view options used to construct the view.  The
+   * current resolution (or zoom), center, and rotation are applied to any stored
+   * options.  The provided options can be used to apply new min/max zoom or
+   * resolution limits.
+   * @param {ViewOptions} newOptions New options to be applied.
+   * @return {ViewOptions} New options updated with the current view state.
+   */
   getUpdatedOptions_(newOptions) {
     const options = this.getProperties();
     if (options.resolution !== void 0) {
@@ -2512,6 +3707,39 @@ var View = class extends Object_default {
     options.rotation = this.getRotation();
     return Object.assign({}, options, newOptions);
   }
+  /**
+   * Animate the view.  The view's center, zoom (or resolution), and rotation
+   * can be animated for smooth transitions between view states.  For example,
+   * to animate the view to a new zoom level:
+   *
+   *     view.animate({zoom: view.getZoom() + 1});
+   *
+   * By default, the animation lasts one second and uses in-and-out easing.  You
+   * can customize this behavior by including `duration` (in milliseconds) and
+   * `easing` options (see {@link module:ol/easing}).
+   *
+   * To chain together multiple animations, call the method with multiple
+   * animation objects.  For example, to first zoom and then pan:
+   *
+   *     view.animate({zoom: 10}, {center: [0, 0]});
+   *
+   * If you provide a function as the last argument to the animate method, it
+   * will get called at the end of an animation series.  The callback will be
+   * called with `true` if the animation series completed on its own or `false`
+   * if it was cancelled.
+   *
+   * Animations are cancelled by user interactions (e.g. dragging the map) or by
+   * calling `view.setCenter()`, `view.setResolution()`, or `view.setRotation()`
+   * (or another method that calls one of these).
+   *
+   * @param {...(AnimationOptions|function(boolean): void)} var_args Animation
+   *     options.  Multiple animations can be run in series by passing multiple
+   *     options objects.  To run multiple animations in parallel, call the method
+   *     multiple times.  An optional callback can be provided as a final
+   *     argument.  The callback will be called with a boolean indicating whether
+   *     the animation completed without being cancelled.
+   * @api
+   */
   animate(var_args) {
     if (this.isDef() && !this.getAnimating()) {
       this.resolveConstraints(0);
@@ -2521,16 +3749,25 @@ var View = class extends Object_default {
       let options = arguments[i];
       if (options.center) {
         options = Object.assign({}, options);
-        options.center = fromUserCoordinate(options.center, this.getProjection());
+        options.center = fromUserCoordinate(
+          options.center,
+          this.getProjection()
+        );
       }
       if (options.anchor) {
         options = Object.assign({}, options);
-        options.anchor = fromUserCoordinate(options.anchor, this.getProjection());
+        options.anchor = fromUserCoordinate(
+          options.anchor,
+          this.getProjection()
+        );
       }
       args[i] = options;
     }
     this.animateInternal.apply(this, args);
   }
+  /**
+   * @param {...(AnimationOptions|function(boolean): void)} var_args Animation options.
+   */
   animateInternal(var_args) {
     let animationCount = arguments.length;
     let callback;
@@ -2565,7 +3802,10 @@ var View = class extends Object_default {
     let rotation = this.targetRotation_;
     const series = [];
     for (; i < animationCount; ++i) {
-      const options = arguments[i];
+      const options = (
+        /** @type {AnimationOptions} */
+        arguments[i]
+      );
       const animation = {
         start,
         complete: false,
@@ -2605,12 +3845,26 @@ var View = class extends Object_default {
     this.setHint(ViewHint_default.ANIMATING, 1);
     this.updateAnimations_();
   }
+  /**
+   * Determine if the view is being animated.
+   * @return {boolean} The view is being animated.
+   * @api
+   */
   getAnimating() {
     return this.hints_[ViewHint_default.ANIMATING] > 0;
   }
+  /**
+   * Determine if the user is interacting with the view, such as panning or zooming.
+   * @return {boolean} The view is being interacted with.
+   * @api
+   */
   getInteracting() {
     return this.hints_[ViewHint_default.INTERACTING] > 0;
   }
+  /**
+   * Cancel any ongoing animations.
+   * @api
+   */
   cancelAnimations() {
     this.setHint(ViewHint_default.ANIMATING, -this.hints_[ViewHint_default.ANIMATING]);
     let anchor;
@@ -2635,6 +3889,9 @@ var View = class extends Object_default {
     this.nextResolution_ = NaN;
     this.nextRotation_ = NaN;
   }
+  /**
+   * Update all animations.
+   */
   updateAnimations_() {
     if (this.updateAnimationKey_ !== void 0) {
       cancelAnimationFrame(this.updateAnimationKey_);
@@ -2676,8 +3933,16 @@ var View = class extends Object_default {
           const resolution = progress === 1 ? animation.targetResolution : animation.sourceResolution + progress * (animation.targetResolution - animation.sourceResolution);
           if (animation.anchor) {
             const size = this.getViewportSize_(this.getRotation());
-            const constrainedResolution = this.constraints_.resolution(resolution, 0, size, true);
-            this.targetCenter_ = this.calculateCenterZoom(constrainedResolution, animation.anchor);
+            const constrainedResolution = this.constraints_.resolution(
+              resolution,
+              0,
+              size,
+              true
+            );
+            this.targetCenter_ = this.calculateCenterZoom(
+              constrainedResolution,
+              animation.anchor
+            );
           }
           this.nextResolution_ = animation.targetResolution;
           this.targetResolution_ = resolution;
@@ -2686,8 +3951,14 @@ var View = class extends Object_default {
         if (animation.sourceRotation !== void 0 && animation.targetRotation !== void 0) {
           const rotation = progress === 1 ? modulo(animation.targetRotation + Math.PI, 2 * Math.PI) - Math.PI : animation.sourceRotation + progress * (animation.targetRotation - animation.sourceRotation);
           if (animation.anchor) {
-            const constrainedRotation = this.constraints_.rotation(rotation, true);
-            this.targetCenter_ = this.calculateCenterRotate(constrainedRotation, animation.anchor);
+            const constrainedRotation = this.constraints_.rotation(
+              rotation,
+              true
+            );
+            this.targetCenter_ = this.calculateCenterRotate(
+              constrainedRotation,
+              animation.anchor
+            );
           }
           this.nextRotation_ = animation.targetRotation;
           this.targetRotation_ = rotation;
@@ -2712,9 +3983,16 @@ var View = class extends Object_default {
     }
     this.animations_ = this.animations_.filter(Boolean);
     if (more && this.updateAnimationKey_ === void 0) {
-      this.updateAnimationKey_ = requestAnimationFrame(this.updateAnimations_.bind(this));
+      this.updateAnimationKey_ = requestAnimationFrame(
+        this.updateAnimations_.bind(this)
+      );
     }
   }
+  /**
+   * @param {number} rotation Target rotation.
+   * @param {import("./coordinate.js").Coordinate} anchor Rotation anchor.
+   * @return {import("./coordinate.js").Coordinate|undefined} Center for rotation and anchor.
+   */
   calculateCenterRotate(rotation, anchor) {
     let center;
     const currentCenter = this.getCenterInternal();
@@ -2725,6 +4003,11 @@ var View = class extends Object_default {
     }
     return center;
   }
+  /**
+   * @param {number} resolution Target resolution.
+   * @param {import("./coordinate.js").Coordinate} anchor Zoom anchor.
+   * @return {import("./coordinate.js").Coordinate|undefined} Center for resolution and anchor.
+   */
   calculateCenterZoom(resolution, anchor) {
     let center;
     const currentCenter = this.getCenterInternal();
@@ -2736,6 +4019,12 @@ var View = class extends Object_default {
     }
     return center;
   }
+  /**
+   * Returns the current viewport size.
+   * @private
+   * @param {number} [rotation] Take into account the rotation of the viewport when giving the size
+   * @return {import("./size.js").Size} Viewport size or `[100, 100]` when no viewport is found.
+   */
   getViewportSize_(rotation) {
     const size = this.viewportSize_;
     if (rotation) {
@@ -2748,12 +4037,25 @@ var View = class extends Object_default {
     }
     return size;
   }
+  /**
+   * Stores the viewport size on the view. The viewport size is not read every time from the DOM
+   * to avoid performance hit and layout reflow.
+   * This should be done on map size change.
+   * Note: the constraints are not resolved during an animation to avoid stopping it
+   * @param {import("./size.js").Size} [size] Viewport size; if undefined, [100, 100] is assumed
+   */
   setViewportSize(size) {
     this.viewportSize_ = Array.isArray(size) ? size.slice() : [100, 100];
     if (!this.getAnimating()) {
       this.resolveConstraints(0);
     }
   }
+  /**
+   * Get the view center.
+   * @return {import("./coordinate.js").Coordinate|undefined} The center of the view.
+   * @observable
+   * @api
+   */
   getCenter() {
     const center = this.getCenterInternal();
     if (!center) {
@@ -2761,15 +4063,32 @@ var View = class extends Object_default {
     }
     return toUserCoordinate(center, this.getProjection());
   }
+  /**
+   * Get the view center without transforming to user projection.
+   * @return {import("./coordinate.js").Coordinate|undefined} The center of the view.
+   */
   getCenterInternal() {
-    return this.get(ViewProperty_default.CENTER);
+    return (
+      /** @type {import("./coordinate.js").Coordinate|undefined} */
+      this.get(ViewProperty_default.CENTER)
+    );
   }
+  /**
+   * @return {Constraints} Constraints.
+   */
   getConstraints() {
     return this.constraints_;
   }
+  /**
+   * @return {boolean} Resolution constraint is set
+   */
   getConstrainResolution() {
     return this.get("constrainResolution");
   }
+  /**
+   * @param {Array<number>} [hints] Destination array.
+   * @return {Array<number>} Hint.
+   */
   getHints(hints) {
     if (hints !== void 0) {
       hints[0] = this.hints_[0];
@@ -2778,82 +4097,224 @@ var View = class extends Object_default {
     }
     return this.hints_.slice();
   }
+  /**
+   * Calculate the extent for the current view state and the passed size.
+   * The size is the pixel dimensions of the box into which the calculated extent
+   * should fit. In most cases you want to get the extent of the entire map,
+   * that is `map.getSize()`.
+   * @param {import("./size.js").Size} [size] Box pixel size. If not provided, the size
+   * of the map that uses this view will be used.
+   * @return {import("./extent.js").Extent} Extent.
+   * @api
+   */
   calculateExtent(size) {
     const extent = this.calculateExtentInternal(size);
     return toUserExtent(extent, this.getProjection());
   }
+  /**
+   * @param {import("./size.js").Size} [size] Box pixel size. If not provided,
+   * the map's last known viewport size will be used.
+   * @return {import("./extent.js").Extent} Extent.
+   */
   calculateExtentInternal(size) {
     size = size || this.getViewportSizeMinusPadding_();
-    const center = this.getCenterInternal();
+    const center = (
+      /** @type {!import("./coordinate.js").Coordinate} */
+      this.getCenterInternal()
+    );
     assert(center, 1);
-    const resolution = this.getResolution();
+    const resolution = (
+      /** @type {!number} */
+      this.getResolution()
+    );
     assert(resolution !== void 0, 2);
-    const rotation = this.getRotation();
+    const rotation = (
+      /** @type {!number} */
+      this.getRotation()
+    );
     assert(rotation !== void 0, 3);
     return getForViewAndSize(center, resolution, rotation, size);
   }
+  /**
+   * Get the maximum resolution of the view.
+   * @return {number} The maximum resolution of the view.
+   * @api
+   */
   getMaxResolution() {
     return this.maxResolution_;
   }
+  /**
+   * Get the minimum resolution of the view.
+   * @return {number} The minimum resolution of the view.
+   * @api
+   */
   getMinResolution() {
     return this.minResolution_;
   }
+  /**
+   * Get the maximum zoom level for the view.
+   * @return {number} The maximum zoom level.
+   * @api
+   */
   getMaxZoom() {
-    return this.getZoomForResolution(this.minResolution_);
+    return (
+      /** @type {number} */
+      this.getZoomForResolution(this.minResolution_)
+    );
   }
+  /**
+   * Set a new maximum zoom level for the view.
+   * @param {number} zoom The maximum zoom level.
+   * @api
+   */
   setMaxZoom(zoom) {
     this.applyOptions_(this.getUpdatedOptions_({ maxZoom: zoom }));
   }
+  /**
+   * Get the minimum zoom level for the view.
+   * @return {number} The minimum zoom level.
+   * @api
+   */
   getMinZoom() {
-    return this.getZoomForResolution(this.maxResolution_);
+    return (
+      /** @type {number} */
+      this.getZoomForResolution(this.maxResolution_)
+    );
   }
+  /**
+   * Set a new minimum zoom level for the view.
+   * @param {number} zoom The minimum zoom level.
+   * @api
+   */
   setMinZoom(zoom) {
     this.applyOptions_(this.getUpdatedOptions_({ minZoom: zoom }));
   }
+  /**
+   * Set whether the view should allow intermediary zoom levels.
+   * @param {boolean} enabled Whether the resolution is constrained.
+   * @api
+   */
   setConstrainResolution(enabled) {
     this.applyOptions_(this.getUpdatedOptions_({ constrainResolution: enabled }));
   }
+  /**
+   * Get the view projection.
+   * @return {import("./proj/Projection.js").default} The projection of the view.
+   * @api
+   */
   getProjection() {
     return this.projection_;
   }
+  /**
+   * Get the view resolution.
+   * @return {number|undefined} The resolution of the view.
+   * @observable
+   * @api
+   */
   getResolution() {
-    return this.get(ViewProperty_default.RESOLUTION);
+    return (
+      /** @type {number|undefined} */
+      this.get(ViewProperty_default.RESOLUTION)
+    );
   }
+  /**
+   * Get the resolutions for the view. This returns the array of resolutions
+   * passed to the constructor of the View, or undefined if none were given.
+   * @return {Array<number>|undefined} The resolutions of the view.
+   * @api
+   */
   getResolutions() {
     return this.resolutions_;
   }
+  /**
+   * Get the resolution for a provided extent (in map units) and size (in pixels).
+   * @param {import("./extent.js").Extent} extent Extent.
+   * @param {import("./size.js").Size} [size] Box pixel size.
+   * @return {number} The resolution at which the provided extent will render at
+   *     the given size.
+   * @api
+   */
   getResolutionForExtent(extent, size) {
-    return this.getResolutionForExtentInternal(fromUserExtent(extent, this.getProjection()), size);
+    return this.getResolutionForExtentInternal(
+      fromUserExtent(extent, this.getProjection()),
+      size
+    );
   }
+  /**
+   * Get the resolution for a provided extent (in map units) and size (in pixels).
+   * @param {import("./extent.js").Extent} extent Extent.
+   * @param {import("./size.js").Size} [size] Box pixel size.
+   * @return {number} The resolution at which the provided extent will render at
+   *     the given size.
+   */
   getResolutionForExtentInternal(extent, size) {
     size = size || this.getViewportSizeMinusPadding_();
     const xResolution = getWidth(extent) / size[0];
     const yResolution = getHeight(extent) / size[1];
     return Math.max(xResolution, yResolution);
   }
+  /**
+   * Return a function that returns a value between 0 and 1 for a
+   * resolution. Exponential scaling is assumed.
+   * @param {number} [power] Power.
+   * @return {function(number): number} Resolution for value function.
+   */
   getResolutionForValueFunction(power) {
     power = power || 2;
     const maxResolution = this.getConstrainedResolution(this.maxResolution_);
     const minResolution = this.minResolution_;
     const max = Math.log(maxResolution / minResolution) / Math.log(power);
-    return function(value) {
-      const resolution = maxResolution / Math.pow(power, value * max);
-      return resolution;
-    };
+    return (
+      /**
+       * @param {number} value Value.
+       * @return {number} Resolution.
+       */
+      function(value) {
+        const resolution = maxResolution / Math.pow(power, value * max);
+        return resolution;
+      }
+    );
   }
+  /**
+   * Get the view rotation.
+   * @return {number} The rotation of the view in radians.
+   * @observable
+   * @api
+   */
   getRotation() {
-    return this.get(ViewProperty_default.ROTATION);
+    return (
+      /** @type {number} */
+      this.get(ViewProperty_default.ROTATION)
+    );
   }
+  /**
+   * Return a function that returns a resolution for a value between
+   * 0 and 1. Exponential scaling is assumed.
+   * @param {number} [power] Power.
+   * @return {function(number): number} Value for resolution function.
+   */
   getValueForResolutionFunction(power) {
     const logPower = Math.log(power || 2);
     const maxResolution = this.getConstrainedResolution(this.maxResolution_);
     const minResolution = this.minResolution_;
     const max = Math.log(maxResolution / minResolution) / logPower;
-    return function(resolution) {
-      const value = Math.log(maxResolution / resolution) / logPower / max;
-      return value;
-    };
+    return (
+      /**
+       * @param {number} resolution Resolution.
+       * @return {number} Value.
+       */
+      function(resolution) {
+        const value = Math.log(maxResolution / resolution) / logPower / max;
+        return value;
+      }
+    );
   }
+  /**
+   * Returns the size of the viewport minus padding.
+   * @private
+   * @param {number} [rotation] Take into account the rotation of the viewport when giving the size
+   * @return {import("./size.js").Size} Viewport size reduced by the padding.
+   */
   getViewportSizeMinusPadding_(rotation) {
     let size = this.getViewportSize_(rotation);
     const padding = this.padding_;
@@ -2865,15 +4326,27 @@ var View = class extends Object_default {
     }
     return size;
   }
+  /**
+   * @return {State} View state.
+   */
   getState() {
     const projection = this.getProjection();
     const resolution = this.getResolution();
     const rotation = this.getRotation();
-    let center = this.getCenterInternal();
+    let center = (
+      /** @type {import("./coordinate.js").Coordinate} */
+      this.getCenterInternal()
+    );
     const padding = this.padding_;
     if (padding) {
       const reducedSize = this.getViewportSizeMinusPadding_();
-      center = calculateCenterOn(center, this.getViewportSize_(), [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]], resolution, rotation);
+      center = calculateCenterOn(
+        center,
+        this.getViewportSize_(),
+        [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]],
+        resolution,
+        rotation
+      );
     }
     return {
       center: center.slice(0),
@@ -2886,12 +4359,22 @@ var View = class extends Object_default {
       zoom: this.getZoom()
     };
   }
+  /**
+   * @return {ViewStateAndExtent} Like `FrameState`, but just `viewState` and `extent`.
+   */
   getViewStateAndExtent() {
     return {
       viewState: this.getState(),
       extent: this.calculateExtent()
     };
   }
+  /**
+   * Get the current zoom level. This method may return non-integer zoom levels
+   * if the view does not constrain the resolution, or if an interaction or
+   * animation is underway.
+   * @return {number|undefined} Zoom.
+   * @api
+   */
   getZoom() {
     let zoom;
     const resolution = this.getResolution();
@@ -2900,6 +4383,12 @@ var View = class extends Object_default {
     }
     return zoom;
   }
+  /**
+   * Get the zoom level for a resolution.
+   * @param {number} resolution The resolution.
+   * @return {number|undefined} The zoom level for the provided resolution.
+   * @api
+   */
   getZoomForResolution(resolution) {
     let offset = this.minZoom_ || 0;
     let max, zoomFactor;
@@ -2918,38 +4407,71 @@ var View = class extends Object_default {
     }
     return offset + Math.log(max / resolution) / Math.log(zoomFactor);
   }
+  /**
+   * Get the resolution for a zoom level.
+   * @param {number} zoom Zoom level.
+   * @return {number} The view resolution for the provided zoom level.
+   * @api
+   */
   getResolutionForZoom(zoom) {
     if (this.resolutions_) {
       if (this.resolutions_.length <= 1) {
         return 0;
       }
-      const baseLevel = clamp(Math.floor(zoom), 0, this.resolutions_.length - 2);
+      const baseLevel = clamp(
+        Math.floor(zoom),
+        0,
+        this.resolutions_.length - 2
+      );
       const zoomFactor = this.resolutions_[baseLevel] / this.resolutions_[baseLevel + 1];
       return this.resolutions_[baseLevel] / Math.pow(zoomFactor, clamp(zoom - baseLevel, 0, 1));
     }
     return this.maxResolution_ / Math.pow(this.zoomFactor_, zoom - this.minZoom_);
   }
+  /**
+   * Fit the given geometry or extent based on the given map size and border.
+   * The size is pixel dimensions of the box to fit the extent into.
+   * In most cases you will want to use the map size, that is `map.getSize()`.
+   * Takes care of the map angle.
+   * @param {import("./geom/SimpleGeometry.js").default|import("./extent.js").Extent} geometryOrExtent The geometry or
+   *     extent to fit the view to.
+   * @param {FitOptions} [options] Options.
+   * @api
+   */
   fit(geometryOrExtent, options) {
     let geometry;
-    assert(Array.isArray(geometryOrExtent) || typeof geometryOrExtent.getSimplifiedGeometry === "function", 24);
+    assert(
+      Array.isArray(geometryOrExtent) || typeof /** @type {?} */
+      geometryOrExtent.getSimplifiedGeometry === "function",
+      24
+    );
     if (Array.isArray(geometryOrExtent)) {
       assert(!isEmpty2(geometryOrExtent), 25);
       const extent = fromUserExtent(geometryOrExtent, this.getProjection());
       geometry = fromExtent(extent);
     } else if (geometryOrExtent.getType() === "Circle") {
-      const extent = fromUserExtent(geometryOrExtent.getExtent(), this.getProjection());
+      const extent = fromUserExtent(
+        geometryOrExtent.getExtent(),
+        this.getProjection()
+      );
       geometry = fromExtent(extent);
       geometry.rotate(this.getRotation(), getCenter(extent));
     } else {
       const userProjection2 = getUserProjection();
       if (userProjection2) {
-        geometry = geometryOrExtent.clone().transform(userProjection2, this.getProjection());
+        geometry = /** @type {import("./geom/SimpleGeometry.js").default} */
+        geometryOrExtent.clone().transform(userProjection2, this.getProjection());
       } else {
         geometry = geometryOrExtent;
       }
     }
     this.fitInternal(geometry, options);
   }
+  /**
+   * Calculate rotated extent
+   * @param {import("./geom/SimpleGeometry.js").default} geometry The geometry.
+   * @return {import("./extent").Extent} The rotated extent for the geometry.
+   */
   rotatedExtentForGeometry(geometry) {
     const rotation = this.getRotation();
     const cosAngle = Math.cos(rotation);
@@ -2970,6 +4492,10 @@ var View = class extends Object_default {
     }
     return [minRotX, minRotY, maxRotX, maxRotY];
   }
+  /**
+   * @param {import("./geom/SimpleGeometry.js").default} geometry The geometry.
+   * @param {FitOptions} [options] Options.
+   */
   fitInternal(geometry, options) {
     options = options || {};
     let size = options.size;
@@ -3004,12 +4530,15 @@ var View = class extends Object_default {
     const center = this.getConstrainedCenter([centerX, centerY], resolution);
     const callback = options.callback ? options.callback : VOID;
     if (options.duration !== void 0) {
-      this.animateInternal({
-        resolution,
-        center,
-        duration: options.duration,
-        easing: options.easing
-      }, callback);
+      this.animateInternal(
+        {
+          resolution,
+          center,
+          duration: options.duration,
+          easing: options.easing
+        },
+        callback
+      );
     } else {
       this.targetResolution_ = resolution;
       this.targetCenter_ = center;
@@ -3017,18 +4546,56 @@ var View = class extends Object_default {
       animationCallback(callback, true);
     }
   }
+  /**
+   * Center on coordinate and view position.
+   * @param {import("./coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {import("./size.js").Size} size Box pixel size.
+   * @param {import("./pixel.js").Pixel} position Position on the view to center on.
+   * @api
+   */
   centerOn(coordinate, size, position) {
-    this.centerOnInternal(fromUserCoordinate(coordinate, this.getProjection()), size, position);
+    this.centerOnInternal(
+      fromUserCoordinate(coordinate, this.getProjection()),
+      size,
+      position
+    );
   }
+  /**
+   * @param {import("./coordinate.js").Coordinate} coordinate Coordinate.
+   * @param {import("./size.js").Size} size Box pixel size.
+   * @param {import("./pixel.js").Pixel} position Position on the view to center on.
+   */
   centerOnInternal(coordinate, size, position) {
-    this.setCenterInternal(calculateCenterOn(coordinate, size, position, this.getResolution(), this.getRotation()));
+    this.setCenterInternal(
+      calculateCenterOn(
+        coordinate,
+        size,
+        position,
+        this.getResolution(),
+        this.getRotation()
+      )
+    );
   }
+  /**
+   * Calculates the shift between map and viewport center.
+   * @param {import("./coordinate.js").Coordinate} center Center.
+   * @param {number} resolution Resolution.
+   * @param {number} rotation Rotation.
+   * @param {import("./size.js").Size} size Size.
+   * @return {Array<number>|undefined} Center shift.
+   */
   calculateCenterShift(center, resolution, rotation, size) {
     let centerShift;
     const padding = this.padding_;
     if (padding && center) {
       const reducedSize = this.getViewportSizeMinusPadding_(-rotation);
-      const shiftedCenter = calculateCenterOn(center, size, [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]], resolution, rotation);
+      const shiftedCenter = calculateCenterOn(
+        center,
+        size,
+        [reducedSize[0] / 2 + padding[3], reducedSize[1] / 2 + padding[0]],
+        resolution,
+        rotation
+      );
       centerShift = [
         center[0] - shiftedCenter[0],
         center[1] - shiftedCenter[1]
@@ -3036,9 +4603,17 @@ var View = class extends Object_default {
     }
     return centerShift;
   }
+  /**
+   * @return {boolean} Is defined.
+   */
   isDef() {
     return !!this.getCenterInternal() && this.getResolution() !== void 0;
   }
+  /**
+   * Adds relative coordinates to the center of the view. Any extent constraint will apply.
+   * @param {import("./coordinate.js").Coordinate} deltaCoordinates Relative value to add.
+   * @api
+   */
   adjustCenter(deltaCoordinates) {
     const center = toUserCoordinate(this.targetCenter_, this.getProjection());
     this.setCenter([
@@ -3046,6 +4621,10 @@ var View = class extends Object_default {
       center[1] + deltaCoordinates[1]
     ]);
   }
+  /**
+   * Adds relative coordinates to the center of the view. Any extent constraint will apply.
+   * @param {import("./coordinate.js").Coordinate} deltaCoordinates Relative value to add.
+   */
   adjustCenterInternal(deltaCoordinates) {
     const center = this.targetCenter_;
     this.setCenterInternal([
@@ -3053,67 +4632,167 @@ var View = class extends Object_default {
       center[1] + deltaCoordinates[1]
     ]);
   }
+  /**
+   * Multiply the view resolution by a ratio, optionally using an anchor. Any resolution
+   * constraint will apply.
+   * @param {number} ratio The ratio to apply on the view resolution.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   * @api
+   */
   adjustResolution(ratio, anchor) {
     anchor = anchor && fromUserCoordinate(anchor, this.getProjection());
     this.adjustResolutionInternal(ratio, anchor);
   }
+  /**
+   * Multiply the view resolution by a ratio, optionally using an anchor. Any resolution
+   * constraint will apply.
+   * @param {number} ratio The ratio to apply on the view resolution.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   */
   adjustResolutionInternal(ratio, anchor) {
     const isMoving = this.getAnimating() || this.getInteracting();
     const size = this.getViewportSize_(this.getRotation());
-    const newResolution = this.constraints_.resolution(this.targetResolution_ * ratio, 0, size, isMoving);
+    const newResolution = this.constraints_.resolution(
+      this.targetResolution_ * ratio,
+      0,
+      size,
+      isMoving
+    );
     if (anchor) {
       this.targetCenter_ = this.calculateCenterZoom(newResolution, anchor);
     }
     this.targetResolution_ *= ratio;
     this.applyTargetState_();
   }
+  /**
+   * Adds a value to the view zoom level, optionally using an anchor. Any resolution
+   * constraint will apply.
+   * @param {number} delta Relative value to add to the zoom level.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   * @api
+   */
   adjustZoom(delta, anchor) {
     this.adjustResolution(Math.pow(this.zoomFactor_, -delta), anchor);
   }
+  /**
+   * Adds a value to the view rotation, optionally using an anchor. Any rotation
+   * constraint will apply.
+   * @param {number} delta Relative value to add to the zoom rotation, in radians.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The rotation center.
+   * @api
+   */
   adjustRotation(delta, anchor) {
     if (anchor) {
       anchor = fromUserCoordinate(anchor, this.getProjection());
     }
     this.adjustRotationInternal(delta, anchor);
   }
+  /**
+   * @param {number} delta Relative value to add to the zoom rotation, in radians.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The rotation center.
+   */
   adjustRotationInternal(delta, anchor) {
     const isMoving = this.getAnimating() || this.getInteracting();
-    const newRotation = this.constraints_.rotation(this.targetRotation_ + delta, isMoving);
+    const newRotation = this.constraints_.rotation(
+      this.targetRotation_ + delta,
+      isMoving
+    );
     if (anchor) {
       this.targetCenter_ = this.calculateCenterRotate(newRotation, anchor);
     }
     this.targetRotation_ += delta;
     this.applyTargetState_();
   }
+  /**
+   * Set the center of the current view. Any extent constraint will apply.
+   * @param {import("./coordinate.js").Coordinate|undefined} center The center of the view.
+   * @observable
+   * @api
+   */
   setCenter(center) {
-    this.setCenterInternal(center ? fromUserCoordinate(center, this.getProjection()) : center);
+    this.setCenterInternal(
+      center ? fromUserCoordinate(center, this.getProjection()) : center
+    );
   }
+  /**
+   * Set the center using the view projection (not the user projection).
+   * @param {import("./coordinate.js").Coordinate|undefined} center The center of the view.
+   */
   setCenterInternal(center) {
     this.targetCenter_ = center;
     this.applyTargetState_();
   }
+  /**
+   * @param {import("./ViewHint.js").default} hint Hint.
+   * @param {number} delta Delta.
+   * @return {number} New value.
+   */
   setHint(hint, delta) {
     this.hints_[hint] += delta;
     this.changed();
     return this.hints_[hint];
   }
+  /**
+   * Set the resolution for this view. Any resolution constraint will apply.
+   * @param {number|undefined} resolution The resolution of the view.
+   * @observable
+   * @api
+   */
   setResolution(resolution) {
     this.targetResolution_ = resolution;
     this.applyTargetState_();
   }
+  /**
+   * Set the rotation for this view. Any rotation constraint will apply.
+   * @param {number} rotation The rotation of the view in radians.
+   * @observable
+   * @api
+   */
   setRotation(rotation) {
     this.targetRotation_ = rotation;
     this.applyTargetState_();
   }
+  /**
+   * Zoom to a specific zoom level. Any resolution constrain will apply.
+   * @param {number} zoom Zoom level.
+   * @api
+   */
   setZoom(zoom) {
     this.setResolution(this.getResolutionForZoom(zoom));
   }
+  /**
+   * Recompute rotation/resolution/center based on target values.
+   * Note: we have to compute rotation first, then resolution and center considering that
+   * parameters can influence one another in case a view extent constraint is present.
+   * @param {boolean} [doNotCancelAnims] Do not cancel animations.
+   * @param {boolean} [forceMoving] Apply constraints as if the view is moving.
+   * @private
+   */
   applyTargetState_(doNotCancelAnims, forceMoving) {
     const isMoving = this.getAnimating() || this.getInteracting() || forceMoving;
-    const newRotation = this.constraints_.rotation(this.targetRotation_, isMoving);
+    const newRotation = this.constraints_.rotation(
+      this.targetRotation_,
+      isMoving
+    );
     const size = this.getViewportSize_(newRotation);
-    const newResolution = this.constraints_.resolution(this.targetResolution_, 0, size, isMoving);
-    const newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, isMoving, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
+    const newResolution = this.constraints_.resolution(
+      this.targetResolution_,
+      0,
+      size,
+      isMoving
+    );
+    const newCenter = this.constraints_.center(
+      this.targetCenter_,
+      newResolution,
+      size,
+      isMoving,
+      this.calculateCenterShift(
+        this.targetCenter_,
+        newResolution,
+        newRotation,
+        size
+      )
+    );
     if (this.get(ViewProperty_default.ROTATION) !== newRotation) {
       this.set(ViewProperty_default.ROTATION, newRotation);
     }
@@ -3129,13 +4808,37 @@ var View = class extends Object_default {
     }
     this.cancelAnchor_ = void 0;
   }
+  /**
+   * If any constraints need to be applied, an animation will be triggered.
+   * This is typically done on interaction end.
+   * Note: calling this with a duration of 0 will apply the constrained values straight away,
+   * without animation.
+   * @param {number} [duration] The animation duration in ms.
+   * @param {number} [resolutionDirection] Which direction to zoom.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   */
   resolveConstraints(duration, resolutionDirection, anchor) {
     duration = duration !== void 0 ? duration : 200;
     const direction = resolutionDirection || 0;
     const newRotation = this.constraints_.rotation(this.targetRotation_);
     const size = this.getViewportSize_(newRotation);
-    const newResolution = this.constraints_.resolution(this.targetResolution_, direction, size);
-    const newCenter = this.constraints_.center(this.targetCenter_, newResolution, size, false, this.calculateCenterShift(this.targetCenter_, newResolution, newRotation, size));
+    const newResolution = this.constraints_.resolution(
+      this.targetResolution_,
+      direction,
+      size
+    );
+    const newCenter = this.constraints_.center(
+      this.targetCenter_,
+      newResolution,
+      size,
+      false,
+      this.calculateCenterShift(
+        this.targetCenter_,
+        newResolution,
+        newRotation,
+        size
+      )
+    );
     if (duration === 0 && !this.cancelAnchor_) {
       this.targetResolution_ = newResolution;
       this.targetRotation_ = newRotation;
@@ -3159,14 +4862,35 @@ var View = class extends Object_default {
       });
     }
   }
+  /**
+   * Notify the View that an interaction has started.
+   * The view state will be resolved to a stable one if needed
+   * (depending on its constraints).
+   * @api
+   */
   beginInteraction() {
     this.resolveConstraints(0);
     this.setHint(ViewHint_default.INTERACTING, 1);
   }
+  /**
+   * Notify the View that an interaction has ended. The view state will be resolved
+   * to a stable one if needed (depending on its constraints).
+   * @param {number} [duration] Animation duration in ms.
+   * @param {number} [resolutionDirection] Which direction to zoom.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   * @api
+   */
   endInteraction(duration, resolutionDirection, anchor) {
     anchor = anchor && fromUserCoordinate(anchor, this.getProjection());
     this.endInteractionInternal(duration, resolutionDirection, anchor);
   }
+  /**
+   * Notify the View that an interaction has ended. The view state will be resolved
+   * to a stable one if needed (depending on its constraints).
+   * @param {number} [duration] Animation duration in ms.
+   * @param {number} [resolutionDirection] Which direction to zoom.
+   * @param {import("./coordinate.js").Coordinate} [anchor] The origin of the transformation.
+   */
   endInteractionInternal(duration, resolutionDirection, anchor) {
     if (!this.getInteracting()) {
       return;
@@ -3174,14 +4898,45 @@ var View = class extends Object_default {
     this.setHint(ViewHint_default.INTERACTING, -1);
     this.resolveConstraints(duration, resolutionDirection, anchor);
   }
+  /**
+   * Get a valid position for the view center according to the current constraints.
+   * @param {import("./coordinate.js").Coordinate|undefined} targetCenter Target center position.
+   * @param {number} [targetResolution] Target resolution. If not supplied, the current one will be used.
+   * This is useful to guess a valid center position at a different zoom level.
+   * @return {import("./coordinate.js").Coordinate|undefined} Valid center position.
+   */
   getConstrainedCenter(targetCenter, targetResolution) {
     const size = this.getViewportSize_(this.getRotation());
-    return this.constraints_.center(targetCenter, targetResolution || this.getResolution(), size);
+    return this.constraints_.center(
+      targetCenter,
+      targetResolution || this.getResolution(),
+      size
+    );
   }
+  /**
+   * Get a valid zoom level according to the current view constraints.
+   * @param {number|undefined} targetZoom Target zoom.
+   * @param {number} [direction=0] Indicate which resolution should be used
+   * by a renderer if the view resolution does not match any resolution of the tile source.
+   * If 0, the nearest resolution will be used. If 1, the nearest lower resolution
+   * will be used. If -1, the nearest higher resolution will be used.
+   * @return {number|undefined} Valid zoom level.
+   */
   getConstrainedZoom(targetZoom, direction) {
     const targetRes = this.getResolutionForZoom(targetZoom);
-    return this.getZoomForResolution(this.getConstrainedResolution(targetRes, direction));
+    return this.getZoomForResolution(
+      this.getConstrainedResolution(targetRes, direction)
+    );
   }
+  /**
+   * Get a valid resolution according to the current view constraints.
+   * @param {number|undefined} targetResolution Target resolution.
+   * @param {number} [direction=0] Indicate which resolution should be used
+   * by a renderer if the view resolution does not match any resolution of the tile source.
+   * If 0, the nearest resolution will be used. If 1, the nearest lower resolution
+   * will be used. If -1, the nearest higher resolution will be used.
+   * @return {number|undefined} Valid resolution.
+   */
   getConstrainedResolution(targetResolution, direction) {
     direction = direction || 0;
     const size = this.getViewportSize_(this.getRotation());
@@ -3232,12 +4987,26 @@ function createResolutionConstraint(options) {
     maxResolution = resolutions[minZoom];
     minResolution = resolutions[maxZoom] !== void 0 ? resolutions[maxZoom] : resolutions[resolutions.length - 1];
     if (options.constrainResolution) {
-      resolutionConstraint = createSnapToResolutions(resolutions, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createSnapToResolutions(
+        resolutions,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     } else {
-      resolutionConstraint = createMinMaxResolution(maxResolution, minResolution, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createMinMaxResolution(
+        maxResolution,
+        minResolution,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     }
   } else {
-    const size = !projExtent ? 360 * METERS_PER_UNIT.degrees / projection.getMetersPerUnit() : Math.max(getWidth(projExtent), getHeight(projExtent));
+    const size = !projExtent ? (
+      // use an extent that can fit the whole world if need be
+      360 * METERS_PER_UNIT.degrees / projection.getMetersPerUnit()
+    ) : Math.max(getWidth(projExtent), getHeight(projExtent));
     const defaultMaxResolution = size / DEFAULT_TILE_SIZE / Math.pow(defaultZoomFactor, DEFAULT_MIN_ZOOM);
     const defaultMinResolution = defaultMaxResolution / Math.pow(defaultZoomFactor, defaultMaxZoom - DEFAULT_MIN_ZOOM);
     maxResolution = options.maxResolution;
@@ -3258,12 +5027,27 @@ function createResolutionConstraint(options) {
         minResolution = defaultMinResolution;
       }
     }
-    maxZoom = minZoom + Math.floor(Math.log(maxResolution / minResolution) / Math.log(zoomFactor));
+    maxZoom = minZoom + Math.floor(
+      Math.log(maxResolution / minResolution) / Math.log(zoomFactor)
+    );
     minResolution = maxResolution / Math.pow(zoomFactor, maxZoom - minZoom);
     if (options.constrainResolution) {
-      resolutionConstraint = createSnapToPower(zoomFactor, maxResolution, minResolution, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createSnapToPower(
+        zoomFactor,
+        maxResolution,
+        minResolution,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     } else {
-      resolutionConstraint = createMinMaxResolution(maxResolution, minResolution, smooth, !constrainOnlyCenter && extent, showFullExtent);
+      resolutionConstraint = createMinMaxResolution(
+        maxResolution,
+        minResolution,
+        smooth,
+        !constrainOnlyCenter && extent,
+        showFullExtent
+      );
     }
   }
   return {

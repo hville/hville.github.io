@@ -1,5 +1,6 @@
 // ../node_modules/ol/proj/Units.js
 var METERS_PER_UNIT = {
+  // use the radius of the Normal sphere
   "radians": 6370997 / (2 * Math.PI),
   "degrees": 2 * Math.PI * 6370997 / 360,
   "ft": 0.3048,
@@ -9,9 +10,13 @@ var METERS_PER_UNIT = {
 
 // ../node_modules/ol/proj/Projection.js
 var Projection = class {
+  /**
+   * @param {Options} options Projection options.
+   */
   constructor(options) {
     this.code_ = options.code;
-    this.units_ = options.units;
+    this.units_ = /** @type {import("./Units.js").Units} */
+    options.units;
     this.extent_ = options.extent !== void 0 ? options.extent : null;
     this.worldExtent_ = options.worldExtent !== void 0 ? options.worldExtent : null;
     this.axisOrientation_ = options.axisOrientation !== void 0 ? options.axisOrientation : "enu";
@@ -21,50 +26,129 @@ var Projection = class {
     this.defaultTileGrid_ = null;
     this.metersPerUnit_ = options.metersPerUnit;
   }
+  /**
+   * @return {boolean} The projection is suitable for wrapping the x-axis
+   */
   canWrapX() {
     return this.canWrapX_;
   }
+  /**
+   * Get the code for this projection, e.g. 'EPSG:4326'.
+   * @return {string} Code.
+   * @api
+   */
   getCode() {
     return this.code_;
   }
+  /**
+   * Get the validity extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getExtent() {
     return this.extent_;
   }
+  /**
+   * Get the units of this projection.
+   * @return {import("./Units.js").Units} Units.
+   * @api
+   */
   getUnits() {
     return this.units_;
   }
+  /**
+   * Get the amount of meters per unit of this projection.  If the projection is
+   * not configured with `metersPerUnit` or a units identifier, the return is
+   * `undefined`.
+   * @return {number|undefined} Meters.
+   * @api
+   */
   getMetersPerUnit() {
     return this.metersPerUnit_ || METERS_PER_UNIT[this.units_];
   }
+  /**
+   * Get the world extent for this projection.
+   * @return {import("../extent.js").Extent} Extent.
+   * @api
+   */
   getWorldExtent() {
     return this.worldExtent_;
   }
+  /**
+   * Get the axis orientation of this projection.
+   * Example values are:
+   * enu - the default easting, northing, elevation.
+   * neu - northing, easting, up - useful for "lat/long" geographic coordinates,
+   *     or south orientated transverse mercator.
+   * wnu - westing, northing, up - some planetary coordinate systems have
+   *     "west positive" coordinate systems
+   * @return {string} Axis orientation.
+   * @api
+   */
   getAxisOrientation() {
     return this.axisOrientation_;
   }
+  /**
+   * Is this projection a global projection which spans the whole world?
+   * @return {boolean} Whether the projection is global.
+   * @api
+   */
   isGlobal() {
     return this.global_;
   }
+  /**
+   * Set if the projection is a global projection which spans the whole world
+   * @param {boolean} global Whether the projection is global.
+   * @api
+   */
   setGlobal(global) {
     this.global_ = global;
     this.canWrapX_ = !!(global && this.extent_);
   }
+  /**
+   * @return {import("../tilegrid/TileGrid.js").default} The default tile grid.
+   */
   getDefaultTileGrid() {
     return this.defaultTileGrid_;
   }
+  /**
+   * @param {import("../tilegrid/TileGrid.js").default} tileGrid The default tile grid.
+   */
   setDefaultTileGrid(tileGrid) {
     this.defaultTileGrid_ = tileGrid;
   }
+  /**
+   * Set the validity extent for this projection.
+   * @param {import("../extent.js").Extent} extent Extent.
+   * @api
+   */
   setExtent(extent) {
     this.extent_ = extent;
     this.canWrapX_ = !!(this.global_ && extent);
   }
+  /**
+   * Set the world extent for this projection.
+   * @param {import("../extent.js").Extent} worldExtent World extent
+   *     [minlon, minlat, maxlon, maxlat].
+   * @api
+   */
   setWorldExtent(worldExtent) {
     this.worldExtent_ = worldExtent;
   }
+  /**
+   * Set the getPointResolution function (see {@link module:ol/proj.getPointResolution}
+   * for this projection.
+   * @param {function(number, import("../coordinate.js").Coordinate):number} func Function
+   * @api
+   */
   setGetPointResolution(func) {
     this.getPointResolutionFunc_ = func;
   }
+  /**
+   * Get the custom point resolution function for this projection (if set).
+   * @return {function(number, import("../coordinate.js").Coordinate):number|undefined} The custom point
+   * resolution function (if set).
+   */
   getPointResolutionFunc() {
     return this.getPointResolutionFunc_;
   }
@@ -78,6 +162,9 @@ var EXTENT = [-HALF_SIZE, -HALF_SIZE, HALF_SIZE, HALF_SIZE];
 var WORLD_EXTENT = [-180, -85, 180, 85];
 var MAX_SAFE_Y = RADIUS * Math.log(Math.tan(Math.PI / 2));
 var EPSG3857Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   */
   constructor(code) {
     super({
       code,
@@ -143,6 +230,10 @@ var RADIUS2 = 6378137;
 var EXTENT2 = [-180, -90, 180, 90];
 var METERS_PER_UNIT2 = Math.PI * RADIUS2 / 180;
 var EPSG4326Projection = class extends Projection_default {
+  /**
+   * @param {string} code Code.
+   * @param {string} [axisOrientation] Axis orientation.
+   */
   constructor(code, axisOrientation) {
     super({
       code,
@@ -225,7 +316,16 @@ function applyTransform(extent, transformFn, dest, stops) {
     const width = extent[2] - extent[0];
     const height = extent[3] - extent[1];
     for (let i = 0; i < stops; ++i) {
-      coordinates.push(extent[0] + width * i / stops, extent[1], extent[2], extent[1] + height * i / stops, extent[2] - width * i / stops, extent[3], extent[0], extent[3] - height * i / stops);
+      coordinates.push(
+        extent[0] + width * i / stops,
+        extent[1],
+        extent[2],
+        extent[1] + height * i / stops,
+        extent[2] - width * i / stops,
+        extent[3],
+        extent[0],
+        extent[3] - height * i / stops
+      );
     }
   } else {
     coordinates = [
@@ -277,7 +377,9 @@ function getWorldsAway(coordinate, projection, sourceExtentWidth) {
   let worldsAway = 0;
   if (projection.canWrapX() && (coordinate[0] < projectionExtent[0] || coordinate[0] > projectionExtent[2])) {
     sourceExtentWidth = sourceExtentWidth || getWidth(projectionExtent);
-    worldsAway = Math.floor((coordinate[0] - projectionExtent[0]) / sourceExtentWidth);
+    worldsAway = Math.floor(
+      (coordinate[0] - projectionExtent[0]) / sourceExtentWidth
+    );
   }
   return worldsAway;
 }
@@ -343,7 +445,13 @@ function addProjections(projections) {
   projections.forEach(addProjection);
 }
 function get3(projectionLike) {
-  return typeof projectionLike === "string" ? get(projectionLike) : projectionLike || null;
+  return typeof projectionLike === "string" ? get(
+    /** @type {string} */
+    projectionLike
+  ) : (
+    /** @type {Projection} */
+    projectionLike || null
+  );
 }
 function getPointResolution(projection, resolution, point, units) {
   projection = get3(projection);
@@ -362,7 +470,10 @@ function getPointResolution(projection, resolution, point, units) {
     if (projUnits == "degrees" && !units || units == "degrees") {
       pointResolution = resolution;
     } else {
-      const toEPSG43262 = getTransformFromProjections(projection, get3("EPSG:4326"));
+      const toEPSG43262 = getTransformFromProjections(
+        projection,
+        get3("EPSG:4326")
+      );
       if (toEPSG43262 === identityTransform && projUnits !== "degrees") {
         pointResolution = resolution * projection.getMetersPerUnit();
       } else {
@@ -417,35 +528,62 @@ function createProjection(projection, defaultCode) {
   } else if (typeof projection === "string") {
     return get3(projection);
   }
-  return projection;
+  return (
+    /** @type {Projection} */
+    projection
+  );
 }
 function createTransformFromCoordinateTransform(coordTransform) {
-  return function(input, output, dimension) {
-    const length = input.length;
-    dimension = dimension !== void 0 ? dimension : 2;
-    output = output !== void 0 ? output : new Array(length);
-    for (let i = 0; i < length; i += dimension) {
-      const point = coordTransform(input.slice(i, i + dimension));
-      const pointLength = point.length;
-      for (let j = 0, jj = dimension; j < jj; ++j) {
-        output[i + j] = j >= pointLength ? input[i + j] : point[j];
+  return (
+    /**
+     * @param {Array<number>} input Input.
+     * @param {Array<number>} [output] Output.
+     * @param {number} [dimension] Dimension.
+     * @return {Array<number>} Output.
+     */
+    function(input, output, dimension) {
+      const length = input.length;
+      dimension = dimension !== void 0 ? dimension : 2;
+      output = output !== void 0 ? output : new Array(length);
+      for (let i = 0; i < length; i += dimension) {
+        const point = coordTransform(input.slice(i, i + dimension));
+        const pointLength = point.length;
+        for (let j = 0, jj = dimension; j < jj; ++j) {
+          output[i + j] = j >= pointLength ? input[i + j] : point[j];
+        }
       }
+      return output;
     }
-    return output;
-  };
+  );
 }
 function addCoordinateTransforms(source, destination, forward, inverse) {
   const sourceProj = get3(source);
   const destProj = get3(destination);
-  add2(sourceProj, destProj, createTransformFromCoordinateTransform(forward));
-  add2(destProj, sourceProj, createTransformFromCoordinateTransform(inverse));
+  add2(
+    sourceProj,
+    destProj,
+    createTransformFromCoordinateTransform(forward)
+  );
+  add2(
+    destProj,
+    sourceProj,
+    createTransformFromCoordinateTransform(inverse)
+  );
 }
 function fromLonLat(coordinate, projection) {
   disableCoordinateWarning();
-  return transform(coordinate, "EPSG:4326", projection !== void 0 ? projection : "EPSG:3857");
+  return transform(
+    coordinate,
+    "EPSG:4326",
+    projection !== void 0 ? projection : "EPSG:3857"
+  );
 }
 function toLonLat(coordinate, projection) {
-  const lonLat = transform(coordinate, projection !== void 0 ? projection : "EPSG:3857", "EPSG:4326");
+  const lonLat = transform(
+    coordinate,
+    projection !== void 0 ? projection : "EPSG:3857",
+    "EPSG:4326"
+  );
   const lon = lonLat[0];
   if (lon < -180 || lon > 180) {
     lonLat[0] = modulo(lon + 180, 360) - 180;
@@ -486,7 +624,10 @@ function transformExtent(extent, source, destination, stops) {
   return applyTransform(extent, transformFunc, void 0, stops);
 }
 function transformWithProjections(point, sourceProjection, destinationProjection) {
-  const transformFunc = getTransformFromProjections(sourceProjection, destinationProjection);
+  const transformFunc = getTransformFromProjections(
+    sourceProjection,
+    destinationProjection
+  );
   return transformFunc(point);
 }
 var userProjection = null;
@@ -512,7 +653,9 @@ function fromUserCoordinate(coordinate, destProjection) {
   if (!userProjection) {
     if (showCoordinateWarning && !equals(coordinate, [0, 0]) && coordinate[0] >= -180 && coordinate[0] <= 180 && coordinate[1] >= -90 && coordinate[1] <= 90) {
       showCoordinateWarning = false;
-      warn("Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates.");
+      warn(
+        "Call useGeographic() from ol/proj once to work with [longitude, latitude] coordinates."
+      );
     }
     return coordinate;
   }
@@ -572,7 +715,12 @@ function createSafeCoordinateTransform(sourceProj, destProj, transform2) {
 function addCommon() {
   addEquivalentProjections(PROJECTIONS);
   addEquivalentProjections(PROJECTIONS2);
-  addEquivalentTransforms(PROJECTIONS2, PROJECTIONS, fromEPSG4326, toEPSG4326);
+  addEquivalentTransforms(
+    PROJECTIONS2,
+    PROJECTIONS,
+    fromEPSG4326,
+    toEPSG4326
+  );
 }
 addCommon();
 export {
