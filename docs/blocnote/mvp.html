@@ -1,0 +1,104 @@
+<!doctype html>
+<head>
+	<title data-lang>benchmark // banc d'essais</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+<hr>
+
+<details>
+	<summary>templates and examples // exemples de modèles</summary>
+	<li></li>
+</details>
+
+<hr>
+
+<script type=module>
+
+//import {cast, frame, $, $$} from '/_npm/@hugov/inhtml.js'
+//import hashData from '../_src/hash-data.js'
+//import editable from '../_src/editable.js'
+
+async function getFile() {
+	const [fileHandle] = await window.showOpenFilePicker()
+	const file = await fileHandle.getFile()
+	return await file.text()
+}
+async function getCode() {
+	const [fileHandle] = await window.showOpenFilePicker({
+		types: [{
+			description: "javascript",
+			accept: {"text/javascript": [".js", ".mjs"]}
+		}],
+		//excludeAcceptAllOptions: true
+	})
+	const file = await fileHandle.getFile()
+	return file.text() // .name;
+}
+function dateStamp() {
+	const d = new Date()
+	return d.getFullYear() + (d.getMonth()+1).toString().padStart(2,'0') + d.getDate()
+}
+/**
+ * @param {string|BufferSource|Blob} content
+ * @param {} fileHandle
+ * @return void
+ */
+async function saveFile(content, fileHandle_ = window.showSaveFilePicker({
+		suggestedName: dateStamp() + 'notebook.js',
+		types: [{
+			description: "javascript",
+			accept: {"text/javascript": [".js", ".mjs"]}
+		}],
+		//excludeAcceptAllOptions: true,
+		//multiple: false
+	})) {
+	const fileHandle = await fileHandle_
+	const wStream = await fileHandle.createWritable()
+	await wStream.write(content)
+	await wStream.close()
+}
+
+window.cmd = {saveFile, getFile, getCode}
+const url = URL.createObjectURL(new Blob(['console.log("B L O B")'],{type:"text/javascript"}))
+console.log(await import(url))
+const iframeEl = document.createElement('iframe')
+iframeEl.style.display = 'none'
+	iframeEl.sandbox = 'allow-scripts'
+	//iframeEl.srcdoc = `<script type=module>import '${ url }';<\/script>`
+	iframeEl.srcdoc = `<script type=module>console.log(navigator.storage)<\/script>`
+document.body.appendChild(iframeEl)
+
+//URL.createObjectURL(new FILE('console.log("F I L E")',{type:"text/javascript"}))
+
+
+
+
+//TODO drag and drop
+//TODO remember file
+//TODO keep file handle for auto save
+//TODO private file system root = navigator.storage.getDirectory() //backup
+//TODO googlechromelabs.github.io/text-editor/
+//FILE SYSTEM ACCESS API : read/write files/directories
+//FILEREADER : drag&drop, <input type=file>
+
+
+/**
+ * const file = await fileHandle.getFile()
+ * const code = file.text
+ * const name = file.name
+ */
+async function getFileHandle(options = {
+		types: [{
+			description: "javascript",
+			accept: {"text/javascript": [".js", ".mjs"]}
+		}]
+	}) {
+	const [fileHandle] = await window.showOpenFilePicker(options)
+	return fileHandle
+}
+</script>
+</body>

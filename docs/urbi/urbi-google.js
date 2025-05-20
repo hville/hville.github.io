@@ -27,7 +27,7 @@ After contacting google here is the answer: "Places API nearby search can return
 So bottom line is, calling the request to the get the next page results is being charged again. the price of the call is the same as the call to the first page results.
 
 */
-import { Loader } from '../_npm/@googlemaps/js-api-loader.js'
+import { Loader } from '../_${TODO-npm}/@googlemaps/js-api-loader.js'
 //C:\_dev\hville.github.io\docs\_env\api_key-googlemaps.js
 import key from '../_env/api_key-googlemaps.js'
 
