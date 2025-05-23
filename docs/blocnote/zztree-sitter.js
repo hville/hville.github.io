@@ -14,11 +14,11 @@ seafox@1.7.1                   95 KB      93.41 KB   25.57 KB x 2,613 ...3y! ...
 esprima@4.0.1                  278.47 KB  132.14 KB  28.59 KB x 1,581 ...No Module
 acorn@8.8.0                    206.72 KB  107.29 KB  30.81 KB x 1,502 mjs
 tenko@2.0.1                    371.71 KB  142.41 KB  39.75 KB x 1,183
-meriyah@4.3.0                  128.94 KB  127.33 KB  40.25 KB x 3,107 ***
+meriyah@4.3.0                  128.94 KB  127.33 KB  40.25 KB x 3,107 *** (a js parser)
 
 esprima@4.0.1 29.0 kB
 acorn@8.9.0   32.1 kB
-meriyah@4.3.7 40.3 kB
+meriyah@4.3.7 40.3 kB (a js parser)
 
 acorn-loose@8.3.0                                    38.2
 

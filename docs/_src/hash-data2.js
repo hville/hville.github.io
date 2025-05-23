@@ -1,4 +1,4 @@
-import {encode, decode} from '/_npm/@hugov/shorter-string.js'
+import {encode, decode} from '/_npm/@hugov/shorter-string2.js'
 import './lang-event.js'
 
 function getHash() {
@@ -22,13 +22,13 @@ addEventListener('lang', () => {
 })
 
 const {port1, port2} = new MessageChannel()
-port1.onmessage = ({data:{data='', lang=H.lang}}) => {
-	location.hash = `#${ lang }/${ encode(data) }`
+port1.onmessage = async ({data:{data='', lang=H.lang}}) => {
+	location.hash = `#${ lang }/${ await encode(data) }`
 }
-addEventListener('hashchange', () => {
+addEventListener('hashchange', async () => {
 	const {lang, data} = getHash()
 	H.lang = lang
-	port1.postMessage({data: !data ? '' : decode( data ), lang})
+	port1.postMessage({data: !data ? '' : await decode( data ), lang})
 })
 
 export default port2

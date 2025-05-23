@@ -21,11 +21,7 @@
 
 <details>
 	<summary data-lang>templates and examples // exemples de modèles</summary>
-	<li data-lang data-hash="D!ZiTsPl~?6DCy_G">
-		<a lang=en> a test </a>
-		<a lang=fr> un test </a>
-	</li>
-	<li data-lang data-hash="O+c?.-jMBX;ph:T+.zvAVpmarOjKCeQbS.0gPlVY=/X_7o+g9(ROfpVj!&y)h0k+A2)2nP#">
+	<li data-lang data-hash="_p@1j~+@wn?0K?jZrDe!ik4FxcUqWhr?Uz;Lv6=7__bZI(~7DjaJ!Optob&,5~;2sqiW3Q/z.#4ba9?tmJGL3h@u.=Iax5nH@&we">
 		<a lang=en> "unknown-pleasure" </a>
 		<a lang=fr> "unknown-pleasure" </a>
 	</li>
@@ -148,7 +144,7 @@ function nextFrame() {
 	return new Promise(r => requestAnimationFrame(r))
 }
 
-function plot2D(ctx, stat) {
+function plot2D(ctx, stat) { //TODO scale height?
 	ctx.save()
 	stat.plotf(ctx)
 	ctx.globalCompositeOperation = 'destination-out'

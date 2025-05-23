@@ -1,14 +1,25 @@
-// ../node_modules/codejar/codejar.js
+// ../node_modules/codejar/dist/codejar.js
 var globalWindow = window;
 function CodeJar(editor, highlight, opt = {}) {
-  const options = Object.assign({ tab: "	", indentOn: /[({\[]$/, moveToNewLine: /^[)}\]]/, spellcheck: false, catchTab: true, preserveIdent: true, addClosing: true, history: true, window: globalWindow }, opt);
+  const options = {
+    tab: "	",
+    indentOn: /[({\[]$/,
+    moveToNewLine: /^[)}\]]/,
+    spellcheck: false,
+    catchTab: true,
+    preserveIdent: true,
+    addClosing: true,
+    history: true,
+    window: globalWindow,
+    ...opt
+  };
   const window2 = options.window;
   const document = window2.document;
-  let listeners = [];
-  let history = [];
+  const listeners = [];
+  const history = [];
   let at = -1;
   let focus = false;
-  let callback;
+  let onUpdate = () => void 0;
   let prev;
   editor.setAttribute("contenteditable", "plaintext-only");
   editor.setAttribute("spellcheck", options.spellcheck ? "true" : "false");
@@ -16,15 +27,17 @@ function CodeJar(editor, highlight, opt = {}) {
   editor.style.overflowWrap = "break-word";
   editor.style.overflowY = "auto";
   editor.style.whiteSpace = "pre-wrap";
+  const doHighlight = (editor2, pos) => {
+    highlight(editor2, pos);
+  };
   let isLegacy = false;
-  highlight(editor);
   if (editor.contentEditable !== "plaintext-only")
     isLegacy = true;
   if (isLegacy)
     editor.setAttribute("contenteditable", "true");
   const debounceHighlight = debounce(() => {
     const pos = save();
-    highlight(editor, pos);
+    doHighlight(editor, pos);
     restore(pos);
   }, 30);
   let recording = false;
@@ -71,8 +84,7 @@ function CodeJar(editor, highlight, opt = {}) {
     if (prev !== toString())
       debounceHighlight();
     debounceRecordHistory(event);
-    if (callback)
-      callback(toString());
+    onUpdate(toString());
   });
   on("focus", (_event) => {
     focus = true;
@@ -84,8 +96,13 @@ function CodeJar(editor, highlight, opt = {}) {
     recordHistory();
     handlePaste(event);
     recordHistory();
-    if (callback)
-      callback(toString());
+    onUpdate(toString());
+  });
+  on("cut", (event) => {
+    recordHistory();
+    handleCut(event);
+    recordHistory();
+    onUpdate(toString());
   });
   function save() {
     const s = getSelection();
@@ -183,7 +200,35 @@ function CodeJar(editor, highlight, opt = {}) {
     if (pos.dir == "<-") {
       [startNode, startOffset, endNode, endOffset] = [endNode, endOffset, startNode, startOffset];
     }
+    {
+      const startEl = uneditable(startNode);
+      if (startEl) {
+        const node = document.createTextNode("");
+        startEl.parentNode?.insertBefore(node, startEl);
+        startNode = node;
+        startOffset = 0;
+      }
+      const endEl = uneditable(endNode);
+      if (endEl) {
+        const node = document.createTextNode("");
+        endEl.parentNode?.insertBefore(node, endEl);
+        endNode = node;
+        endOffset = 0;
+      }
+    }
     s.setBaseAndExtent(startNode, startOffset, endNode, endOffset);
+    editor.normalize();
+  }
+  function uneditable(node) {
+    while (node && node !== editor) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node;
+        if (el.getAttribute("contenteditable") == "false") {
+          return el;
+        }
+      }
+      node = node.parentNode;
+    }
   }
   function beforeCursor() {
     const s = getSelection();
@@ -241,16 +286,7 @@ function CodeJar(editor, highlight, opt = {}) {
   function handleSelfClosingCharacters(event) {
     const open = `([{'"`;
     const close = `)]}'"`;
-    const codeAfter = afterCursor();
-    const codeBefore = beforeCursor();
-    const escapeCharacter = codeBefore.substr(codeBefore.length - 1) === "\\";
-    const charAfter = codeAfter.substr(0, 1);
-    if (close.includes(event.key) && !escapeCharacter && charAfter === event.key) {
-      const pos = save();
-      preventDefault(event);
-      pos.start = ++pos.end;
-      restore(pos);
-    } else if (open.includes(event.key) && !escapeCharacter && (`"'`.includes(event.key) || ["", " ", "\n"].includes(charAfter))) {
+    if (open.includes(event.key)) {
       preventDefault(event);
       const pos = save();
       const wrapText = pos.start == pos.end ? "" : getSelection().toString();
@@ -325,16 +361,33 @@ function CodeJar(editor, highlight, opt = {}) {
     }
   }
   function handlePaste(event) {
+    if (event.defaultPrevented)
+      return;
     preventDefault(event);
-    const text = (event.originalEvent || event).clipboardData.getData("text/plain").replace(/\r/g, "");
+    const originalEvent = event.originalEvent ?? event;
+    const text = originalEvent.clipboardData.getData("text/plain").replace(/\r\n?/g, "\n");
     const pos = save();
     insert(text);
-    highlight(editor);
+    doHighlight(editor);
     restore({
       start: Math.min(pos.start, pos.end) + text.length,
       end: Math.min(pos.start, pos.end) + text.length,
       dir: "<-"
     });
+  }
+  function handleCut(event) {
+    const pos = save();
+    const selection = getSelection();
+    const originalEvent = event.originalEvent ?? event;
+    originalEvent.clipboardData.setData("text/plain", selection.toString());
+    document.execCommand("delete");
+    doHighlight(editor);
+    restore({
+      start: Math.min(pos.start, pos.end),
+      end: Math.min(pos.start, pos.end),
+      dir: "<-"
+    });
+    preventDefault(event);
   }
   function visit(editor2, visitor) {
     const queue = [];
@@ -397,8 +450,7 @@ function CodeJar(editor, highlight, opt = {}) {
     event.preventDefault();
   }
   function getSelection() {
-    var _a;
-    if (((_a = editor.parentNode) === null || _a === void 0 ? void 0 : _a.nodeType) == Node.DOCUMENT_FRAGMENT_NODE) {
+    if (editor.parentNode?.nodeType == Node.DOCUMENT_FRAGMENT_NODE) {
       return editor.parentNode.getSelection();
     }
     return window2.getSelection();
@@ -409,10 +461,11 @@ function CodeJar(editor, highlight, opt = {}) {
     },
     updateCode(code) {
       editor.textContent = code;
-      highlight(editor);
+      doHighlight(editor);
+      onUpdate(code);
     },
-    onUpdate(cb) {
-      callback = cb;
+    onUpdate(callback) {
+      onUpdate = callback;
     },
     toString,
     save,

@@ -22,16 +22,14 @@
     "@hugov/correl-range2": "^0.1.0",
     "@hugov/inhtml": "^1.0.0",
     "@hugov/shorter-string": "^6.1.0",
+    "@hugov/shorter-string2": "^0.1.0",
     "array-order": "^2.2.0",
-    "codejar": "^3.7.0",
+    "codejar": "^4.2.0",
     "esprima": "^4.0.1",
     "grosso-modo": "^4.3.0",
     "lazy-stats": "^4.3.0",
-    "meriyah": "^4.3.7",
     "norm-dist": "^3.0.1",
-    "ol": "^7.3.0",
     "sample-distribution": "^1.7.1",
-    "terser": "^5.18.2",
     "yace": "^0.0.6"
   },
   "devDependencies": {

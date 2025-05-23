@@ -1,4 +1,4 @@
-import {encode, decode} from '/_npm/@hugov/shorter-string.js'
+import {encode, decode} from '/_npm/@hugov/shorter-string2.js'
 import './lang-event.js'
 
 function getHash() {
@@ -22,15 +22,15 @@ addEventListener('lang', () => {
 })
 
 export default function(/* {lang:string, lang:string} => void */onhash, enc=encode, dec=decode) {
-	function onhashchange() {
+	async function onhashchange() {
 		const {lang, data} = getHash()
 		H.lang = lang
-		onhash( {data: !data ? '' : !dec ? data : dec( data ), lang} )
+		onhash( {data: !data ? '' : !dec ? data : await dec( data ), lang} )
 	}
 	addEventListener('hashchange', onhashchange)
 	onhashchange()
 
-	return ({data='', lang=H.lang}) => {
-		location.hash = `#${ lang }/${ enc?.( data ) ?? data }`
+	return async ({data='', lang=H.lang}) => {
+		location.hash = `#${ lang }/${ await (enc?.( data )) ?? data }`
 	}
 }

@@ -6,7 +6,7 @@ import LexE from './lexer.js'
 import LexT from './lexer2.js'
 import {readFileSync} from 'fs'
 
-const ol = readFileSync('../_npm/ol.js', 'utf8')
+//const ol = readFileSync('../_npm/ol.js', 'utf8')
 const lx = readFileSync('./lexer.js', 'utf8')
 let tr = readFileSync('../../node_modules/terser/dist/bundle.min.js', 'utf8')
 console.log(ol.length + lx.length + tr.length)
