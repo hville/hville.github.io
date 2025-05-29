@@ -25,15 +25,36 @@ function icdf_voutier_default(p = Math.random()) {
   return ((a1 * r + a0) / ((r + b1) * r + b0) + a2) * q;
 }
 
+// ../node_modules/@hugov/metanorm/parser.js
+var toNumber = (val) => val.endsWith("%") ? +val.slice(0, -1).replace(/[,_]/g, "") / 100 : +val.replace(/[,_]/g, "");
+function parser_default(strings, ...values) {
+  const tokens = strings.reduce((acc, str, i) => acc + str + (values[i] ?? ""), "").split(/\s+/), points = [], options = {}, risks = {};
+  for (let t of tokens) {
+    if (t.endsWith("]")) options.max = toNumber(t.slice(0, -1));
+    else if (t.startsWith("[")) options.min = toNumber(t.slice(1));
+    else if (t.startsWith("@")) options.ci = toNumber(t.slice(1));
+    else if (t.includes(":")) {
+      const [key, val] = t.split(":");
+      risks[key] = toNumber(val);
+    } else points.push(toNumber(t));
+  }
+  return { points, options, risks };
+}
+
 // ../node_modules/@hugov/metanorm/index.js
-function metanorm_default(low, top, { min, med, max, ci = 0.8 } = {}) {
-  if (top <= low) throw Error("top <= low");
-  if (max !== void 0 && max <= top) throw Error("max <= top");
-  if (min !== void 0 && low <= min) throw Error("low <= min");
-  if (med !== void 0 && (med <= low || top <= med)) throw Error("med <= low || top <= med");
+function metanorm(...args) {
+  const { points, options } = {
+    points: args,
+    options: typeof args[args.length - 1] === "object" ? args.pop() : {}
+  };
+  const { min, max, ci = 0.8 } = options, low = points[0], top = points[points.length - 1];
+  for (let i = 1; i < points.length; i++)
+    if (points[i - 1] >= points[i]) throw Error(`out of order points: ${points[i - 1]} >= ${points[i]}`);
+  if (max !== void 0 && max <= top) throw Error(`max <= ${top}`);
+  if (min !== void 0 && low <= min) throw Error(`${low} <= min`);
   if (min !== void 0 && max !== void 0) {
-    const [a13, a23, a32, k2] = params(ci, low, med, top, (x) => Math.log((x - min) / (max - x)));
-    if (med === void 0) {
+    const [a13, a23, a32, k2] = params(ci, points.map((x) => Math.log((x - min) / (max - x))));
+    if (a32 === 0) {
       return (z) => {
         const q = Math.exp(a13 + a23 * z);
         return q === Infinity ? max : (min + max * q) / (1 + q);
@@ -48,30 +69,32 @@ function metanorm_default(low, top, { min, med, max, ci = 0.8 } = {}) {
     }
   }
   if (min !== void 0) {
-    const [a13, a23, a32, k2] = params(ci, low, med, top, (x) => Math.log(x - min));
-    if (med === void 0)
+    const [a13, a23, a32, k2] = params(ci, points.map((x) => Math.log(x - min)));
+    if (a32 === 0)
       return (z) => min + Math.exp(a13 + a23 * z);
     else
       return (z) => z > 0 ? z === Infinity ? z : min + Math.exp(a13 + z * (a23 + a32 * z / (1 + k2 * z))) : z === -Infinity ? min : min + Math.exp(a13 + z * (a23 + a32 * z / (1 - k2 * z)));
   }
   if (max !== void 0) {
-    const [a13, a23, a32, k2] = params(ci, low, med, top, (x) => -Math.log(max - x));
-    if (med === void 0)
+    const [a13, a23, a32, k2] = params(ci, points.map((x) => -Math.log(max - x)));
+    if (a32 === 0)
       return (z) => max - Math.exp(-a13 - a23 * z);
     else
       return (z) => z > 0 ? z === Infinity ? max : max - Math.exp(-a13 - z * (a23 + a32 * z / (1 + k2 * z))) : z === -Infinity ? z : max - Math.exp(-a13 - z * (a23 + a32 * z / (1 - k2 * z)));
   }
-  const [a12, a22, a3, k] = params(ci, low, med, top);
-  if (med === void 0)
+  const [a12, a22, a3, k] = params(ci, points);
+  if (a3 === 0)
     return (z) => a12 + a22 * z;
   else
     return (z) => z + 1 === z ? z : a12 + z * (a22 + a3 * z / (1 + k * Math.abs(z)));
 }
-function params(ci, low, med, top, xfo = (x) => x) {
-  const l = xfo(low), t = xfo(top), zq = icdf_voutier_default(0.5 + ci / 2);
-  if (med === void 0) return [(t + l) / 2, (t - l) / (2 * zq), med, med];
-  const m = xfo(med), \u03B1 = 2 * (med - low) / (top - low) - 1, c = 2, k = c * Math.abs(\u03B1) / (zq * (1 - Math.abs(\u03B1)));
-  return [m, (t - l) / (2 * zq), k * (t + l - 2 * m) * (1 + k * zq) / (2 * k * zq * zq), k];
+function params(ci, points) {
+  if (points.length === 0) return [0, 1, 0, 0];
+  if (points.length === 1) return [points[0], 1, 0, 0];
+  const l = points[0], t = points[points.length - 1], zq = icdf_voutier_default(0.5 + ci / 2);
+  if (points.length === 2) return [(t + l) / 2, (t - l) / (2 * zq), 0, 0];
+  const m = points[1], \u03B1 = 2 * (m - l) / (t - l) - 1, c = 2, k = c * Math.abs(\u03B1) / (zq * (1 - Math.abs(\u03B1)));
+  return k > Number.MIN_VALUE ? [m, (t - l) / (2 * zq), k * (t + l - 2 * m) * (1 + k * zq) / (2 * k * zq * zq), k] : [(t + l) / 2, (t - l) / (2 * zq), 0, 0];
 }
 
 // ../node_modules/@hugov/correl-range2/src/_random-number.js
@@ -552,33 +575,14 @@ var Sim = class {
   }
 };
 
-// ../node_modules/@hugov/correl-range2/src/parser.js
-function parser_default(strings, ...values) {
-  const tokens = strings.reduce((acc, str, i) => acc + str + (values[i] ?? ""), "").split(/\s+/), points = [], options = {}, risks = {};
-  for (let t of tokens) {
-    if (t.endsWith("]")) options.max = +t.slice(0, -1);
-    else if (t.startsWith("[")) options.min = +t.slice(1);
-    else if (t.includes(":")) {
-      const [key, val] = t.split(":");
-      risks[key] = val.endsWith("%") ? +val.slice(0, -1) / 100 : +val;
-    } else if (t.includes("=")) {
-      const [key, val] = t.split("=");
-      options[key] = val.endsWith("%") ? +val.slice(0, -1) / 100 : +val;
-    } else points.push(+t.replace(/[,_]/g, ""));
-  }
-  if (points.length === 3) options.med = points.splice(1, 1)[0];
-  points.push(options);
-  return { points, risks };
-}
-
 // ../node_modules/@hugov/correl-range2/sim.js
 function sim_default(factory, { confidence = 0.8, resolution = 128 } = {}) {
   const riskNames = [], rndNs = [], conf = confidence <= 1 ? confidence : Math.pow(2, 1 - 1 / confidence) - 1;
   let init = false;
   const rndFn = function(strings, ...values) {
     if (init) throw Error("distribution definition must be at initiation");
-    const { points, risks } = parser_default(strings, ...values);
-    return rndNs[rndNs.length] = new RandomNumber(metanorm_default.apply(null, points))._link(riskNames, risks);
+    const { points, options, risks } = parser_default(strings, ...values);
+    return rndNs[rndNs.length] = new RandomNumber(metanorm.apply(null, points, options))._link(riskNames, risks);
   };
   const model = factory(rndFn);
   init = true;

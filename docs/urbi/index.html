@@ -37,18 +37,6 @@
 import hashData from '../_src/hash-data.js'
 import {$} from '/_npm/@hugov/inhtml.js' //$ = ids => document.getElementById(ids[0])
 //import './urbi.js'
-//import Map from '/_npm/ol/Map.js';
-import TileLayer from '/_npm/ol/layer/Tile.js';
-import ImageLayer from '/_npm/ol/layer/Image.js';
-import OSM from '/_npm/ol/source/OSM.js';
-//import View from '/_npm/ol/View.js';
-import Stamen from '/_npm/ol/source/Stamen.js'
-import {Map, View} from '/_npm/ol.js';
-import {fromLonLat} from '/_npm/ol/proj.js';
-import {getRenderPixel} from '/_npm/ol/render.js'
-//import Tile from '/_npm/ol/Tile.js';
-//import Vector from '.../ol/Vector.js';
-//import TileWMS from '/_npm/ol/source/TileWMS.js';
 
 const mapE = $`#mapdiv`,
 			layer1 = new TileLayer({ source: new Stamen({ layer: 'watercolor' }) }),
