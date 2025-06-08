@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "name": "testing scribbler with github",
+    "language_info": {
+      "name": "JavaScipt",
+      "version": "8.0"
+    }
+  },
+  "jsnbversion": "v0.1",
+  "cells": [
+    {
+      "code": "doc text: patate\napp.scribbler.live in desktop\n* save only local save\n\n\n",
+      "status": "",
+      "output": "",
+      "type": "html"
+    }
+  ],
+  "source": "https://github.com/gopi-suvanam/scribbler",
+  "run_on_load": false
+}
