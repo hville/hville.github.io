@@ -113,7 +113,7 @@ const afterSim = stats => {
 		console.log( 'stats', k, stats[k], stats[k].Q(.05), stats[k].Q(.95) )
 		$`tbody`.appendChild(makeRow(stats[k], k))
 		ctx.globalCompositeOperation = 'copy'
-		ctx.drawImage(ctx.canvas, 0, -25)
+		ctx.drawImage(ctx.canvas, 0, -15)
 		ctx.globalCompositeOperation = 'source-over'
 		plot2D(ctx, stats[k])
 	})
