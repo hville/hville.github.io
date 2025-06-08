@@ -113,7 +113,7 @@ const afterSim = stats => {
 		console.log( 'stats', k, stats[k], stats[k].Q(.05), stats[k].Q(.95) )
 		$`tbody`.appendChild(makeRow(stats[k], k))
 		ctx.globalCompositeOperation = 'copy'
-		ctx.drawImage(ctx.canvas, 0, -10)
+		ctx.drawImage(ctx.canvas, 0, -20)
 		ctx.globalCompositeOperation = 'source-over'
 		plot2D(ctx, stats[k])
 	})
@@ -144,9 +144,9 @@ function nextFrame() {
 	return new Promise(r => requestAnimationFrame(r))
 }
 
-function plot2D(ctx, stat) { //TODO scale height?
+function plot2D(ctx, stat) {
 	ctx.save()
-	stat.plotf(ctx, stat.Q(.001), stat.Q(.999))
+	stat.plotf(ctx, stat.Q(.001), stat.Q(.999), 3)
 	ctx.globalCompositeOperation = 'destination-out'
 	ctx.fill()
 	ctx.restore()
