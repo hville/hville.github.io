@@ -93,7 +93,7 @@ function params(ci, points) {
   if (points.length === 1) return [points[0], 1, 0, 0];
   const l = points[0], t = points[points.length - 1], zq = icdf_voutier_default(0.5 + ci / 2);
   if (points.length === 2) return [(t + l) / 2, (t - l) / (2 * zq), 0, 0];
-  const m = points[1], \u03B1 = 2 * (m - l) / (t - l) - 1, c = 2, k = c * Math.abs(\u03B1) / (zq * (1 - Math.abs(\u03B1)));
+  const m = points[1], \u03B1 = 2 * (m - l) / (t - l) - 1, c = Math.abs(\u03B1) + Number.EPSILON, k = c / (zq * (1 - c));
   return k > Number.MIN_VALUE ? [m, (t - l) / (2 * zq), k * (t + l - 2 * m) * (1 + k * zq) / (2 * k * zq * zq), k] : [(t + l) / 2, (t - l) / (2 * zq), 0, 0];
 }
 
@@ -582,11 +582,10 @@ function sim_default(factory, { confidence = 0.8, resolution = 128 } = {}) {
   const rndFn = function(strings, ...values) {
     if (init) throw Error("distribution definition must be at initiation");
     const { points, options, risks } = parser_default(strings, ...values);
-    return rndNs[rndNs.length] = new RandomNumber(metanorm.apply(null, points, options))._link(riskNames, risks);
+    return rndNs[rndNs.length] = new RandomNumber(metanorm(...points, options))._link(riskNames, risks);
   };
   const model = factory(rndFn);
   init = true;
-  console.log("sim.js - riskNames", riskNames, "; # variables", rndNs.length);
   return new Sim(rndNs, riskNames, model, resolution);
 }
 export {
