@@ -1,8 +1,19 @@
+# Keeps docs/feed.atom in sync with the home page list.
+# - On main: rebuild the feed and commit it if it changed.
+# - On pull requests: only check that the home page list can be read
+#   (the feed itself is rebuilt after merge).
 name: feed
 on:
-  pull_request:
   push:
     branches: [main]
+    paths: [docs/index.html, makefeed.js]
+  pull_request:
+    paths: [docs/index.html, makefeed.js]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: feed-${{ github.ref }}
 jobs:
   feed:
     runs-on: ubuntu-latest
@@ -11,4 +22,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node makefeed.js --check
+      - run: node makefeed.js
+      - name: commit the updated feed
+        if: github.event_name != 'pull_request'
+        run: |
+          git diff --quiet docs/feed.atom && { echo "feed already up to date"; exit 0; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update feed.atom from the home page" docs/feed.atom
+          git push
