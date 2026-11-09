@@ -1,44 +1,98 @@
-//TODO https://www.mozilla.org/en-US/foundation/feed-icon-guidelines/
+// Builds docs/feed.atom from the list on the home page (docs/index.html).
+// Only what the home page lists ends up in the feed: drafts are never syndicated.
+//
+//   node makefeed.js           rewrite docs/feed.atom
+//   node makefeed.js --check   exit 1 if docs/feed.atom is out of date (used by CI)
+//
+// No dependencies. The output only depends on the home page (no "now" timestamp),
+// so running it twice gives the same file and no spurious diff.
 
-import {resolve as cd} from path
-const encodeHTMLEntities = s => s.replace(/[\u00A0-\u9999<>\&]/g, i => '&#'+i.charCodeAt(0)+';')
-/*
-	https://www.rfc-editor.org/rfc/rfc4287
-	https://kevincox.ca/2022/05/06/rss-feed-best-practices/
-		<subtitle>${ esc(site.description) }</subtitle>
+import {readFileSync, writeFileSync} from 'node:fs'
 
-	Atom ID: valid URI(RFC 2396) & globally unique & never change, even if the permalink changes
-	http://web.archive.org/web/20110502030950/http://www.taguri.org/
-	http://web.archive.org/web/20110514113830/http://diveintomark.org/archives/2004/05/28/howto-atom-idnp
-		<id>tag:roboleary.net,2022-06-13:/blog/1655074800</id>
-		<id>https://schem.ist/</id>
-		<id>uuid:bcecded5-97c8-4d24-96f1-6d9e16652434;id=1</id>
-		<id>tag:example.org,2003:3</id>
-	replace summary with ?
-		<content type="html">{{ENTRY.HTML}}</content>
-		tag:example.com,2009-01-08:tsqueue:WB20TSQ:23
-*/
-export default ({name='schemist', url='https://schem.ist/', author='Hugo Villeneuve', entries=[]}) => {
-	const now = (new Date()).toISOString()
-	if (url.at(-1) !== '/') url += '/'
-return /*xml*/`<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-	<title><![CDATA[${ name }]]></title>
-	<link rel="alternate" href="${ url /* default rel=alternate::permalink */}" />
-	<link rel="self" href="${ url /* type="application/atom+xml" */}feed.atom"  />
-	<author><name><![CDATA[${ author }]]></name></author>
-	<id>${ id ?? url }</id>
-	<updated>${ now }</updated>
-	<icon>/favicon.svg</icon>
+const SITE = 'https://schem.ist/',
+	AUTHOR = 'Hugo Villeneuve',
+	HOME = new URL('docs/index.html', import.meta.url),
+	FEED = new URL('docs/feed.atom', import.meta.url)
 
-${entries.map(entry => /* xml */`
-	<entry>
-		<title><![CDATA[${ esc(entry.title) /* Reader Header */}]]></title>
-		<link rel="alternate" type="text/html" href="${ cd(siteURL, entry.url) /* default rel=alternate::permalink */}"/>
-		<summary type="html"><![CDATA[${ entry.description /* Reader Sub-Header */}]]></summary>
-		<id>${ cd(siteURL, entry.url) /* <id>tag:example.org,2003:3.2397</id> */}</id>
-		<updated>${ entry.updated ?? now }</updated>
-	</entry>`
-)}
-</feed>`
+const xml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const decode = s => s.replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ({amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'"})[e])
+const text = html => decode(html.replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim()
+const abs = (href, hash = '') => new URL(href + hash, SITE).href
+// make every link in a fragment absolute (readers have no base URL) and add the item's data-hash
+const absLinks = (html, hash) => html.replace(/href="([^"]*)"/g, (_, h) => `href="${abs(h, hash)}"`)
+
+/** parse one <li> of the home page list into {date, en, fr} (html fragments) */
+function parseItem(li) {
+	const date = li.match(/<time>(\d{4}-\d{2}-\d{2})<\/time>/)?.[1]
+	if (!date) throw Error(`home page item without <time>YYYY-MM-DD</time>:\n${li}`)
+	const hash = li.match(/data-hash="([^"]*)"/)?.[1] ?? '',
+		lang = {}
+	// rich form: <span lang=en>…</span> or <a lang=en href=…>…</a>
+	for (const [, tag, attrs, body] of li.matchAll(/<(span|a)\b([^>]*\blang=(?:en|fr)\b[^>]*)>([\s\S]*?)<\/\1>/g)) {
+		const l = attrs.match(/\blang=(en|fr)\b/)[1]
+		lang[l] = tag === 'a' ? `<a${attrs.replace(/\s*\blang=(en|fr)\b/, '')}>${body}</a>` : body
+	}
+	// short form: <span data-lang>english // français</span>
+	if (!lang.en) {
+		const short = li.match(/<span data-lang>([^<]*\/\/[^<]*)<\/span>/)?.[1]
+		if (short) [lang.en, lang.fr] = short.split('//').map(s => s.trim())
+	}
+	if (!lang.en || !lang.fr) throw Error(`home page item ${date}: missing en or fr text:\n${li}`)
+	const link = lang.en.match(/href="([^"]*)"/)?.[1]
+	return {
+		date,
+		title: text(lang.en),
+		link: link ? abs(link, hash) : SITE,
+		path: link ? new URL(link, SITE).pathname : '/',
+		en: absLinks(lang.en.trim(), hash),
+		fr: absLinks(lang.fr.trim(), hash),
+	}
+}
+
+export function build(home) {
+	const list = home.match(/<ul>([\s\S]*?)<\/ul>/)?.[1]
+	if (!list) throw Error('no <ul> list found on the home page')
+	const items = [...list.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(m => parseItem(m[1])),
+		ids = new Set()
+	if (!items.length) throw Error('the home page list is empty')
+	const entries = items.map(it => {
+		// stable id: date + page path (never changes even if the wording does)
+		let id = `tag:schem.ist,${it.date}:${it.path}`
+		for (let n = 2; ids.has(id); ++n) id = `tag:schem.ist,${it.date}:${it.path}#${n}`
+		ids.add(id)
+		return `	<entry>
+		<title>${xml(it.title)}</title>
+		<link rel="alternate" type="text/html" href="${xml(it.link)}"/>
+		<id>${xml(id)}</id>
+		<updated>${it.date}T12:00:00Z</updated>
+		<content type="html">${xml(`<p lang="en">${it.en}</p><p lang="fr">${it.fr}</p>`)}</content>
+	</entry>
+`
+	})
+	const updated = items.map(it => it.date).sort().at(-1)
+	return `<?xml version="1.0" encoding="utf-8"?>
+<!-- generated by makefeed.js from docs/index.html: do not edit by hand -->
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title>schem.ist</title>
+	<subtitle>small experiments: risk, stats and other scripts</subtitle>
+	<id>${SITE}</id>
+	<link rel="alternate" type="text/html" href="${SITE}"/>
+	<link rel="self" type="application/atom+xml" href="${SITE}feed.atom"/>
+	<updated>${updated}T12:00:00Z</updated>
+	<author><name>${xml(AUTHOR)}</name></author>
+	<icon>${SITE}favicon.svg</icon>
+${entries.join('')}</feed>
+`
+}
+
+const feed = build(readFileSync(HOME, 'utf8'))
+if (process.argv.includes('--check')) {
+	if (readFileSync(FEED, 'utf8') !== feed) {
+		console.error('docs/feed.atom is out of date: run `node makefeed.js` and commit the result')
+		process.exit(1)
+	}
+	console.log('docs/feed.atom is up to date')
+} else {
+	writeFileSync(FEED, feed)
+	console.log('docs/feed.atom written')
 }
