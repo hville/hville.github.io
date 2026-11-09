@@ -27,11 +27,11 @@ Use the **GitHub** app for personal edits and tweeks.
 - Saved URLs are bookmarks: breaking changes go to a new folder (`app2/`), never in place.
 - Published = linked from the home page. Everything else in `docs/` is a draft (`urbi/`, `muse/`, `npm/`, and the `-` folders). New drafts get a `-` prefix.
 - `docs/_env/` has a Google Maps key, restricted to schem.ist, not used yet. It's in a public repo, so keep the restriction.
+- Feed: `feed.atom` is generated from the home page list by `node makefeed.js` (done 2026-11-09). Run it after any change to that list; a GitHub check fails the PR if you forget. Drafts are never in the feed.
 - Shared URL-state code: `docs/_src/hash-data.js` (used by every published app). `hash-data2.js` is an unused leftover.
 
 ## Future pipeline
 
-- Make `makefeed.js` work: generate `feed.atom` (and maybe RSS) from the home page list. Right now it's a broken draft and `feed.atom` is hand-edited, last updated 2023.
 - Use the Google Maps key (`urbi` or a new app).
 - Delete `hash-data2.js` once nothing needs it.
 
