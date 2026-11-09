@@ -1,14 +1,16 @@
 # schem.ist — instructions for coding agents
 
-Personal site of small, bilingual (en/fr), serverless web apps. User data lives in the URL hash, never on a server. Hosted on GitHub Pages at https://schem.ist from the `docs/` folder of `main`.
+**Read `readme.md` first.** It is the owner's note: goals, requirements and "Things to remember" (saved URLs, drafts, `_env/` key, `hash-data.js`, future pipeline). Those rules apply to you; they are not repeated here. This file only adds what an agent needs to do the work.
 
-The owner rarely reads code and reviews from a phone. Keep things simple, explain changes in plain words in the PR, and include screenshots.
+Hosted on GitHub Pages at https://schem.ist from the `docs/` folder of `main`. User data lives in the URL hash, never on a server.
 
-## Hard rules
+The owner rarely reads code and reviews from a phone. Explain changes in plain words in the PR and include screenshots.
 
-- **No build step.** Files in `docs/` are served exactly as committed. No bundlers, frameworks, transpilers, TypeScript or CSS preprocessors. Plain HTML, CSS and ES modules.
+## Hard rules (on top of the readme)
+
+- **No build step** means: no bundlers, frameworks, transpilers, TypeScript or CSS preprocessors. Plain HTML, CSS and ES modules, served exactly as committed.
 - **Never push to `main`.** Work on a branch and open a pull request. Merging is the owner's decision.
-- **Saved URLs must keep working.** People bookmark app states. Never change how an existing app encodes its URL data, never rename or move an app folder. For a breaking change, make a new folder (`app2/`), as was done with `montecode/`, `montecode2/`, `montecode3/`, and leave the old one in place.
+- **Never change how an existing app encodes its URL data, never rename or move an app folder.** Breaking change → new folder, as with `montecode/`, `montecode2/`, `montecode3/`.
 - **Every visible string in both English and French.**
 - **No secrets.** Don't add keys or tokens. Don't edit `docs/_env/`.
 - **No new dependency without asking** in the PR description first.
@@ -21,16 +23,14 @@ docs/                 served site root (GitHub Pages, CNAME schem.ist, .nojekyll
   feed.atom           Atom feed, maintained by hand
   404.html
   <app>/index.html    one folder per app, self-contained, imports shared code
-                      published = linked from index.html; any other folder is a draft
-                      (currently: urbi/, muse/, npm/ and every -<name>/ folder)
   _src/               shared site code (see below)
   _npm/               npm packages pre-bundled by unnode — generated, committed
   _lib/               third-party static files (CSS)
   _data/              reference/scratch data, not part of any app
-  _env/               API key, see "Don't touch"
+  _env/               API key (see readme)
 package.json          npm dependencies + unnode devDependency
-makefeed.js           draft of an Atom/RSS feed generator; never worked, don't rely on it
-readme.md             owner's notes ("web is hard"), not docs for the site
+makefeed.js           broken draft (see readme), don't rely on it
+readme.md             owner's notes and project rules
 ```
 
 ## Shared building blocks (`docs/_src/`)
@@ -47,7 +47,7 @@ readme.md             owner's notes ("web is hard"), not docs for the site
   const save = hashData(({data, lang}) => { /* restore state from data */ })
   save({data: '...'})   // writes #lang/<encoded data>
   ```
-  `data` is compressed with `@hugov/shorter-string2` by default; pass custom `enc`/`dec` as 2nd/3rd arguments if needed. Every published app uses `hash-data.js`; `hash-data2.js` is an unused experiment, don't use it.
+  `data` is compressed with `@hugov/shorter-string2` by default; pass custom `enc`/`dec` as 2nd/3rd arguments if needed.
 - `editable.js` — makes an element contentEditable and fires `change` on blur.
 - `lang-swap.js`, `lang-event.js` — internals of the above.
 
@@ -61,9 +61,9 @@ Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) f
 
 ## Adding a new app
 
-1. Create `docs/<short-name>/index.html` (lowercase, no spaces) from the pattern above.
+1. New drafts: `docs/-<short-name>/index.html` (lowercase, no spaces), off the home page. Publishing (removing the `-`, linking it) only when the owner says so.
 2. All UI text bilingual. All state that should survive a reload goes through `hash-data.js`.
-3. Add an entry at the top of the list in `docs/index.html` with `<time>YYYY-MM-DD</time>` and links to `./<name>/index.html#en` and `#fr`.
+3. To publish: add an entry at the top of the list in `docs/index.html` with `<time>YYYY-MM-DD</time>` and links to `./<name>/index.html#en` and `#fr`.
 4. Update `docs/feed.atom` only if asked.
 
 ## Code style
@@ -83,8 +83,6 @@ Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) f
 3. Take screenshots (en and fr, phone width ~390px) and put them in the PR.
 4. PR description: what changed, why, how to try it (a link with example state), anything uncertain.
 
-## Don't touch
+## Don't touch unless asked
 
-- `docs/_env/` — holds a Google Maps browser key (restricted to schem.ist, not used by any published app yet). Locally the owner mounts his own copy (`.vscode/settings.json`).
-- Draft folders (not linked from `docs/index.html`), `readme.md`, `docs/_data/` — unless asked.
-- New drafts go in a folder starting with `-` and stay off the home page until the owner says to publish.
+- `docs/_env/`, draft folders, `readme.md`, `docs/_data/`.
