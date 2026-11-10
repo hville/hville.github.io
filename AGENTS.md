@@ -10,7 +10,7 @@ The owner may perform edits from a phone with limited screen size. Explain chang
 
 - **No build step** means: no bundlers, frameworks, transpilers, TypeScript or CSS preprocessors. Plain HTML, CSS and ES modules, served exactly as committed.
 - **Never push to `main`.** Work on a branch and open a pull request. Merging is the owner's decision.
-- **Never change how an existing app encodes its URL data, never rename or move a published app folder** (one linked from the home page). Breaking change → new folder, as with `montecode/`, `montecode2/`, `montecode3/`.
+- **Never change how an existing app encodes its URL data, never rename or move a published app folder** (one on the home page and Atom feed). Drafts can be renamed. Breaking change → new folder, as with `montecode/`, `montecode2/`, `montecode3/`.
 - **Every visible string in both English and French.**
 - **No secrets.** Don't add keys or tokens. Don't edit `docs/_env/`.
 - **No new dependency without asking** in the PR description first.
@@ -48,7 +48,6 @@ readme.md             owner's notes and project rules
   save({data: '...'})   // writes #lang/<encoded data>
   ```
   `data` is compressed with `@hugov/shorter-string2` (CompressionStream, deflate-raw) by default; pass custom `enc`/`dec` as 2nd/3rd arguments, or `null, null` for raw text.
-- `hash-data2.js` — same compression, but exposes a `MessagePort` instead of a callback. Not used by any app yet.
 - `editable.js` — makes an element contentEditable and fires `change` on blur.
 - `lang-swap.js`, `lang-event.js` — internals of the above.
 

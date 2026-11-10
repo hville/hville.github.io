@@ -27,17 +27,17 @@ Use the **GitHub** app for personal edits and tweaks.
 
 - Saved URLs are bookmarks: breaking changes go to a new folder (`app2/`), never in place.
 - Released project versions are linked from the home page and have an Atom feed.
-- Draft projects in `docs/` have a `-` prefix.
+- Draft projects in `docs/` have a `-` prefix. Drafts can be renamed; a name is fixed once it appears on the home page and Atom feed.
 - Shared utils, libs and code have the `_` prefix
 - `docs/_env/` has a Google Maps key, restricted to schem.ist.
 - `feed.atom` is generated from the home page list by `node makefeed.js`. It rebuilds itself on `main` (GitHub workflow `feed`) whenever the home page changes. Drafts are never in the feed.
-- Serverless. State is saved in the URL
+- Serverless. State is saved in the URL by `docs/_src/hash-data.js` (CompressionStream API, via `shorter-string2`).
 
 ## Future pipeline
 
-- Rename `urbi/`, `muse/` and `npm/` with dash since they are unfinished drafts
+- Rename `urbi/`, `muse/` and `npm/` (list of my npm modules with stats, barely started) with dash since they are unfinished drafts
 - Since the site was created, `importMaps` have gained wider support. Investigate if `unnode` is still preferred for dependencies.
 - Add a readme.md to every app folder to explain the concept, goals and open actions
-- Since 2025-05-22, `hash-data.js` and `hash-data2.js` both use the CompressionStream API (`shorter-string2`) instead of the older BWT+EliasGamma (`shorter-string`). They differ only in API: callback vs `MessagePort`. Decide whether to keep `hash-data2.js`.
+- `zero/`: the formula typed is saved in the URL but not restored on reload, and only the first function gets the `Math.` prefix (`cos(x)-sin(x)` fails).
 
 
