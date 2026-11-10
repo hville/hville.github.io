@@ -1,10 +1,10 @@
 # schem.ist — instructions for coding agents
 
-**Read `readme.md` first.** It is the owner's note: goals, requirements and "Things to remember" (saved URLs, drafts, `_env/` key, `hash-data.js`, future pipeline). Those rules apply to you; they are not repeated here. This file only adds what an agent needs to do the work.
+**Read `readme.md` first.** It contains the goals, requirements and open actions and do not need to be repeated here. This file only adds what an agent needs to do the work.
 
 Hosted on GitHub Pages at https://schem.ist from the `docs/` folder of `main`. User data lives in the URL hash, never on a server.
 
-The owner rarely reads code and reviews from a phone. Explain changes in plain words in the PR and include screenshots.
+The owner may perform edits from a phone with limited screen size. Explain changes briefly in plain words in the PR and include screenshots of it helps to be concise.
 
 ## Hard rules (on top of the readme)
 
