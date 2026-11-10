@@ -39,4 +39,8 @@ Use the **GitHub** app for personal edits and tweaks.
 - Add a readme.md to every app folder to explain the concept, goals and open actions.
 - `zero/`: the formula typed is saved in the URL but not restored on reload, and only the first function gets the `Math.` prefix (`cos(x)-sin(x)` fails).
 - `docs/_data/` (11 MB: photos, a PDF, a 7z archive, climate CSV/XML) is published on the site because everything in `docs/` is. If these are scratch files, move them to a `data/` folder at the repo root to keep them in the repo but off the site.
+- Fill in the `[insert …]` placeholders (search for `[insert`), starting with the page descriptions.
+- `-blocnote/`: the page stops with a script error (`Cannot read properties of null (reading 'children')`).
+- `-urbi/`: the map needs `docs/_lib/ol.css` (OpenLayers), which was never committed.
+- `-npm/`: needs the npm registry (registry.npmjs.com); untested, since the cloud sandbox blocks it.
 - Links saved before 2025-05-22 were made with the old compression (`shorter-string`) and may no longer open in apps using `hash-data.js`. Home page examples work.

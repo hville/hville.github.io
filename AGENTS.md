@@ -61,7 +61,9 @@ readme.md             owner's notes and project rules
 - `editable.js` — makes an element contentEditable and fires `change` on blur.
 - `lang-swap.js`, `lang-event.js` — internals of the above.
 
-Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) for any new page: same `<html lang=en>`, meta tags, favicon link (`<link rel=icon type=image/svg+xml href=/favicon.svg>`), `<title data-lang>`, `main.css`, `data-lang.js`, and the header row with the home link, title and `<data-lang>en fr</data-lang>`.
+Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) for any new page: same `<html lang=en>`, meta tags, favicon link (`<link rel=icon type=image/svg+xml href=/favicon.svg>`), `<title data-lang>`, `<meta name=description content="english / français">` (one line, both languages: it can't switch), `main.css`, `data-lang.js`, and the header row with the home link, title and `<data-lang>en fr</data-lang>`.
+
+Placeholders: when a text is unknown, never copy it from another page. Write `[insert <what>: english / français]` (e.g. `[insert description: english / français]`) so the owner finds every gap with a search for `[insert`. Don't replace a placeholder with your own guess unless asked.
 
 ## npm libraries (unnode)
 
