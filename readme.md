@@ -36,6 +36,7 @@ Use the **GitHub** app for personal edits and tweeks.
 ## Future pipeline
 
 - Rename `urbi/` and `muse/` with dash since they are unfinished drafts
+- Since the site was created, `importMaps` have gained wider support. Investigate if `unnode` is still preferred for dependencies.
 - Add a readme.md to every app folder to explain the concept, goals and open actions
 - The new `hash-data2.js` uses the CompressionStream API instead of the older BWT+EliasGamma custom algorithm. It is likely faster, smaller and with better performance.
 
