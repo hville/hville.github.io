@@ -12,6 +12,7 @@ Keep things simple, or more realistically, understand when and where simple is j
 * static files
 * multilingual
 * dynamic scripts in every html files
+* bias for web APIs over external scripts
 * no bundlers, no build steps: serve the html files as-is
 
 ## the future starts on 20261109 
@@ -25,13 +26,17 @@ Use the **GitHub** app for personal edits and tweeks.
 ## Things to remember
 
 - Saved URLs are bookmarks: breaking changes go to a new folder (`app2/`), never in place.
-- Published = linked from the home page. Everything else in `docs/` is a draft (`urbi/`, `muse/`, `npm/`, and the `-` folders). New drafts get a `-` prefix.
-- `docs/_env/` has a Google Maps key, restricted to schem.ist, not used yet. It's in a public repo, so keep the restriction.
-- Feed: `feed.atom` is generated from the home page list by `node makefeed.js` (done 2026-11-09). It rebuilds itself on `main` (GitHub workflow `feed`) whenever the home page changes: nothing to do by hand. Drafts are never in the feed.
-- Shared URL-state code: `docs/_src/hash-data.js` (used by every published app). `hash-data2.js` is an unused leftover.
+- Released project versions are linked from the home page and have an ATOM feed.
+- Draft projects in `docs/` have a `-` prefix.
+- Shared utils, libs and code have the `_` prefix
+- `docs/_env/` has a Google Maps key, restricted to schem.ist.
+- `feed.atom` is generated from the home page list by `node makefeed.js`. It rebuilds itself on `main` (GitHub workflow `feed`) whenever the home page changes. Drafts are never in the feed.
+- Serverless. State is saved in the URL
 
 ## Future pipeline
 
-- Use the Google Maps key (`urbi` or a new app).
-- Delete `hash-data2.js` once nothing needs it.
+- Rename `urbi/` and `muse/` with dash since they are unfinished drafts
+- Add a readme.md to every app folder to explain the concept, goals and open actions
+- The new `hash-data2.js` uses the CompressionStream API instead of the older BWT+EliasGamma custom algorithm. It is likely faster, smaller and with better performance.
+
 
