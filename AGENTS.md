@@ -23,7 +23,7 @@ The owner may perform edits from a phone with limited screen size. Explain chang
 docs/                 served site root (GitHub Pages, CNAME schem.ist, .nojekyll)
   index.html          home page: dated list of apps, newest first
   feed.atom           Atom feed, rebuilt automatically on main — never edit by hand
-  404.html
+  404.html            shown at any missing address: link files with absolute /… paths
   <app>/index.html    one folder per app, self-contained, imports shared code
   <app>/readme.md     the app's concept, goals, open actions and instructions
   <app>/readme.svg    the app's image, shown in its readme.md
@@ -38,6 +38,7 @@ docs/                 served site root (GitHub Pages, CNAME schem.ist, .nojekyll
 package.json          npm dependencies + unnode devDependency
 package-lock.json     locked versions, updated by npm
 makefeed.js           builds docs/feed.atom from the home page list
+check.js              loads every page in a headless browser, reports titles and errors
 readme.md             owner's notes and project rules
 ```
 
@@ -60,7 +61,7 @@ readme.md             owner's notes and project rules
 - `editable.js` — makes an element contentEditable and fires `change` on blur.
 - `lang-swap.js`, `lang-event.js` — internals of the above.
 
-Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) for any new page: same `<html lang=en>`, meta tags, `main.css`, `data-lang.js`, and the header row with the home link, title and `<data-lang>en fr</data-lang>`.
+Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) for any new page: same `<html lang=en>`, meta tags, favicon link (`<link rel=icon type=image/svg+xml href=/favicon.svg>`), `<title data-lang>`, `main.css`, `data-lang.js`, and the header row with the home link, title and `<data-lang>en fr</data-lang>`.
 
 ## npm libraries (unnode)
 
@@ -108,9 +109,8 @@ Rules:
 
 ## Before opening a PR — check your work
 
-1. Serve the site: `cd docs && python3 -m http.server 8000` (pages use absolute `/…` paths, so serve `docs/` as the root).
-2. Open every page you changed with a headless browser, in both `#en` and `#fr`:
-   - no console errors
+1. Run `node check.js` (or `node check.js <folder> …` for some apps only). It serves `docs/` like GitHub Pages, opens each page in every language of its `<data-lang>` list, and prints the title and errors. Add `--shots <dir>` for phone-width screenshots. Compare with a run on `main`: drafts may already have errors, a PR must not add any. `external:` lines are other hosts, mostly blocked in cloud sessions.
+2. For interactive checks, serve the site with `cd docs && python3 -m http.server 8000` (pages use absolute `/…` paths, so serve `docs/` as the root) and open every page you changed with a headless browser, in both `#en` and `#fr`:
    - text switches language, nothing left untranslated
    - set some state, reload the produced URL, confirm the same state comes back
    - confirm an old URL from the home page still loads (for changed apps)
