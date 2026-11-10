@@ -1,6 +1,6 @@
 # schem.ist — instructions for coding agents
 
-**Read `readme.md` first.** It contains the goals, requirements and open actions and do not need to be repeated here. This file only adds what an agent needs to do the work.
+**Read `readme.md` first.** It contains the goals, requirements and open actions and do not need to be repeated here. This file only adds what an agent needs to do the work. In case of conflicts, edit this file to match `readme.md`.
 
 Hosted on GitHub Pages at https://schem.ist from the `docs/` folder of `main`. User data lives in the URL hash, never on a server.
 
