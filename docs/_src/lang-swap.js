@@ -1,5 +1,6 @@
 const H = document.documentElement,
 			setters = new Map,
+			titles = new Map,
 			div = '//'
 
 export default list => H.querySelectorAll('[data-lang]').forEach(pick, list)
@@ -10,6 +11,8 @@ export default list => H.querySelectorAll('[data-lang]').forEach(pick, list)
 	this :: list of languages
 */
 function pick(el) {
+	// <title> holds plain text only: pick the text for the current language
+	if (el.tagName === 'TITLE') return pickTitle(el, this)
 	// first initiation
 	if (!setters.has(el)) {
 		const setter = {}
@@ -36,3 +39,8 @@ function pick(el) {
 	setter.set?.call(el)
 }
 
+function pickTitle(el, langs) {
+	if (!titles.has(el)) titles.set(el, el.textContent.split(div).map( t => t.trim() ))
+	const texts = titles.get(el)
+	el.textContent = texts[langs.indexOf(H.lang)] ?? texts[0]
+}

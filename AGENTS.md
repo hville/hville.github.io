@@ -48,6 +48,7 @@ readme.md             owner's notes and project rules
 - Bilingual text, two forms:
   - short: `<h3 data-lang>source text // texte initial</h3>` (split on `//`, in the order of the `<data-lang>` list)
   - rich: `<span data-lang><span lang=en>…</span><span lang=fr>…</span></span>`
+  - page title: `<title data-lang>source text // texte initial</title>` (short form only; every page has one, so tabs and bookmarks show the app's name)
   - `data-lang="js code"` with a value runs that code with `this` = the element on each language change (e.g. to set a localized `href`).
 - `hash-data.js` — URL state, used by every app. The hash is `#<lang>/<data>`. Use:
   ```js
