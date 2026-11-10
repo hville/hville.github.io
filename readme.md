@@ -21,23 +21,23 @@ As a side goal, use this simple site to test Claude Code and hopefully advance o
 
 Use **Claude Code in the cloud** for structural edits and tests in headless browser. Nothing to install.
 
-Use the **GitHub** app for personal edits and tweeks.
+Use the **GitHub** app for personal edits and tweaks.
 
 ## Things to remember
 
 - Saved URLs are bookmarks: breaking changes go to a new folder (`app2/`), never in place.
-- Released project versions are linked from the home page and have an ATOM feed.
-- Draft projects in `docs/` have a `-` prefix.
+- Released project versions are linked from the home page and have an Atom feed.
+- Draft projects in `docs/` have a `-` prefix. Drafts can be renamed; a name is fixed once it appears on the home page and Atom feed.
 - Shared utils, libs and code have the `_` prefix
 - `docs/_env/` has a Google Maps key, restricted to schem.ist.
 - `feed.atom` is generated from the home page list by `node makefeed.js`. It rebuilds itself on `main` (GitHub workflow `feed`) whenever the home page changes. Drafts are never in the feed.
-- Serverless. State is saved in the URL
+- Serverless. State is saved in the URL by `docs/_src/hash-data.js` (CompressionStream API, via `shorter-string2`).
 
 ## Future pipeline
 
-- Rename `urbi/` and `muse/` with dash since they are unfinished drafts
+- Rename `urbi/`, `muse/` and `npm/` (list of my npm modules with stats, barely started) with dash since they are unfinished drafts
 - Since the site was created, `importMaps` have gained wider support. Investigate if `unnode` is still preferred for dependencies.
 - Add a readme.md to every app folder to explain the concept, goals and open actions
-- The new `hash-data2.js` uses the CompressionStream API instead of the older BWT+EliasGamma custom algorithm. It is likely faster, smaller and with better performance.
+- `zero/`: the formula typed is saved in the URL but not restored on reload, and only the first function gets the `Math.` prefix (`cos(x)-sin(x)` fails).
 
 

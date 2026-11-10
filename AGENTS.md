@@ -1,16 +1,16 @@
 # schem.ist — instructions for coding agents
 
-**Read `readme.md` first.** It contains the goals, requirements and open actions and do not need to be repeated here. This file only adds what an agent needs to do the work. In case of conflicts, edit this file to match `readme.md`.
+**Read `readme.md` first.** It holds the goals, requirements and open actions, which are not repeated here. This file only adds what an agent needs to do the work. In case of conflicts, edit this file to match `readme.md`.
 
 Hosted on GitHub Pages at https://schem.ist from the `docs/` folder of `main`. User data lives in the URL hash, never on a server.
 
-The owner may perform edits from a phone with limited screen size. Explain changes briefly in plain words in the PR and include screenshots of it helps to be concise.
+The owner may perform edits from a phone with limited screen size. Explain changes briefly in plain words in the PR and include screenshots if it helps to be concise.
 
 ## Hard rules (on top of the readme)
 
 - **No build step** means: no bundlers, frameworks, transpilers, TypeScript or CSS preprocessors. Plain HTML, CSS and ES modules, served exactly as committed.
 - **Never push to `main`.** Work on a branch and open a pull request. Merging is the owner's decision.
-- **Never change how an existing app encodes its URL data, never rename or move an app folder.** Breaking change → new folder, as with `montecode/`, `montecode2/`, `montecode3/`.
+- **Never change how an existing app encodes its URL data, never rename or move a published app folder** (one on the home page and Atom feed). Drafts can be renamed. Breaking change → new folder, as with `montecode/`, `montecode2/`, `montecode3/`.
 - **Every visible string in both English and French.**
 - **No secrets.** Don't add keys or tokens. Don't edit `docs/_env/`.
 - **No new dependency without asking** in the PR description first.
@@ -41,13 +41,13 @@ readme.md             owner's notes and project rules
   - short: `<h3 data-lang>source text // texte initial</h3>` (split on `//`, in the order of the `<data-lang>` list)
   - rich: `<span data-lang><span lang=en>…</span><span lang=fr>…</span></span>`
   - `data-lang="js code"` with a value runs that code with `this` = the element on each language change (e.g. to set a localized `href`).
-- `hash-data.js` — URL state. The hash is `#<lang>/<data>`. Use:
+- `hash-data.js` — URL state, used by every app. The hash is `#<lang>/<data>`. Use:
   ```js
   import hashData from '../_src/hash-data.js'
   const save = hashData(({data, lang}) => { /* restore state from data */ })
   save({data: '...'})   // writes #lang/<encoded data>
   ```
-  `data` is compressed with `@hugov/shorter-string2` by default; pass custom `enc`/`dec` as 2nd/3rd arguments if needed.
+  `data` is compressed with `@hugov/shorter-string2` (CompressionStream, deflate-raw) by default; pass custom `enc`/`dec` as 2nd/3rd arguments, or `null, null` for raw text.
 - `editable.js` — makes an element contentEditable and fires `change` on blur.
 - `lang-swap.js`, `lang-event.js` — internals of the above.
 
@@ -57,7 +57,7 @@ Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) f
 
 - Browser code imports libraries by path, never by bare name: `import Rec from '/_npm/sample-distribution.js'`, or a sub-file `'/_npm/@hugov/shorter-string/src/bwt.js'`.
 - To add or update a library: add it to `package.json`, `npm install`, then from `docs/` run `npx unnode _npm`. unnode bundles only the `/_npm/...` paths that source files actually import. Commit the generated files in `docs/_npm/`.
-- The `dependencies` script in `package.json` uses `&` (Windows). On Linux use `cd docs && npx unnode _npm`.
+- Or run `npm run dependencies` (works on Windows and Linux).
 
 ## Adding a new app
 
