@@ -2,6 +2,8 @@
 
 **Read `readme.md` first.** It holds the goals, requirements and open actions, which are not repeated here. This file only adds what an agent needs to do the work. In case of conflicts, edit this file to match `readme.md`.
 
+**Before working on an app, read its own `docs/<app>/readme.md`** (see Project readme below). Its instructions apply to that app on top of this file.
+
 Hosted on GitHub Pages at https://schem.ist from the `docs/` folder of `main`. User data lives in the URL hash, never on a server.
 
 The owner may perform edits from a phone with limited screen size. Explain changes briefly in plain words in the PR and include screenshots if it helps to be concise.
@@ -23,6 +25,8 @@ docs/                 served site root (GitHub Pages, CNAME schem.ist, .nojekyll
   feed.atom           Atom feed, rebuilt automatically on main — never edit by hand
   404.html
   <app>/index.html    one folder per app, self-contained, imports shared code
+  <app>/readme.md     the app's concept, goals, open actions and instructions
+  <app>/readme.svg    the app's image, shown in its readme.md
   -<draft>/           unfinished apps, not on the home page or feed
   _src/               shared site code (see below)
   _npm/               npm packages pre-bundled by unnode — generated, committed
@@ -65,10 +69,27 @@ Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) f
 
 ## Adding a new app
 
-1. New drafts: `docs/-<short-name>/index.html` (lowercase, no spaces), off the home page. Publishing (removing the `-`, linking it) only when the owner says so.
+1. New drafts: `docs/-<short-name>/index.html` (lowercase, no spaces), off the home page. Publishing (removing the `-`, linking it) only when the owner says so. Add `readme.md` and `readme.svg` too (see Project readme below).
 2. All UI text bilingual. All state that should survive a reload goes through `hash-data.js`.
 3. To publish: add an entry at the top of the list in `docs/index.html` with `<time>YYYY-MM-DD</time>` and links to `./<name>/index.html#en` and `#fr`.
 4. The feed updates itself after the merge (see Feed below).
+
+## Project readme
+
+Every project folder in `docs/` (all folders without the `_` prefix, drafts included) has two files:
+
+- `readme.md`: starts with the project name as a level 1 header (the folder name without the draft `-`), then the image, then the owner's notes and per-project instructions:
+  ```md
+  # bwt
+
+  ![bwt](readme.svg)
+  ```
+- `readme.svg`: the project's image. Until the owner replaces it, a placeholder (rounded box with a circle, grey stroke, no fill), so it shows in light and dark mode.
+
+Rules:
+- A new project folder gets both files, starting with the placeholder.
+- The content below the image is the owner's. Don't edit it unless asked, except to remove an open action the PR completes (same rule as for the main `readme.md`).
+- Keep the names `readme.md` and `readme.svg`, lowercase, at the root of the folder. A draft keeps its files when it is published.
 
 ## Feed (`docs/feed.atom`)
 
