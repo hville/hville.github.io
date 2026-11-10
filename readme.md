@@ -35,10 +35,7 @@ Use the **GitHub** app for personal edits and tweaks.
 
 ## Future pipeline
 
-- Rename `urbi/`, `muse/` and `npm/` (list of my npm modules with stats, barely started) with a `-` prefix since they are unfinished drafts.
 - Since the site was created, `importMaps` have gained wider support. Investigate if `unnode` is still preferred for dependencies.
 - Add a readme.md to every app folder to explain the concept, goals and open actions.
 - `zero/`: the formula typed is saved in the URL but not restored on reload, and only the first function gets the `Math.` prefix (`cos(x)-sin(x)` fails).
-- `docs/_src/api.js` (fetch helper) and `docs/_src/h.css` (dark theme) are not used by any page: delete or keep on purpose.
 - Links saved before 2025-05-22 were made with the old compression (`shorter-string`) and may no longer open in apps using `hash-data.js`. Home page examples work.
-- GitHub security alerts: `brace-expansion`, a dev-only package pulled in by `unnode`, never served on the site. Fix with `npm audit fix`, or drop it if `unnode` is replaced.
