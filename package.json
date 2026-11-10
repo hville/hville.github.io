@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "schem.ist",
   "scripts": {
-    "dependencies": "cd ./docs & unnode _npm",
+    "dependencies": "cd docs && unnode _npm",
     "feed": "node makefeed.js"
   },
   "repository": {
