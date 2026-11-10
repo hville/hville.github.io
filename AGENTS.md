@@ -23,12 +23,16 @@ docs/                 served site root (GitHub Pages, CNAME schem.ist, .nojekyll
   feed.atom           Atom feed, rebuilt automatically on main — never edit by hand
   404.html
   <app>/index.html    one folder per app, self-contained, imports shared code
+  -<draft>/           unfinished apps, not on the home page or feed
   _src/               shared site code (see below)
   _npm/               npm packages pre-bundled by unnode — generated, committed
-  _lib/               third-party static files (CSS)
+  _lib/               third-party static files (water-dark2.css, imported by main.css)
   _data/              reference/scratch data, not part of any app
   _env/               API key (see readme)
+.github/workflows/    feed.yml (see Feed below)
+.editorconfig         indentation and line endings
 package.json          npm dependencies + unnode devDependency
+package-lock.json     locked versions, updated by npm
 makefeed.js           builds docs/feed.atom from the home page list
 readme.md             owner's notes and project rules
 ```
@@ -94,3 +98,4 @@ Copy the head and header block of an existing app (e.g. `docs/bwt/index.html`) f
 ## Don't touch unless asked
 
 - `docs/_env/`, draft folders, `readme.md`, `docs/_data/`.
+- Exception for `readme.md`: when a PR completes an item of the "Future pipeline", remove that item in the same PR. Change nothing else in the readme.
