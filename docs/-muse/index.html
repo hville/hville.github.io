@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title data-lang>muse: melody contours // muse : contours de mélodie</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<link rel=icon type=image/svg+xml href=/favicon.svg>
+	<meta name=description content="The notes of a melody as the rounded version of smooth pitch and intensity contours / Les notes d'une mélodie comme version arrondie de contours lisses de hauteur et d'intensité">
+	<link rel="stylesheet" href="../_src/main.css">
+	<script type=module src="../_src/data-lang.js"></script>
+	<style>
+		.row { display: flex; flex-wrap: wrap; gap: 0 1em; align-items: center; }
+		.row select, .row input { display: inline-block; }
+		#scale { flex: 1; min-width: 8em; }
+		#bpm { width: 5em; }
+		#pic { overflow-x: auto; }
+		#pic svg { display: block; }
+		#out { white-space: pre-wrap; }
+		#err { color: var(--code); }
+		.o { color: var(--text-muted); }
+		.c { color: var(--highlight); }
+		.n { color: var(--code); }
+		svg .grid { stroke: var(--border); stroke-width: .5; opacity: .5; }
+		svg .tonic { opacity: 1; }
+		svg text { fill: var(--text-muted); font-size: 9px; }
+		svg .o { fill: none; stroke: currentColor; }
+		svg .c { fill: none; stroke: currentColor; stroke-width: 1.5; }
+		svg .n { fill: currentColor; fill-opacity: .45; stroke: currentColor; }
+		svg #head { stroke: var(--text-bright); }
+	</style>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2>muse</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<p data-lang>
+	<span lang=en>
+		The notes of a melody seen as the rounded version of smooth pitch and intensity curves (contours).
+		The contours are rebuilt from the notes, then rounded again to the notes of another scale.
+	</span>
+	<span lang=fr>
+		Les notes d'une mélodie vues comme la version arrondie de courbes lisses de hauteur et d'intensité (contours).
+		Les contours sont reconstruits à partir des notes, puis arrondis de nouveau aux notes d'une autre gamme.
+	</span>
+</p>
+
+<h3 data-lang>melody // mélodie</h3>
+<pre><textarea id=src rows=4 spellcheck=false autocapitalize=off autocomplete=off></textarea></pre>
+<p id=err></p>
+<div class=row>
+	<button data-ex=0 data-lang>Morning Mood (Grieg) // Au matin (Grieg)</button>
+	<button data-ex=1 data-lang>Frère Jacques // Frère Jacques</button>
+	<button data-ex=2 data-lang>leaps and a silence // sauts et un silence</button>
+	<label><span data-lang>MIDI file // fichier MIDI</span> <input type=file id=file accept=".mid,.midi,audio/midi"></label>
+</div>
+<details>
+	<summary data-lang>notation // notation</summary>
+	<div data-lang>
+		<ul lang=en>
+			<li><code>C4 F#4 Bb3</code> a note: name, optional <code>#</code> or <code>b</code>, octave. Without octave, the one of the previous note: <code>C4 E G C5</code>
+			<li><code>C4*2</code> twice as long, <code>C4/2</code> half as long, <code>C4*3/2</code>. A note is one beat long otherwise
+			<li><code>-</code> a silence, <code>-*2</code> a longer one
+			<li><code>C4@100</code> or <code>@100</code> alone: intensity from here on, 1 to 127. Starts at 80
+			<li><code>|</code> is ignored
+			<li>MIDI file: reads the first voice only, top notes of the chords
+		</ul>
+		<ul lang=fr>
+			<li><code>C4 F#4 Bb3</code> une note : nom (C = do), <code>#</code> ou <code>b</code> au besoin, octave. Sans octave, celle de la note précédente : <code>C4 E G C5</code>
+			<li><code>C4*2</code> deux fois plus longue, <code>C4/2</code> deux fois plus courte, <code>C4*3/2</code>. Sinon, une note dure un temps
+			<li><code>-</code> un silence, <code>-*2</code> un silence plus long
+			<li><code>C4@100</code> ou <code>@100</code> seul : intensité à partir d'ici, de 1 à 127. Débute à 80
+			<li><code>|</code> est ignoré
+			<li>fichier MIDI : lit la première voix seulement, notes du haut des accords
+		</ul>
+	</div>
+</details>
+
+<h3 data-lang>scale // gamme</h3>
+<div class=row>
+	<select id=root></select>
+	<select id=kind></select>
+	<input id=scale spellcheck=false autocapitalize=off autocomplete=off>
+</div>
+
+<div class=row>
+	<label><span data-lang>smoothing // lissage</span> <output id=kOut></output><br><input type=range id=k min=0 max=8 step=.25 value=2></label>
+	<label><span data-lang>grid: notes per beat // grille : notes par temps</span><br><select id=g><option>1<option selected>2<option>3<option>4<option>6<option>8<option>12</select></label>
+	<label><span data-lang>tempo: beats per minute // tempo : temps par minute</span><br><input type=number id=bpm min=20 max=400 value=120></label>
+</div>
+
+<h3 data-lang>contours // contours</h3>
+<div class=row>
+	<button id=play>▶&#xFE0E;</button>
+	<label class=o><input type=checkbox id=po checked> <span data-lang>▭ notes // ▭ notes</span></label>
+	<label class=c><input type=checkbox id=pc> <span data-lang>〜 contours // 〜 contours</span></label>
+	<label class=n><input type=checkbox id=pn> <span data-lang>▬ new notes // ▬ nouvelles notes</span></label>
+</div>
+<div id=pic></div>
+
+<h3 data-lang>new notes // nouvelles notes</h3>
+<pre id=out></pre>
+<p id=stats></p>
+<p><small data-lang>
+	<span lang=en>Equal consecutive notes are merged: a repeated note becomes one long note.</span>
+	<span lang=fr>Les notes consécutives égales sont fusionnées : une note répétée devient une seule note longue.</span>
+</small></p>
+<p><a id=dl download=muse.mid data-lang>download as a MIDI file // télécharger en fichier MIDI</a></p>
+
+<script type=module>
+import hashData from '../_src/hash-data.js'
+
+const H = document.documentElement,
+			$ = id => document.getElementById(id),
+			tr = (en, fr) => H.lang === 'fr' ? fr : en,
+			clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v)),
+			[$src, $err, $file, $root, $kind, $scale, $k, $kOut, $g, $bpm, $play, $pic, $out, $stats, $dl]
+				= 'src err file root kind scale k kOut g bpm play pic out stats dl'.split(' ').map($)
+
+const LETTER = {C:0, D:2, E:4, F:5, G:7, A:9, B:11},
+			SHARP = 'C C# D D# E F F# G G# A A# B'.split(' '),
+			FLAT = 'C Db D Eb E F Gb G Ab A Bb B'.split(' '),
+			ROOTS = 'C C# D Eb E F F# G Ab A Bb B'.split(' '),
+			KINDS = [
+				['chromatic', 'chromatique', [0,1,2,3,4,5,6,7,8,9,10,11]],
+				['major', 'majeure', [0,2,4,5,7,9,11]],
+				['minor', 'mineure', [0,2,3,5,7,8,10]],
+				['major pentatonic', 'pentatonique majeure', [0,2,4,7,9]],
+				['minor pentatonic', 'pentatonique mineure', [0,3,5,7,10]],
+				['blues', 'blues', [0,3,5,6,7,10]],
+				['whole tone', 'par tons', [0,2,4,6,8,10]],
+				['major chord', 'accord majeur', [0,4,7]],
+				['minor chord', 'accord mineur', [0,3,7]]
+			],
+			EXAMPLES = [
+				{m: '@70 G5 E D C D E G E D C D/2 E/2 D/2 E/2 @100 G E G A E A @60 G E D C*3', s: 'C D E F G A B', k: 2, g: 2, t: 160},
+				{m: 'C4 D E C C D E C E F G*2 E F G*2\nG/2 A/2 G/2 F/2 E C G/2 A/2 G/2 F/2 E C\nC G3 C4*2 C G3 C4*2', s: 'C D Eb F G Ab Bb', k: 1, g: 2, t: 120},
+				{m: 'C4*2 G4*2 C5*2 -*2 @110 E5 C5 G4 E4 @50 C4*2', s: 'C D E G A', k: 2, g: 4, t: 100}
+			]
+
+/*
+	TEXT <=> NOTES
+	a note is {p: MIDI pitch or null for a silence, d: duration in beats, v: intensity 0-127}
+*/
+const noteRE = /^(?:([A-Ga-g])([#b]*)(-?\d+)?|-)(?:\*(\d+))?(?:\/(\d+))?(?:@(\d+))?$/,
+			// semitones from C of a name like F# or Bb
+			semi = name => LETTER[name[0].toUpperCase()] + name.slice(1).split('#').length - name.slice(1).split('b').length
+
+function parse(text) {
+	const notes = [], bad = []
+	let oct = 4, v = 80
+	for (const tok of text.split(/[\s|]+/).filter(Boolean)) {
+		const m = tok.match(noteRE) ?? tok.match(/^()()()()()@(\d+)$/), // a note, or only an intensity
+					d = m && (m[4] || 1) / (m[5] || 1),
+					p = !m?.[1] ? null : semi(m[1] + m[2]) + 12 * ((m[3] ?? oct) - -1)
+		if (!(d > 0) || p < 0 || p > 127) { bad.push(tok); continue }
+		if (m[3]) oct = +m[3]
+		if (m[6]) v = clamp(+m[6], 1, 127)
+		if (m[0][0] !== '@') notes.push({p, d, v: p === null ? 0 : v})
+	}
+	return {notes, bad}
+}
+
+// scale text => names of the allowed pitch classes, as typed: Map(0-11 => 'Bb')
+function parseScale(text) {
+	const names = new Map, bad = []
+	for (const tok of text.split(/[\s,]+/).filter(Boolean)) {
+		if (!/^[A-Ga-g][#b]*$/.test(tok)) bad.push(tok)
+		else {
+			const name = tok[0].toUpperCase() + tok.slice(1), pc = (semi(name) % 12 + 12) % 12
+			if (!names.has(pc)) names.set(pc, name)
+		}
+	}
+	return {names, bad}
+}
+
+function fraction(x) {
+	for (let b = 1; b < 1000; ++b) if (Math.abs(x * b - Math.round(x * b)) < 1e-6) return [Math.round(x * b), b]
+	return [Math.round(x * 1000), 1000]
+}
+
+function toText(notes, names) {
+	let v = 80
+	return notes.map( n => {
+		const [a, b] = fraction(n.d), name = names.get(n.p % 12) ?? SHARP[n.p % 12]
+		return (n.p === null ? '-' : name + ((n.p - semi(name)) / 12 - 1))
+			+ (a === 1 ? '' : '*' + a) + (b === 1 ? '' : '/' + b)
+			+ (n.p === null || n.v === v ? '' : '@' + (v = n.v))
+	}).join(' ')
+}
+
+/*
+	NOTES => CONTOURS (the "DAC")
+	The notes make a staircase. Each jump of the staircase is spread over time by a low-pass filter
+	(Lanczos-2 windowed sinc): the curve leaves early, arrives late and slightly overshoots.
+	width = 0 keeps the staircase. To test another interpolation, change STEP or contour().
+*/
+const STEP = (() => { // response of the filter to a jump from 0 to 1, for x in [-1, 1] filter widths
+	const n = 512, sinc = x => x ? Math.sin(Math.PI * x) / (Math.PI * x) : 1, a = new Float64Array(2 * n + 1)
+	for (let i = 1; i <= 2 * n; ++i) {
+		const x = (i - .5) / n - 1
+		a[i] = a[i - 1] + sinc(2 * x) * sinc(x)
+	}
+	return a.map( y => y / a[2 * n] )
+})()
+
+function step(x) {
+	if (x <= -1) return 0
+	if (x >= 1) return 1
+	const i = (x + 1) * 512, j = Math.floor(i)
+	return STEP[j] + (i - j) * (STEP[j + 1] - STEP[j])
+}
+
+// number of items with item.t <= t, in a list sorted by t
+function count(list, t) {
+	let lo = 0, hi = list.length
+	while (lo < hi) {
+		const mid = (lo + hi) >> 1
+		if (list[mid].t <= t) lo = mid + 1
+		else hi = mid
+	}
+	return lo
+}
+
+// staircase starting at y0 with jumps [{t, dy}] => smooth function of t
+function contour(y0, jumps, width) {
+	const sums = [y0]
+	for (const j of jumps) sums.push(sums.at(-1) + j.dy)
+	return t => {
+		let i = count(jumps, t - width), y = sums[i]
+		for (; i < jumps.length && jumps[i].t < t + width; ++i) y += jumps[i].dy * step((t - jumps[i].t) / width)
+		return y
+	}
+}
+
+// a silence has no pitch: the pitch contour is made on a time axis without the silences (u)
+// the intensity contour keeps them, as 0
+function contours(notes, width) {
+	const segs = [], pitchJumps = [], levelJumps = []
+	let t = 0, u = 0, p, v
+	for (const n of notes) {
+		if (n.p !== null) {
+			if (p !== undefined && n.p !== p) pitchJumps.push({t: u, dy: n.p - p})
+			p = n.p
+		}
+		if (v !== undefined && n.v !== v) levelJumps.push({t, dy: n.v - v})
+		v = n.v
+		segs.push({t, u, p: n.p, v: n.v})
+		t += n.d
+		if (n.p !== null) u += n.d
+	}
+	const first = segs.find( s => s.p !== null ),
+				pitchU = contour(first?.p ?? 60, pitchJumps, width),
+				seg = t => segs[Math.max(0, count(segs, t) - 1)]
+	return {
+		total: t,
+		seg, // the original note at time t
+		pitch: t => { const s = seg(t); return pitchU(s.p === null ? s.u : s.u + t - s.t) },
+		level: contour(segs[0]?.v ?? 0, levelJumps, width)
+	}
+}
+
+/*
+	CONTOURS => NOTES (the "ADC")
+	One reading per tick, in the middle of the tick, rounded to the closest allowed pitch.
+	Equal consecutive ticks are merged in one note.
+*/
+function quantize(curves, grid, levels) {
+	const out = []
+	let same = 0, ticks = Math.ceil(curves.total * grid - 1e-6)
+	for (let k = 0; k < ticks; ++k) {
+		const t = (k + .5) / grid,
+					v = Math.round(clamp(curves.level(t), 0, 127)),
+					x = curves.pitch(t),
+					p = v ? levels.reduce( (best, l) => Math.abs(l - x) < Math.abs(best - x) ? l : best ) : null,
+					last = out.at(-1)
+		if (last?.p === p) { ++last.n; last.sum += v }
+		else out.push({p, n: 1, sum: v})
+		if (curves.seg(t).p === p) ++same
+	}
+	return {
+		notes: out.map( ({p, n, sum}) => ({p, d: n / grid, v: Math.round(sum / n)}) ),
+		same: ticks ? same / ticks : 1
+	}
+}
+
+/*
+	MIDI FILES (format 1.0)
+*/
+function readMidi(buf) {
+	const d = new DataView(buf),
+				id = i => String.fromCharCode(d.getUint8(i), d.getUint8(i + 1), d.getUint8(i + 2), d.getUint8(i + 3)),
+				div = d.getUint16(12),
+				voices = new Map // 'track:channel' => notes
+	if (id(0) !== 'MThd' || div & 0x8000) throw Error('unsupported file')
+	let i = 8 + d.getUint32(4), bpm
+	const vlq = () => {
+		let v = 0, b
+		do { b = d.getUint8(i++); v = v * 128 + (b & 127) } while (b & 128)
+		return v
+	}
+	for (let trk = 0; i + 8 <= d.byteLength; ++trk) {
+		const end = i + 8 + d.getUint32(i + 4), isTrack = id(i) === 'MTrk', open = new Map // 'channel:pitch' => note still on
+		let t = 0, status = 0
+		i += 8
+		while (isTrack && i < end) {
+			t += vlq()
+			if (d.getUint8(i) & 0x80) status = d.getUint8(i++)
+			if (status === 0xFF) { // meta event, 0x51 is the tempo
+				const type = d.getUint8(i++), len = vlq()
+				if (type === 0x51) bpm ??= 6e7 / (d.getUint8(i) * 65536 + d.getUint16(i + 1))
+				i += len
+			} else if (status >= 0xF0) {
+				const len = vlq()
+				i += len
+			} else {
+				const kind = status >> 4, ch = status & 15, key = `${trk}:${ch}`,
+							p = d.getUint8(i++),
+							v = kind === 0xC || kind === 0xD ? 0 : d.getUint8(i++)
+				if (kind === 8 || kind === 9) {
+					if (open.has(`${ch}:${p}`)) open.get(`${ch}:${p}`).end = t
+					open.delete(`${ch}:${p}`)
+				}
+				if (kind === 9 && v && ch !== 9) { // channel 10 is for drums
+					const note = {t, p, v, end: Infinity}
+					open.set(`${ch}:${p}`, note)
+					if (!voices.has(key)) voices.set(key, [])
+					voices.get(key).push(note)
+				}
+			}
+		}
+		for (const note of open.values()) note.end = t
+		i = end
+	}
+	// first voice, top note of the chords, on a grid of 1/24 beat
+	const all = (voices.values().next().value ?? []).sort( (a, b) => a.t - b.t || b.p - a.p ),
+				mono = all.filter( (n, i) => !i || n.t !== all[i - 1].t ),
+				q = t => Math.round(t / div * 24),
+				notes = []
+	let at = q(mono[0]?.t ?? 0)
+	mono.forEach( (n, i) => {
+		const start = q(n.t), end = q(Math.min(n.end, mono[i + 1]?.t ?? Infinity))
+		if (end <= start) return
+		if (start > at) notes.push({p: null, d: (start - at) / 24, v: 0})
+		notes.push({p: n.p, d: (end - start) / 24, v: n.v})
+		at = end
+	})
+	return {notes, bpm}
+}
+
+function writeMidi(notes, bpm) {
+	const div = 480,
+				vlq = n => { const b = [n & 127]; while (n >>= 7) b.unshift(n & 127 | 128); return b },
+				u32 = n => [n >>> 24, n >>> 16 & 255, n >>> 8 & 255, n & 255],
+				ev = [0, 0xFF, 0x51, 3, ...u32(Math.round(6e7 / bpm)).slice(1)]
+	let wait = 0
+	for (const n of notes) {
+		const d = Math.round(n.d * div)
+		if (n.p === null) wait += d
+		else {
+			ev.push(...vlq(wait), 0x90, n.p, n.v, ...vlq(d), 0x80, n.p, 0)
+			wait = 0
+		}
+	}
+	ev.push(...vlq(wait), 0xFF, 0x2F, 0)
+	return new Uint8Array([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, div >> 8, div & 255, 0x4D, 0x54, 0x72, 0x6B, ...u32(ev.length), ...ev])
+}
+
+/*
+	PICTURE
+	top: pitch over time, with the allowed pitches as horizontal lines
+	bottom: intensity over time
+*/
+let model, // result of the last update
+		ppb = 20 // pixels per beat
+
+function draw() {
+	const {notes, out, curves, levels, tonic} = model, total = curves.total
+	if (!total) return $pic.textContent = ''
+	ppb = clamp($pic.clientWidth / total, 12, 60)
+	const W = Math.ceil(total * ppb), xs = [], ps = [], vs = []
+	for (let x = 0; x <= W; x += 2) {
+		const t = Math.min(x / ppb, total - 1e-6)
+		xs.push(x)
+		vs.push(clamp(curves.level(t), 0, 127))
+		ps.push(vs.at(-1) < .5 ? null : curves.pitch(t)) // no pitch when silent
+	}
+	const pitches = [...notes.map( n => n.p ), ...out.map( n => n.p ), ...ps].filter( p => p !== null )
+	if (!pitches.length) return $pic.textContent = ''
+	const 				hi = Math.ceil(Math.max(...pitches)) + 2, lo = Math.floor(Math.min(...pitches)) - 2,
+				h = clamp(Math.round(240 / (hi - lo)), 3, 12), // pixels per semitone
+				HP = (hi - lo) * h, HV = 60, top = HP + 12,
+				y = p => ((hi - p) * h).toFixed(1),
+				yv = v => (top + HV * (1 - v / 127)).toFixed(1),
+				svg = []
+
+	for (let b = 0; b <= total; ++b) svg.push(`<path class=grid d="M${b * ppb} 0V${top + HV}"/>`)
+	for (const l of levels) if (l > lo && l < hi) {
+		const isTonic = l % 12 === tonic
+		svg.push(`<path class="grid${isTonic ? ' tonic' : ''}" d="M0 ${y(l)}H${W}"/>`)
+		if (isTonic) svg.push(`<text x=2 y=${y(l) - 2}>${model.names.get(tonic)}${Math.floor(l / 12) - 1}</text>`)
+	}
+	svg.push(`<path class=grid d="M0 ${top}H${W}M0 ${top + HV}H${W}"/>`)
+
+	// notes as boxes, intensity as bars
+	const boxes = (list, cls) => {
+		let t = 0
+		for (const n of list) {
+			if (n.p !== null) svg.push(
+				`<rect class=${cls} x=${(t * ppb + .5).toFixed(1)} y=${y(n.p + .5)} width=${Math.max(1, n.d * ppb - 1).toFixed(1)} height=${h} rx=2 />`,
+				cls === 'o' ? `<path class=o d="M${(t * ppb).toFixed(1)} ${yv(n.v)}h${(n.d * ppb).toFixed(1)}"/>`
+					: `<path class=n d="M${(t * ppb + .5).toFixed(1)} ${yv(0)}V${yv(n.v)}h${Math.max(1, n.d * ppb - 1).toFixed(1)}V${yv(0)}"/>`
+			)
+			t += n.d
+		}
+	}
+	boxes(out, 'n')
+	boxes(notes, 'o')
+
+	// contours
+	const line = (ys, f) => ys.map( (v, i) => v === null ? '' : `${ys[i - 1] == null ? 'M' : 'L'}${xs[i]} ${f(v)}` ).join('')
+	svg.push(`<path class=c d="${line(ps, y)}"/>`, `<path class=c d="${line(vs, yv)}"/>`)
+	svg.push(`<path id=head d="M0 0V${top + HV}" visibility=hidden />`)
+	$pic.innerHTML = `<svg width=${W} height=${top + HV + 1} viewBox="0 0 ${W} ${top + HV + 1}">${svg.join('')}</svg>`
+}
+
+/*
+	SOUND
+	one oscillator per version: triangle for the notes, sine for the contours, square for the new notes
+*/
+let audio
+
+function stop() {
+	audio?.ctx.close()
+	audio = null
+	$play.textContent = '▶︎'
+	$('head')?.setAttribute('visibility', 'hidden')
+}
+
+function play() {
+	if (audio) return stop()
+	const {notes, out, curves} = model,
+				picks = [$('po').checked, $('pc').checked, $('pn').checked]
+	if (!curves.total || !picks.includes(true)) return
+	const ctx = new AudioContext,
+				spb = 60 / clamp(+$bpm.value || 120, 20, 400), // seconds per beat
+				t0 = ctx.currentTime + .1, time = curves.total * spb,
+				hz = p => 440 * 2 ** ((p - 69) / 12),
+				amp = v => (v / 127) ** 2,
+				voice = (type, vol) => {
+					const osc = new OscillatorNode(ctx, {type}), gain = new GainNode(ctx, {gain: 0})
+					osc.connect(gain).connect(ctx.destination)
+					osc.start(t0)
+					osc.stop(t0 + time)
+					osc.onended = () => audio?.ctx === ctx && stop()
+					return {f: osc.frequency, g: gain.gain, vol}
+				},
+				playNotes = (list, {f, g, vol}) => {
+					let t = t0
+					for (const n of list) {
+						const d = n.d * spb, edge = Math.min(.015, d / 4)
+						if (n.p !== null) {
+							f.setValueAtTime(hz(n.p), t)
+							g.setValueAtTime(0, t)
+							g.linearRampToValueAtTime(amp(n.v) * vol, t + edge)
+							g.setValueAtTime(amp(n.v) * vol, t + d - edge)
+							g.linearRampToValueAtTime(0, t + d)
+						}
+						t += d
+					}
+				}
+	if (picks[0]) playNotes(notes, voice('triangle', .3))
+	if (picks[2]) playNotes(out, voice('square', .1))
+	if (picks[1]) {
+		const {f, g, vol} = voice('sine', .3),
+					n = Math.ceil(time * 200) + 2, fs = new Float32Array(n), gs = new Float32Array(n)
+		for (let i = 0; i < n - 1; ++i) {
+			const t = Math.min(i / (n - 1) * curves.total, curves.total - 1e-6)
+			fs[i] = hz(curves.pitch(t))
+			gs[i] = amp(clamp(curves.level(t), 0, 127)) * vol
+		}
+		fs[n - 1] = fs[n - 2]
+		f.setValueCurveAtTime(fs, t0, time)
+		g.setValueCurveAtTime(gs, t0, time)
+	}
+	audio = {ctx}
+	$play.textContent = '■'
+	// moving line
+	const head = $('head'), frame = () => {
+		if (audio?.ctx !== ctx) return
+		const x = clamp((ctx.currentTime - t0) / spb, 0, curves.total) * ppb
+		head.setAttribute('transform', `translate(${x.toFixed(1)})`)
+		head.setAttribute('visibility', 'visible')
+		if (x < $pic.scrollLeft || x > $pic.scrollLeft + $pic.clientWidth - 20) $pic.scrollLeft = x - 20
+		requestAnimationFrame(frame)
+	}
+	frame()
+}
+
+/*
+	PAGE
+*/
+let fileError = false, midiUrl
+
+function update() {
+	stop()
+	const {notes, bad} = parse($src.value),
+				scale = parseScale($scale.value),
+				names = scale.names.size ? scale.names : new Map(SHARP.map( (n, i) => [i, n] )),
+				levels = Array.from({length: 128}, (_, p) => p).filter( p => names.has(p % 12) ),
+				grid = +$g.value || 2,
+				curves = contours(notes, +$k.value),
+				{notes: out, same} = quantize(curves, grid, levels),
+				sounding = list => list.filter( n => n.p !== null ).length,
+				pct = Math.floor(same * 100)
+	model = {notes, out, curves, levels, names, tonic: names.keys().next().value}
+
+	bad.push(...scale.bad)
+	$err.textContent = (fileError ? tr('This MIDI file could not be read. ', 'Ce fichier MIDI n\'a pas pu être lu. ') : '')
+		+ (bad.length ? tr('Not understood: ', 'Incompris : ') + bad.join(' ') : '')
+	$kOut.textContent = +$k.value ? tr(`${+$k.value} beats`, `${+$k.value} temps`.replace('.', ',')) : tr('none', 'aucun')
+	$out.textContent = toText(out, names)
+	$stats.textContent = tr(
+		`${sounding(notes)} notes → ${sounding(out)} notes. Same pitch as the melody ${pct}% of the time.`,
+		`${sounding(notes)} notes → ${sounding(out)} notes. Même hauteur que la mélodie ${pct} % du temps.`)
+	URL.revokeObjectURL(midiUrl)
+	$dl.href = midiUrl = URL.createObjectURL(new Blob([writeMidi(out, +$bpm.value || 120)], {type: 'audio/midi'}))
+	syncScale(new Set(names.keys()))
+	draw()
+}
+
+// scale selectors <=> scale text
+function fillScale() {
+	const root = $root.selectedIndex, kind = KINDS[$kind.value]
+	if (!kind) return
+	const names = /b/.test(ROOTS[root]) || ROOTS[root] === 'F' ? FLAT : SHARP
+	$scale.value = kind[2].map( i => names[(root + i) % 12] ).join(' ')
+}
+function syncScale(set) {
+	for (const root of [$root.selectedIndex, ...ROOTS.keys()]) for (const [i, kind] of KINDS.entries()) {
+		if (kind[2].length === set.size && kind[2].every( s => set.has((root + s) % 12) )) {
+			$root.selectedIndex = root
+			return $kind.value = i
+		}
+	}
+	$kind.value = ''
+}
+function labels() {
+	const kind = $kind.value
+	$kind.innerHTML = `<option value="">${tr('other', 'autre')}` + KINDS.map( (k, i) => `<option value=${i}>${tr(k[0], k[1])}` ).join('')
+	$kind.value = kind
+}
+$root.innerHTML = ROOTS.map( r => `<option>${r}` ).join('')
+labels()
+
+// URL: the settings as JSON, compressed
+let inUrl, timer
+const sent = new Set,
+			state = () => JSON.stringify({m: $src.value, s: $scale.value, k: +$k.value, g: +$g.value, t: +$bpm.value}),
+			restore = ({m, s, k, g, t}) => {
+				$src.value = m ?? ''
+				$scale.value = s ?? ''
+				$k.value = k ?? 2
+				$g.value = g ?? 2
+				$bpm.value = t ?? 120
+			},
+			save = hashData( ({data}) => {
+				if (data === inUrl || sent.delete(data)) return inUrl = data // language change or own change
+				inUrl = data
+				try { restore(JSON.parse(data)) } catch { restore(EXAMPLES[0]) }
+				update()
+			}),
+			changed = () => {
+				fileError = false
+				update()
+				clearTimeout(timer)
+				timer = setTimeout( () => {
+					const data = state()
+					if (data === inUrl) return
+					sent.add(data)
+					save({data})
+				}, 300)
+			}
+
+for (const el of [$src, $scale, $k, $g, $bpm]) el.oninput = changed
+$root.onchange = $kind.onchange = () => { fillScale(); changed() }
+for (const el of document.querySelectorAll('[data-ex]')) el.onclick = () => { restore(EXAMPLES[el.dataset.ex]); changed() }
+$play.onclick = play
+$file.onchange = async () => {
+	try {
+		const {notes, bpm} = readMidi(await $file.files[0].arrayBuffer())
+		if (!notes.length) throw Error('no notes')
+		$src.value = toText(notes, new Map)
+		if (bpm) $bpm.value = Math.round(bpm)
+		changed()
+	} catch {
+		fileError = true
+		update()
+	}
+	$file.value = ''
+}
+let lang = H.lang
+addEventListener('lang', () => { // also fires when the URL changes with the same language
+	if (lang === (lang = H.lang)) return
+	labels()
+	if (model) update()
+})
+addEventListener('resize', () => model && draw())
+</script>
+</body>
+</content>
