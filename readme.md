@@ -35,7 +35,7 @@ Use the **GitHub** app for personal edits and tweaks.
 
 ## Future pipeline
 
-- Since the site was created, `importMaps` have gained wider support. Investigate if `unnode` is still preferred for dependencies.
+- `_npm/` imports are written two ways: 18 as `/_npm/…` and 7 as `../_npm/…`. Check on its own whether the mix causes a real problem (e.g. the same file loaded twice) before changing any page.
 - Add a readme.md to every app folder to explain the concept, goals and open actions.
 - `zero/`: the formula typed is saved in the URL but not restored on reload, and only the first function gets the `Math.` prefix (`cos(x)-sin(x)` fails).
 - `docs/_data/` (11 MB: photos, a PDF, a 7z archive, climate CSV/XML) is published on the site because everything in `docs/` is. If these are scratch files, move them to a `data/` folder at the repo root to keep them in the repo but off the site.
