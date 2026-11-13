@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<title data-lang>notebook (prototype) // calepin (prototype)</title>
+	<meta charset=utf-8>
+	<meta name=viewport content="width=device-width, initial-scale=1.0">
+	<link rel=icon type=image/svg+xml href=/favicon.svg>
+	<meta name=description content="[insert description: english / français]">
+	<link rel="stylesheet" href="../_src/main.css">
+	<script type=module src="../_src/data-lang.js"></script>
+	<style>
+		iframe { width: 100%; border: 0; display: block }
+		textarea { width: 100%; white-space: pre; tab-size: 2 }
+	</style>
+</head>
+
+<body>
+
+<div style="display: flex; justify-content: space-between;">
+	<h2><a data-lang="this.href=`/#${this.lang}`"><i><svg><use href="/icon.svg#dice"></use></svg></i></a> schem.ist</h2>
+	<h2 data-lang>notebook // calepin</h2>
+	<data-lang>en fr</data-lang>
+</div>
+<hr>
+
+<details>
+	<summary data-lang>source and examples // source et exemples</summary>
+	<p>
+		<a href="?./example.js" data-lang>first notebook // premier calepin</a> ·
+		<a href="?./example2.js" data-lang>notebook importing another // calepin qui en importe un autre</a>
+	</p>
+	<p><label><span data-lang>open a file // ouvrir un fichier</span> <input id=file type=file accept=".js,.mjs,text/javascript"></label></p>
+	<pre><textarea id=src rows=12 spellcheck=false autocapitalize=off autocomplete=off></textarea></pre>
+</details>
+
+<iframe sandbox="allow-scripts"></iframe>
+
+<script type=module>
+import hashData from '../_src/hash-data.js'
+import {page} from './proto.js'
+
+const src = document.querySelector('#src'),
+			file = document.querySelector('#file'),
+			frame = document.querySelector('iframe'),
+			// address of the notebook file, after the ?  It stays the base of the relative imports when the text is edited
+			base = location.search.length > 1 ? new URL(decodeURIComponent(location.search.slice(1)), location.href).href : ''
+
+function show(text) {
+	if (src.value !== text) src.value = text
+	frame.srcdoc = page(text, {base, css: new URL('../_src/main.css', location.href).href, lang: document.documentElement.lang})
+}
+
+// the frame can't be measured from here (sandbox): it reports its own height
+addEventListener('message', e => {
+	if (e.source === frame.contentWindow && e.data?.height) frame.style.height = `${e.data.height + 16}px`
+})
+
+// an edited text is saved in the hash and has priority over the file
+const save = hashData( async ({data}) => {
+	show( data || !base ? data : await fetch(base).then( r => r.ok ? r.text() : `/*\n${r.status} ${base}\n*/` ) )
+})
+src.onchange = () => save({data: src.value})
+file.onchange = async () => save({data: await file.files[0].text()})
+</script>
+</body>
