@@ -35,6 +35,15 @@ display(mean([1, 2, 3]))
 export function mean(values) { /* … */ }
 ````
 
+### exact rules
+
+* a text starts with `/*` as the 2 first characters of a line, and ends at the first `*/`
+  - `/* # title */` on one line is fine
+  - code after the `*/`, on the same line, is code
+* the lines of a text are read as is: no ` * ` at the start of each line, it would make a list
+* a cell starts with exactly 3 backticks and `js` at the start of a line, and ends with 3 backticks alone
+  - indented (in a list), 4 backticks or `~~~`: not a cell, never run
+
 ### actual comments
 
 They stay with the code, untouched:
@@ -50,6 +59,8 @@ They stay with the code, untouched:
   - `<output id=total></output>`
   - `<input id=n type=range>`
   - `<canvas id=plot></canvas>`
+* the whole page is there before the first line runs: a cell can fill a placeholder written below it
+* an `id` is used once per notebook. Browsers also make it a global variable (`total.value`): don't give an `id` the name of a variable
 * fenced block in another language (` ```txt `): shown only
 * words after `js` change a cell:
   - ` ```js run=false `: shown, not run
@@ -58,11 +69,13 @@ They stay with the code, untouched:
 ### inside a cell
 
 * plain JavaScript, in the same scope as the module: no import needed for what is in the file
-* own `import` lines and `await` are fine
+* own `import` lines and `await` are fine. An `await` holds everything below it, module code included
+* addresses are relative to the notebook: `fetch('./data.json')`, `import.meta.url`
 * 3 helpers, only there in the notebook:
   - `display(value)`: adds the value under the cell. A DOM element is added as is, the rest as text. Returns the value
   - `$(selector)`: first matching element
   - `$$(selector)`: array of matching elements
+* the helpers are for cells only: in module code they break the import
 
 ### where they come from
 
@@ -79,11 +92,16 @@ They stay with the code, untouched:
   - a name declared in a cell is seen by the cells below
   - same name twice: an error, as in any JavaScript file
   - usual JavaScript order: a function can be used above its line, a `const` cannot
+  - the trap: module code also sees the names of the cells. It then works in the notebook and fails when imported. Module code must never use a name from a cell
+* any edit runs the whole notebook again: inputs go back to their first value
 * the file is cut line by line, with no JavaScript parser (as Jupytext does with `# %%`)
 * every text line is blanked and every cell line kept in place, so **an error line is the line in the file**
 * the page is built first, then the code runs: text and code still show when the code fails
 * an error shows under its block, with its line. Phones have no console
 * everything runs in a sandboxed iframe: no access to the site, its storage or the page around
+  - ignored without a word: `alert`, `prompt`, `open` (new window)
+  - blocked with an error: `localStorage`, cookies, IndexedDB, clipboard, geolocation
+  - `fetch` works, where the server allows other origins
 * the address of the notebook is the base of its relative imports (`<base>` in the iframe)
 
 ## Goals
@@ -97,6 +115,9 @@ They stay with the code, untouched:
   - display and run in i-frame
   - must work on mobile phone browsers
 * editing in a plain text block
+* to fix from the tests (see the limits):
+  - links in the text
+  - a notebook that froze must not run again by itself
 
 ### secondary
 
@@ -106,6 +127,8 @@ They stay with the code, untouched:
 * cells that run again when an input changes. For now: plain DOM events
 * code colours
 * save back to a file (desktop only, a download on phones)
+* check of the module alone: run the file once more with the cells left as comments, to catch the trap of the names (see logic)
+* a link to another notebook opens it in the viewer
 
 ## tested
 
@@ -121,6 +144,7 @@ Works:
 * `</script>` and `<!--` in the source
 * an edited notebook saved in the URL and reloaded (`example.js`: 1670 characters → 1083 in the URL)
 * the old files of this folder are cut into valid scripts: any JavaScript file is a notebook
+* `fetch('./readme.svg')` and `import.meta.url` in a cell: both use the address of the notebook
 
 Limits found:
 
@@ -132,6 +156,12 @@ Limits found:
 * some failed promises only say "Script error." (hidden by the sandbox)
 * imports need a server that allows other origins. GitHub Pages and `node check.js` do, `python3 -m http.server` does not
 * a file opened from the phone has no address: its relative imports are read from the app folder
+* **links in the text replace the notebook** inside its frame. An outside link gives an error page, `[top](#title)` shows the raw file
+  - tested fix: `<base target=_blank>` in the frame, and `allow-popups allow-popups-to-escape-sandbox` on the iframe. Links open in a new tab, the notebook stays
+  - links inside the page (`#title`) still need a few lines of script. Not tested
+* **an endless loop in a cell freezes the whole page**, not only the frame. The saved URL freezes again when opened: the text can't be reached to fix it
+  - idea, not tested: note that a run started, clear the note when it ends. If the note is still there at the next opening, show the text and wait for a tap
+* a name from a cell used in module code: fine in the notebook, `ReferenceError` when imported in Node
 
 ## rejected ideas
 
