@@ -6,13 +6,13 @@ Minimal computational notebook
 
 ## concept
 
-* file is a valid JavaScript module
+* the notebook file is a valid JavaScript module. It can run or have imported modules from it without errors
 * specific items to a notebook like text, examples, display and interactive bits are in the comments. Akin to an inverted markdown file where code is the main text and markdown is in blocks
 * regular code is in exported modules throughout the file
 * because all is regular JavaScript, one notebook can import modules from another one, automatically ignoring the single use parts in the comments
 * simple conventions allow for direct in-file editing
-* an HTML viewer allows pretty rendering of markdown comments and code
-* a notebook can be a few lines saved in the URL: a runnable link to share, e.g. to try an npm module from a phone (from the old `-executif` draft)
+* this app is an HTML viewer for JS notebooks and allows pretty rendering of markdown comments and code
+* a notebook can be a standalone js file or is stored in the URL for the app.
 
 ## conventions
 
