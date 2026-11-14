@@ -12,6 +12,7 @@ Minimal computational notebook
 * because all is regular JavaScript, one notebook can import modules from another one, automatically ignoring the single use parts in the comments
 * simple conventions allow for direct in-file editing
 * an HTML viewer allows pretty rendering of markdown comments and code
+* a notebook can be a few lines saved in the URL: a runnable link to share, e.g. to try an npm module from a phone (from the old `-executif` draft)
 
 ## conventions
 
@@ -71,6 +72,7 @@ They stay with the code, untouched:
 * plain JavaScript, in the same scope as the module: no import needed for what is in the file
 * own `import` lines and `await` are fine. An `await` holds everything below it, module code included
 * addresses are relative to the notebook: `fetch('./data.json')`, `import.meta.url`
+* a bare module name is read from esm.sh: `import _ from 'lodash'` → `https://esm.sh/lodash`, `'d3-scale@4'` for a version. Node reads the same file from `node_modules`
 * 3 helpers, only there in the notebook:
   - `display(value)`: adds the value under the cell. A DOM element is added as is, the rest as text. Returns the value
   - `$(selector)`: first matching element
@@ -84,6 +86,7 @@ They stay with the code, untouched:
 * `run=false`, `echo=false`: Observable Framework (`echo` also in Quarto and R Markdown)
 * `display()`: Observable, IPython
 * `$`, `$$`: the browser console
+* bare names from a CDN: Observable, esm.sh
 * HTML for inputs and outputs: plain markdown
 
 ## logic
@@ -152,7 +155,7 @@ Limits found:
 * a line starting with `/*` inside a multi-line string is taken for a text. Indent it
 * `display()` in a timer or a click writes under the last cell that ran. There, write to a placeholder: `$('#total').value = …`
 * an import that can't be loaded: the browser gives no name and no line. The message is only "an import could not be loaded"
-* `import … from 'lodash'` (bare name) does not work in a browser: use an address
+* bare names (`'lodash'`) are rewritten to esm.sh in code and cells. Not tested on esm.sh itself: the cloud session can't reach it. The rewrite also changes `from 'x'` written inside a string
 * some failed promises only say "Script error." (hidden by the sandbox)
 * imports need a server that allows other origins. GitHub Pages and `node check.js` do, `python3 -m http.server` does not
 * a file opened from the phone has no address: its relative imports are read from the app folder
@@ -164,6 +167,8 @@ Limits found:
 * a name from a cell used in module code: fine in the notebook, `ReferenceError` when imported in Node
 
 ## rejected ideas
+
+* **run at each keystroke** (old `-executif` draft): half-typed code runs, and an unfinished `while (` freezes the page. The text runs when it loses the focus
 
 * **cells in a second module that imports the notebook**
   - needs the list of exports, and the notebook loaded from memory (blob) can't have relative imports
@@ -182,3 +187,4 @@ Limits found:
 * should module code and cells look different? Now: a bar on the left of the cells
 * long module code: folded by default?
 * bilingual notebooks: one file per language, or `lang` blocks in the text?
+* esm.sh is an outside service: fine, or only `/_npm/` and full addresses?
