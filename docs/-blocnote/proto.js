@@ -162,6 +162,12 @@ pre.error { color: tomato; white-space: pre-wrap }
 pre { tab-size: 2 }
 `
 
+// bare module names (from 'd3') have no meaning in a browser: they are read from esm.sh (idea from -executif)
+// only the quoted name changes, so the line numbers stay the same
+const IMPORT = /(\bfrom\s*|\bimport\s*\(?\s*)(["'])([^"'.\/\s][^"'\s]*)\2/g
+export const bare = script => script.replace(IMPORT, (all, kw, q, name) =>
+	/^[a-z][a-z\d+.-]*:/i.test(name) ? all : `${kw}${q}https://esm.sh/${name}${q}`)
+
 /**
  * full page for <iframe sandbox=allow-scripts srcdoc=...>
  * the module script starts on line 1, so that error lines are the lines of the source
@@ -170,7 +176,7 @@ pre { tab-size: 2 }
  */
 export function page(src, {base='', css='', lang='en'} = {}) {
 	const {parts, script} = split(src),
-				safe = script.replaceAll('</script', '<\\/script').replaceAll('<!--', '<\\!--')
+				safe = bare(script).replaceAll('</script', '<\\/script').replaceAll('<!--', '<\\!--')
 	return `<!doctype html><html lang=${ lang }><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1.0">${
 		base ? `<base href="${ esc(base).replaceAll('"', '&quot;') }">` : '' }${
 		css ? `<link rel=stylesheet href="${ css }">` : '' }<style>${ CSS.replaceAll('\n', ' ') }</style><script type=module>${ safe }
