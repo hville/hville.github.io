@@ -16,7 +16,7 @@ The owner may perform edits from a phone with limited screen size. Explain chang
 - **Every visible string in both English and French.**
 - **No secrets.** Don't add keys or tokens. Don't edit `docs/_env/`.
 - **No new dependency without asking** in the PR description first.
-- **Nothing raw or bulky inside `docs/`.** Everything in `docs/` is published live on GitHub Pages. Keep offline data-prep scripts and raw/intermediate datasets outside `docs/` (or gitignored); commit only the compact static files the page actually serves.
+- **Nothing raw or bulky inside `docs/`.** Everything in `docs/` is published live on GitHub Pages. Put non-published datasets and offline data-prep files in `data/<app>/` at the repo root (compressed when large; never secrets or PII, since the repo is public); commit only the compact static files the page actually serves inside `docs/<app>/`.
 
 ## Layout
 
@@ -34,6 +34,8 @@ docs/                 served site root (GitHub Pages, CNAME schem.ist, .nojekyll
   _lib/               third-party static files (water-dark2.css, imported by main.css)
   _data/              reference/scratch data, not part of any app
   _env/               API key (see readme)
+data/                 non-published datasets & offline prep files (in repo, off GitHub Pages; no secrets or PII)
+  <app>/              per-app working data (e.g. data/resto/)
 .github/workflows/    feed.yml (see Feed below)
 .editorconfig         indentation and line endings
 package.json          npm dependencies + unnode devDependency
