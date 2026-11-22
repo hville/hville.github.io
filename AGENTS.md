@@ -16,6 +16,7 @@ The owner may perform edits from a phone with limited screen size. Explain chang
 - **Every visible string in both English and French.**
 - **No secrets.** Don't add keys or tokens. Don't edit `docs/_env/`.
 - **No new dependency without asking** in the PR description first.
+- **Nothing raw or bulky inside `docs/`.** Everything in `docs/` is published live on GitHub Pages. Keep offline data-prep scripts and raw/intermediate datasets outside `docs/` (or gitignored); commit only the compact static files the page actually serves.
 
 ## Layout
 
@@ -73,7 +74,7 @@ Placeholders: when a text is unknown, never copy it from another page. Write `[i
 
 ## Adding a new app
 
-1. New drafts: `docs/-<short-name>/index.html` (lowercase, no spaces), off the home page. Publishing (removing the `-`, linking it) only when the owner says so. Add `readme.md` and `readme.svg` too (see Project readme below).
+1. New drafts: `docs/-<short-name>/` (lowercase, no spaces), off the home page. A draft can start with just `readme.md` and `readme.svg` (see Project readme below) while the concept is being shaped, then add `index.html` when ready. Publishing (removing the `-`, linking it) only when the owner says so.
 2. All UI text bilingual. All state that should survive a reload goes through `hash-data.js`.
 3. To publish: add an entry at the top of the list in `docs/index.html` with `<time>YYYY-MM-DD</time>` and links to `./<name>/index.html#en` and `#fr`.
 4. The feed updates itself after the merge (see Feed below).
