@@ -16,6 +16,7 @@ The owner may perform edits from a phone with limited screen size. Explain chang
 - **Every visible string in both English and French.**
 - **No secrets.** Don't add keys or tokens. Don't edit `docs/_env/`.
 - **No new dependency without asking** in the PR description first.
+- **One script language: JavaScript.** Offline scripts (data prep, checks, generators) are Node ES modules run with `node`, like `makefeed.js` and `check.js`. No Python or other script languages in the repo.
 - **Nothing raw or bulky inside `docs/`.** Everything in `docs/` is published live on GitHub Pages. Put non-published datasets and offline data-prep files in `data/<app>/` at the repo root (compressed when large; never secrets or PII, since the repo is public); commit only the compact static files the page actually serves inside `docs/<app>/`.
 
 ## Layout
