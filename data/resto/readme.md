@@ -6,7 +6,7 @@ Working data for the draft app [`docs/-resto/`](../../docs/-resto/readme.md). It
 
 - `central_mtl_places.json.gz`: 3,023 Central Montreal places from Google Maps listings (name, address, coordinates, rating, star counts).
 - `central_mtl_reviews.json.gz`: 11,447 one- to three-star reviews of 602 restaurants, in their original language.
-- `make_gold_set.py` & `gold_set.json`: deterministic stratified 60-review sample (60 distinct places) drawn from `central_mtl_reviews.json.gz` for hand-labeling before the pilot LLM run.
+- `make_gold_set.js` & `gold_set.json`: deterministic stratified 60-review sample (60 distinct places) drawn from `central_mtl_reviews.json.gz` for hand-labeling before the pilot LLM run.
 
 ## provenance
 
