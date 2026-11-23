@@ -10,7 +10,7 @@ A 4.8★ spot tries to please everyone. A 3.9★ spot where someone leaves 1 sta
 
 **Where we are:** Data procurement is **done** (total Outscraper spend: **$32.11 USD**, ~$68 headroom left under the $100 cap). A local $0 heuristic peek confirmed strong gems around Little Italy and surfaced key prompt-calibration rules. A keyword check of the saved reviews then refined the tags, scoring and sampling caveats below (see *Sampling caveats*). Ready for a gold set + pilot, then LLM classification + UI build.
 
-**Saved datasets (in repo at `data/resto/`, outside `docs/` so never published on `schem.ist`):**
+**Saved datasets (in repo at `data/resto/`, outside `docs/` so never published on `schem.ist`; provenance and removal-on-request note in `data/resto/readme.md`):**
 
 - `data/resto/central_mtl_places.json.gz` (~390 KB) — **3,023** unique operational places across 48 Central Montreal FSAs (`$7.60`).
 - `data/resto/central_mtl_reviews.json.gz` (~1.9 MB) — **602** cleaned independent restaurants within **6.5 km of Little Italy** (`45.5361, -73.6149`, Jean-Talon Market; ~1h walk + generous overshoot) with **11,447** non-empty original-language 1–3★ text reviews (`10,434` 1★, `635` 2★, `378` 3★; ~69% French / ~31% English; `4,725` from 2025–2026; `$24.51`). Reviewer names, user IDs, review IDs, and links are stripped; dates are truncated to `YYYY-MM`.
@@ -295,12 +295,14 @@ Compact, privacy-clean file consumed directly by `index.html`:
 - Quotes are checked verbatim in code, never name staff or reviewers, and never come from a review with a red flag (`serious` included).
 - `data/resto/classified_reviews.json.gz` holds keys and labels only, no review text.
 - Link straight to Google Maps for live status, hours, menus, and full reviews.
+- Credit line on the page: *Excerpts from Google Maps reviews // Extraits d'avis Google Maps*, with the link to each place.
+- Stay non-commercial: no ads, no paid tier. Handle removal requests (see `data/resto/readme.md`) promptly.
 
 ## open questions
 
-- **Map choice for v1:** Leaflet (OpenStreetMap, zero key/billing, needs dependency approval) vs. Google Maps JS API (using `docs/_env/` key restricted to `schem.ist`) vs. list-only v1 + Google My Maps CSV?
+- **Map choice for v1:** Leaflet (OpenStreetMap, zero key/billing, needs dependency approval) vs. Google Maps JS API (using `docs/_env/` key restricted to `schem.ist`) vs. list-only v1 + Google My Maps CSV? Note: the Maps key comes with the Google Maps Platform terms, which are strict about Google's place data (no scraping, caching or building databases from it). Showing a scraped copy of Google's places on a Google map, under the owner's billing account, is the one place where the project would be directly bound by a Google contract. Leaflet keeps the two apart.
 - **Verification LLM pass:** with ~$68 left under budget, run a second higher-precision LLM pass on the top ~150–250 finalists to sharpen sarcasm handling and pick the funniest quote per spot?
 - **Buy more data:** decide after the pilot (see *Decision point* in Step 4).
 - **`price` default:** 😐 *don't care* like the other tags, or 👎 *minus* so it lowers the rating unless the user opts out?
 - **App title & voice:** keep `resto` as the folder name, and pick a funny bilingual page title, e.g. *Le guide des chialeux // The Grumbler's Guide*, *1★ mais bon // 1★ but good*, *Bougon gourmand*, *1-star gems // perles à 1 étoile* or *bad reviews, good food // mauvais avis, bonne bouffe*.
-- **Keep or drop `data/resto/` later:** once `docs/-resto/gems.json` is finalized, decide whether to keep the 2.3 MB gzipped archives in `data/resto/` for re-scoring or trim them. The repo is public: the 11k full texts are off `schem.ist` but each is traceable to its author with one Google search. Option: move the raw files to private storage and keep only the labels here.
+- **Keep or drop `data/resto/` later:** once `docs/-resto/gems.json` is finalized, decide whether to keep the 2.3 MB gzipped archives in `data/resto/` for re-scoring or trim them. The repo is public: the 11k full texts are off `schem.ist` but each is traceable to its author with one Google search. **Decided 2026-11-23:** they stay in the public repo, with a provenance and removal-on-request note in `data/resto/readme.md`.
